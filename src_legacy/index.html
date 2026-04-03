@@ -1,0 +1,33 @@
+<script>
+  // محاكاة بيئة إلكترون للمتصفح
+  if (!window.electron) {
+    window.electron = {
+      storage: {
+        async get(key, isJson = true) {
+          try {
+            const data = localStorage.getItem(`mobile_shop_${key}`);
+            if (!data) return null;
+            
+            return {
+              key,
+              value: isJson ? JSON.parse(data) : data
+            };
+          } catch (error) {
+            console.error('خطأ في جلب البيانات:', error);
+            return null;
+          }
+        },
+        async set(key, value, isJson = true) {
+          try {
+            const data = isJson ? JSON.stringify(value) : value;
+            localStorage.setItem(`mobile_shop_${key}`, data);
+            return true;
+          } catch (error) {
+            console.error('خطأ في حفظ البيانات:', error);
+            return false;
+          }
+        }
+      }
+    };
+  }
+</script>
