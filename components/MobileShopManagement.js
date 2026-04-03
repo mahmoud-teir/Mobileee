@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, ShoppingBag, Wrench, DollarSign, FileText, Users, Truck, AlertCircle, BarChart as BarChartIcon, Cloud, RotateCcw, CreditCard, Moon, Sun, ScanLine, LogOut, User, Shield, Database } from 'lucide-react';
-import { useStorage, initializeStorage } from '../lib/storage';
+import { useStorage, initializeStorage } from '@/lib/storage';
 import { useAuth } from './AuthContext';
 
 // استيراد المكونات

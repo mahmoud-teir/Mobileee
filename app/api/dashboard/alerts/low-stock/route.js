@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '../../../../lib/mongodb';
-import { getAuthUser, requireAuth } from '../../../../lib/auth';
-import Screen from '../../../../models/Screen';
-import Phone from '../../../../models/Phone';
-import Accessory from '../../../../models/Accessory';
-import Sticker from '../../../../models/Sticker';
+import { connectDB } from '@/lib/mongodb';
+import { getAuthUser, requireAuth } from '@/lib/auth';
+import Screen from '@/models/Screen';
+import Phone from '@/models/Phone';
+import Accessory from '@/models/Accessory';
+import Sticker from '@/models/Sticker';
 
 export async function GET(request) {
   const user = await getAuthUser(request);

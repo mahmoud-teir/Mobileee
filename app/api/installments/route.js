@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '../../../lib/mongodb';
-import { getAuthUser, requireAuth } from '../../../lib/auth';
-import Installment from '../../../models/Installment';
-import Screen from '../../../models/Screen';
-import Phone from '../../../models/Phone';
-import Accessory from '../../../models/Accessory';
-import Sticker from '../../../models/Sticker';
+import { connectDB } from '@/lib/mongodb';
+import { getAuthUser, requireAuth } from '@/lib/auth';
+import Installment from '@/models/Installment';
+import Screen from '@/models/Screen';
+import Phone from '@/models/Phone';
+import Accessory from '@/models/Accessory';
+import Sticker from '@/models/Sticker';
 
 const getModelByType = (type) => {
   switch (type) {

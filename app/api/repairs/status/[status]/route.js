@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '../../../../../lib/mongodb';
-import { getAuthUser, requireAuth } from '../../../../../lib/auth';
-import Repair from '../../../../../models/Repair';
+import { connectDB } from '@/lib/mongodb';
+import { getAuthUser, requireAuth } from '@/lib/auth';
+import Repair from '@/models/Repair';
 
 export async function GET(request, { params }) {
   const user = await getAuthUser(request);
