@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { User, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, LogIn, AlertCircle, ShoppingBag } from 'lucide-react';
 
 const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
