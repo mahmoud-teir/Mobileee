@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 const migrateLocalDataToMongoDB = async () => { return {}; };
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 const DatabaseViewer = () => {
   const [stats, setStats] = useState(null);
