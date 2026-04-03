@@ -5,7 +5,7 @@ import Login from '../components/Login';
 import MobileShopManagement from '../components/MobileShopManagement';
 
 export default function Page() {
-  const { user, loading } = useAuth();
+  const { user, loading, login } = useAuth();
 
   if (loading) {
     return (
@@ -15,6 +15,6 @@ export default function Page() {
     );
   }
 
-  if (!user) return <Login />;
+  if (!user) return <Login onLogin={login} />;
   return <MobileShopManagement />;
 }
