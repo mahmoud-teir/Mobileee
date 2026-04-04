@@ -9,9 +9,11 @@ const StoreSchema = new mongoose.Schema({
   phone: String,
   settings: {
     logo: String,
+    stamp: String,
     currency: { type: String, default: 'ILS' },
     receiptHeader: String,
-    receiptFooter: String
+    receiptFooter: String,
+    taxNumber: String
   },
   subscription: {
     plan: { type: String, enum: ['free', 'pro', 'enterprise'], default: 'free' },

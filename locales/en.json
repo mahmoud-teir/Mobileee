@@ -32,7 +32,9 @@
     "database": "Database",
     "databaseShort": "Data",
     "admin": "System Admin",
-    "adminShort": "Admin"
+    "adminShort": "System",
+    "settings": "Settings",
+    "settingsShort": "Settings"
   },
   "login": {
     "title": "SmartStore POS",
@@ -141,6 +143,21 @@
     "noItems": "No items added",
     "deleteConfirmTitle": "Confirm Delete",
     "deleteConfirmMsg": "Are you sure you want to delete '{name}'? This action cannot be undone."
+  },
+  "settings": {
+    "title": "Store Settings",
+    "subtitle": "Customize store identity and invoice data",
+    "storeName": "Store Name",
+    "phone": "Phone Number",
+    "address": "Address",
+    "email": "Email",
+    "receiptHeader": "Receipt Header",
+    "receiptFooter": "Receipt Footer",
+    "logo": "Store Logo",
+    "stamp": "Store Stamp",
+    "imageHint": "Click to upload an image or drag it here",
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Error saving settings"
   },
   "print": {
     "title": "Advanced Print Templates",

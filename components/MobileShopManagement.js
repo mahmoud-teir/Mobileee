@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ShoppingBag, Wrench, DollarSign, FileText, Users, Truck, AlertCircle, BarChart as BarChartIcon, Cloud, RotateCcw, CreditCard, Moon, Sun, ScanLine, LogOut, User, Shield, Database, Trash2, Languages, Eye } from 'lucide-react';
+import { TrendingUp, ShoppingBag, Wrench, DollarSign, FileText, Users, Truck, AlertCircle, BarChart as BarChartIcon, Cloud, RotateCcw, CreditCard, Moon, Sun, ScanLine, LogOut, User, Shield, Database, Trash2, Languages, Eye, Settings as SettingsIcon } from 'lucide-react';
 import { useStorage, initializeStorage, clearLocalCache } from '@/lib/storage';
 import { hasFeature } from '@/lib/planLimits';
 import { useAuth } from './AuthContext';
@@ -24,6 +24,7 @@ import BarcodeScanner from './BarcodeScanner';
 import UsersManagement from './UsersManagement';
 import DatabaseViewer from './DatabaseViewer';
 import SystemAdmin from './SystemAdmin';
+import Settings from './Settings';
 
 // تهيئة localStorage عند التشغيل
 initializeStorage();
@@ -248,7 +249,8 @@ const MobileShopManagement = () => {
     { id: 'reports', label: t('nav.reports'), shortLabel: t('nav.reportsShort'), icon: BarChartIcon },
     // تبويبات الإدارة والمستخدمين
     ...(isOwner ? [
-      { id: 'users', label: t('nav.users'), shortLabel: t('nav.usersShort'), icon: Shield }
+      { id: 'users', label: t('nav.users'), shortLabel: t('nav.usersShort'), icon: Shield },
+      { id: 'settings', label: t('nav.settings'), shortLabel: t('nav.settingsShort'), icon: SettingsIcon }
     ] : []),
     // تبويب قاعدة البيانات للمدراء فقط
     ...(isAdmin ? [
@@ -487,6 +489,7 @@ const MobileShopManagement = () => {
         {activeTab === 'users' && isTabVisible('users') && <UsersManagement />}
         {activeTab === 'database' && isTabVisible('database') && <DatabaseViewer />}
         {activeTab === 'admin' && isTabVisible('admin') && <SystemAdmin onImpersonate={handleImpersonate} />}
+        {activeTab === 'settings' && isTabVisible('settings') && <Settings user={user} />}
 
         {/* الفاتورة المنبثقة */}
         {printInvoice && (

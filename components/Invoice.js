@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Printer, X, AlertCircle, CreditCard, Wallet, Smartphone, Tag, Download } from 'lucide-react';
+import { Printer, X, AlertCircle, CreditCard, Wallet, Smartphone, Tag, Download, Store } from 'lucide-react';
+import { useAuth } from './AuthContext';
+import { useLanguage } from './LanguageContext';
 import { useReactToPrint } from 'react-to-print';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -8,6 +10,10 @@ import { saveAs } from 'file-saver';
 import { Document, Paragraph, TextRun, HeadingLevel, Packer } from 'docx';
 
 const Invoice = ({ type, data, onClose }) => {
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const storeInfo = user?.currentStore || {};
+  const settings = storeInfo.settings || {};
   const componentRef = useRef();
   const [isLoading, setIsLoading] = useState(true);
   // paymentMethod, discount and discountType are taken from the passed `data` (sale/repair)
@@ -168,7 +174,7 @@ const Invoice = ({ type, data, onClose }) => {
               spacing: { after: 200 }
             }),
             new Paragraph({
-                  text: `SmartStore POS 🏬`,
+                  text: `${storeInfo.name || 'SmartStore POS'} 🏬`,
               heading: HeadingLevel.HEADING_2,
               alignment: 'center',
               spacing: { after: 100 }
@@ -238,7 +244,7 @@ const Invoice = ({ type, data, onClose }) => {
     const textContent = `
 فاتورة رسمية
 ============
-SmartStore POS 🏬
+${storeInfo.name || 'SmartStore POS'} 🏬
 
 نوع الفاتورة: ${type === 'repair' ? 'صيانة' : 'بيع'}
 العميل: ${safeData.customer}
@@ -357,14 +363,20 @@ ${type === 'repair' ?
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-3">
                 {/* اللوجو */}
-                <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-3 rounded-xl shadow-lg">
-                  <span className="text-3xl">🍒</span>
+                <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-1 rounded-xl shadow-lg overflow-hidden flex items-center justify-center min-w-[60px] min-h-[60px] print:bg-white print:shadow-none print:border">
+                  {settings.logo ? (
+                    <img src={settings.logo} alt="Logo" className="w-12 h-12 object-contain" />
+                  ) : (
+                    <span className="text-3xl p-2">🍒</span>
+                  )}
                 </div>
                 <div>
                   <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent print:text-rose-800 print:text-2xl">
-                    SmartStore POS
+                    {storeInfo.name || 'SmartStore POS'}
                   </h1>
-                  <p className="text-gray-600 text-sm mt-1 print:text-xs">نظام إدارة متكامل للمحلات</p>
+                  <p className="text-gray-600 text-sm mt-1 print:text-xs">
+                    {settings.receiptHeader || t('app.subtitle') || 'نظام إدارة متكامل للمحلات'}
+                  </p>
                 </div>
               </div>
               <div className="text-left">
@@ -540,12 +552,29 @@ ${type === 'repair' ?
               </p>
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-4 text-gray-700 print:text-sm">
-              <span>SmartStore POS</span>
+              <span>{storeInfo.name || 'SmartStore POS'}</span>
               <span className="hidden sm:inline">|</span>
-              <span>خدمة العملاء على مدار الساعة</span>
+              <span>{storeInfo.phone || settings.phone || 'خدمة العملاء على مدار الساعة'}</span>
             </div>
-            <p className="text-gray-600 text-sm mt-1 print:text-xs">
-              هذه الفاتورة صحيحة بدون ختم. يمكن التحقق من صحتها عبر النظام
+            
+            {settings.receiptFooter && (
+              <p className="text-rose-700 text-sm italic font-medium mt-2">
+                {settings.receiptFooter}
+              </p>
+            )}
+
+            {/* الختم / التوقيع */}
+            {settings.stamp && (
+              <div className="flex justify-end mt-4 px-8 text-left">
+                <div className="text-center">
+                  <p className="text-[10px] text-gray-400 mb-1">الختم والتوقيع</p>
+                  <img src={settings.stamp} alt="Stamp" className="h-16 w-auto object-contain opacity-80" />
+                </div>
+              </div>
+            )}
+
+            <p className="text-gray-600 text-sm mt-4 print:text-[10px]">
+              {settings.stamp ? 'تم ختم هذه الفاتورة إلكترونياً' : 'هذه الفاتورة صحيحة بدون ختم. يمكن التحقق من صحتها عبر النظام'}
             </p>
 
             {/* معلومات المطور */}
