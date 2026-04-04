@@ -23,6 +23,7 @@ const Repairs = ({ data, saveData, showInvoice }) => {
     cost: 0
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeMobileColumn, setActiveMobileColumn] = useState('statusInRepair');
   const [filteredScreens, setFilteredScreens] = useState([]);
   const [searchResultsVisible, setSearchResultsVisible] = useState(false);
   const [selectedScreen, setSelectedScreen] = useState(null);
@@ -443,9 +444,34 @@ const Repairs = ({ data, saveData, showInvoice }) => {
         </div>
       )}
 
+      {/* Mobile Column Switcher */}
+      <div className="md:hidden flex gap-2 p-1 bg-gray-100 rounded-xl mb-4">
+        {statusOptions.slice(0, 3).map(opt => (
+          <button
+            key={`nav-${opt.key}`}
+            onClick={() => setActiveMobileColumn(opt.key)}
+            className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${
+              activeMobileColumn === opt.key 
+                ? 'bg-white text-blue-600 shadow-sm scale-[1.02]' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {opt.label}
+            <span className="ml-1 opacity-50">
+              ({data.repairs.filter(r => r.status === opt.label).length})
+            </span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {statusOptions.slice(0, 3).map(statusOpt => (
-          <div key={statusOpt.key} className="bg-white p-4 rounded-xl shadow-lg">
+          <div 
+            key={statusOpt.key} 
+            className={`bg-white p-4 rounded-xl shadow-lg ${
+              activeMobileColumn === statusOpt.key ? 'block' : 'hidden md:block'
+            }`}
+          >
             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${
                 statusOpt.key === 'statusInRepair' ? 'bg-yellow-500' :

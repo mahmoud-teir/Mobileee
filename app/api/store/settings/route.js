@@ -13,7 +13,7 @@ export async function GET(request) {
 
   try {
     await connectDB();
-    const store = await Store.findById(user.storeId).lean();
+    const store = await Store.findById(user.currentStoreId).lean();
     if (!store) {
       return NextResponse.json({ message: 'Store not found' }, { status: 404 });
     }
@@ -27,8 +27,9 @@ export async function GET(request) {
 export async function PATCH(request) {
   const user = await getAuthUser(request);
   // Owners and Admins can update their own store settings
-  const roleErr = requireRole(user, ['owner', 'admin', 'super_admin']);
-  if (roleErr || !user.storeId) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  const roleErr = requireRole(user, 'owner', 'admin', 'super_admin');
+  if (roleErr) return roleErr;
+  if (!user.currentStoreId) return NextResponse.json({ message: 'Store ID required' }, { status: 401 });
 
   try {
     await connectDB();
@@ -41,7 +42,7 @@ export async function PATCH(request) {
     delete safeUpdates._id;
 
     const updatedStore = await Store.findByIdAndUpdate(
-      user.storeId,
+      user.currentStoreId,
       { $set: safeUpdates },
       { new: true }
     );

@@ -305,7 +305,7 @@ const MobileShopManagement = () => {
   }
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-100'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen pb-16 md:pb-0 ${darkMode ? 'dark bg-gray-900' : 'bg-gray-100'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* نظام التنبيهات */}
       <Toaster richColors position="top-center" dir={isRTL ? 'rtl' : 'ltr'} />
 
@@ -536,17 +536,37 @@ const MobileShopManagement = () => {
             <div className="text-center">
               <h4 className="text-sm font-semibold text-gray-300 mb-2">{t('footer.features')}</h4>
               <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-400">
-                <span className="bg-gray-700/50 px-2 py-1 rounded">{t('nav.sales')}</span>
-                <span className="bg-gray-700/50 px-2 py-1 rounded">{t('nav.inventory')}</span>
-                <span className="bg-gray-700/50 px-2 py-1 rounded">{t('nav.repairs')}</span>
-                <span className="bg-gray-700/50 px-2 py-1 rounded">{t('nav.reports')}</span>
+                {[
+                  { id: 'sales', label: t('nav.sales') },
+                  { id: 'inventory', label: t('nav.inventory') },
+                  { id: 'repairs', label: t('nav.repairs') },
+                  { id: 'reports', label: t('nav.reports') }
+                ].map(link => (
+                  <button
+                    key={link.id}
+                    onClick={() => {
+                      setActiveTab(link.id);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="bg-gray-700/50 px-2 py-1 rounded hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                  >
+                    {link.label}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* معلومات المطور */}
             <div className={`text-center ${isRTL ? 'md:text-left' : 'md:text-right'}`}>
               <h4 className="text-sm font-semibold text-gray-300 mb-2">{t('footer.developedBy')}</h4>
-              <p className="text-rose-400 font-bold text-lg">Mahmoud AbuTeir</p>
+              <a
+                href="https://github.com/mahmoud-teir"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-rose-400 font-bold text-lg hover:text-rose-300 transition-colors"
+              >
+                Mahmoud AbuTeir
+              </a>
               <p className="text-gray-500 text-xs mt-1">Full Stack Developer</p>
             </div>
           </div>
@@ -561,12 +581,43 @@ const MobileShopManagement = () => {
                 <span>{t('footer.madeWith')}</span>
                 <span className="text-red-500">❤</span>
                 <span>{t('footer.by')}</span>
-                <span className="text-rose-400 font-medium">Mahmoud AbuTeir</span>
+                <a
+                  href="https://github.com/mahmoud-teir"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-rose-400 font-medium hover:underline"
+                >
+                  Mahmoud AbuTeir
+                </a>
               </p>
             </div>
           </div>
         </div>
       </footer>
+      
+      {/* Mobile Bottom Navigation - Only visible on small screens */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 flex justify-around items-center h-16 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+        {tabs.filter(t => ['dashboard', 'inventory', 'repairs', 'sales'].includes(t.id)).map(tab => (
+          <button
+            key={`mobile-${tab.id}`}
+            onClick={() => {
+              setActiveTab(tab.id);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${
+              activeTab === tab.id 
+                ? 'text-rose-600 dark:text-rose-400' 
+                : 'text-gray-500 dark:text-gray-400 hover:text-rose-500'
+            }`}
+          >
+            <tab.icon className={`w-5 h-5 mb-1 ${activeTab === tab.id ? 'scale-110' : ''}`} />
+            <span className="text-[10px] font-bold">{tab.shortLabel || tab.label}</span>
+            {activeTab === tab.id && (
+              <span className="absolute top-0 w-8 h-1 bg-rose-500 rounded-b-full"></span>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

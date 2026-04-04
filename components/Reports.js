@@ -310,8 +310,8 @@ const Reports = ({ data, saveData }) => {
         </div>
       </div>
 
-      {/* جدول الربح حسب المنتج */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+      {/* جدول الربح حسب المنتج (Desktop View) */}
+      <div className="hidden md:block bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b bg-rose-50 flex justify-between items-center">
           <h3 className="text-xl font-bold text-rose-800">{t('reports.profitByProduct')}</h3>
           <span className="text-sm bg-rose-100 text-rose-700 px-3 py-1 rounded-full font-medium">{t('reports.profitSourceAnalysis')}</span>
@@ -372,7 +372,57 @@ const Reports = ({ data, saveData }) => {
         </div>
       </div>
 
-      {/* سجل المبيعات التفصيلي */}
+      {/* جدول الربح حسب المنتج (Mobile View) */}
+      <div className="md:hidden space-y-4">
+        <h3 className="text-xl font-bold text-rose-800 px-2">{t('reports.profitByProduct')}</h3>
+        {(() => {
+          const profitByItem = {};
+          (data.sales || []).forEach(sale => {
+            const items = sale.items || (sale.item ? [{ item: sale.item, quantity: sale.quantity, price: sale.price, cost: sale.cost || 0, type: sale.itemType }] : []);
+            items.forEach(it => {
+              if (!profitByItem[it.item]) {
+                profitByItem[it.item] = { quantity: 0, sales: 0, cost: 0, profit: 0, type: it.type || it.itemType };
+              }
+              const q = it.quantity || 0;
+              const s = q * (it.price || 0);
+              const c = q * (it.cost || 0);
+              profitByItem[it.item].quantity += q;
+              profitByItem[it.item].sales += s;
+              profitByItem[it.item].cost += c;
+              profitByItem[it.item].profit += (s - c);
+            });
+          });
+
+          return Object.entries(profitByItem)
+            .sort((a, b) => b[1].profit - a[1].profit)
+            .slice(0, 10)
+            .map(([name, stats], idx) => (
+              <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-bold text-gray-900">{name}</h4>
+                    <p className="text-xs text-gray-500">{getProductTypeName(stats.type)}</p>
+                  </div>
+                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">
+                    {stats.sales > 0 ? ((stats.profit / stats.sales) * 100).toFixed(1) : 0}%
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">{t('reports.soldQty')}:</span>
+                    <span className="font-medium">{stats.quantity}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">{t('reports.netProfit')}:</span>
+                    <span className="font-bold text-blue-600">{stats.profit.toFixed(2)} ₪</span>
+                  </div>
+                </div>
+              </div>
+            ));
+        })()}
+      </div>
+
+      {/* سجل المبيعات التفصيلي (Scrollable Table) */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b bg-blue-50 flex justify-between items-center">
           <h3 className="text-xl font-bold text-blue-800">{t('reports.detailedSalesLog')}</h3>
@@ -387,7 +437,7 @@ const Reports = ({ data, saveData }) => {
                 <th className="p-3 font-bold">{isRTL ? 'العميل' : 'Customer'}</th>
                 <th className="p-3 font-bold">{isRTL ? 'الإجمالي' : 'Total'}</th>
                 <th className="p-3 font-bold">{t('reports.profit')}</th>
-                <th className="p-3 font-bold">{isRTL ? 'الدفع' : 'Payment'}</th>
+                <th className="p-3 font-bold hidden md:table-cell">{isRTL ? 'الدفع' : 'Payment'}</th>
               </tr>
             </thead>
             <tbody>
@@ -395,7 +445,7 @@ const Reports = ({ data, saveData }) => {
                 const totalItemProfit = (sale.items || []).reduce((sum, it) => sum + ((it.price - (it.cost || 0)) * it.quantity), 0) || sale.profit || 0;
                 return (
                   <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
-                    <td className="p-3 text-gray-500">
+                    <td className="p-3 text-gray-500 text-xs">
                       {new Date(sale.date).toLocaleString(isRTL ? 'ar-EG' : 'en-US', { 
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
                       })}
@@ -403,18 +453,17 @@ const Reports = ({ data, saveData }) => {
                     <td className="p-3">
                       <div className="flex flex-col gap-1">
                         {(sale.items || []).map((it, i) => (
-                          <div key={i} className="flex items-center justify-between gap-4 text-xs">
+                          <div key={i} className="flex items-center justify-between gap-4 text-[10px] md:text-xs">
                             <span className="text-gray-800 font-medium">{it.item} x{it.quantity}</span>
-                            <span className="text-blue-600 font-bold">{((it.price - (it.cost||0)) * it.quantity).toFixed(2)} ₪ {t('reports.profit')}</span>
                           </div>
                         ))}
                         {!sale.items && <span className="text-gray-800">{sale.item} x{sale.quantity}</span>}
                       </div>
                     </td>
-                    <td className="p-3 text-gray-700">{sale.customerName || sale.customer || '---'}</td>
-                    <td className="p-3 font-bold text-green-600">{sale.total.toFixed(2)} ₪</td>
-                    <td className="p-3 font-bold text-blue-600 bg-blue-50/50">{totalItemProfit.toFixed(2)} ₪</td>
-                    <td className="p-3">
+                    <td className="p-3 text-gray-700 text-xs truncate max-w-[80px] md:max-w-none">{sale.customerName || sale.customer || '---'}</td>
+                    <td className="p-3 font-bold text-green-600 text-xs">{sale.total.toFixed(2)} ₪</td>
+                    <td className="p-3 font-bold text-blue-600 bg-blue-50/50 text-xs">{totalItemProfit.toFixed(2)} ₪</td>
+                    <td className="p-3 hidden md:table-cell">
                       <span className="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600">
                         {sale.paymentMethod === 'cash' ? (isRTL ? 'نقدي' : 'Cash') : 
                          sale.paymentMethod === 'bank' ? (isRTL ? 'تحويل' : 'Transfer') : 
@@ -452,8 +501,8 @@ const Reports = ({ data, saveData }) => {
         </ResponsiveContainer>
       </div>
 
-      {/* التقرير الشهري المفصل */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+      {/* التقرير الشهري المفصل (Desktop Table Only) */}
+      <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
           <h3 className="text-xl font-bold">{t('reports.monthlyDetailedReport')}</h3>
           <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -496,6 +545,39 @@ const Reports = ({ data, saveData }) => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* التقرير الشهري المفصل (Mobile Card View) */}
+      <div className="md:hidden space-y-4">
+        <h3 className="text-xl font-bold px-2">{t('reports.monthlyDetailedReport')}</h3>
+        {monthlyData.filter(row => row.sales > 0 || row.expenses > 0 || row.profit !== 0).map((row, i) => (
+          <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-3">
+              <span className="font-black text-lg text-gray-800">{row.month}</span>
+              {i > 0 && monthlyData[i-1].profit !== 0 && (
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                  row.profit > monthlyData[i-1].profit ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                }`}>
+                  {(((row.profit - monthlyData[i-1].profit) / Math.abs(monthlyData[i-1].profit)) * 100).toFixed(1)}%
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="bg-green-50 p-2 rounded-lg">
+                <p className="text-[10px] text-green-600 uppercase mb-1">{t('reports.sales')}</p>
+                <p className="font-bold text-sm text-green-700">{row.sales.toFixed(0)}</p>
+              </div>
+              <div className="bg-red-50 p-2 rounded-lg">
+                <p className="text-[10px] text-red-600 uppercase mb-1">{t('reports.expenses')}</p>
+                <p className="font-bold text-sm text-red-700">{row.expenses.toFixed(0)}</p>
+              </div>
+              <div className="bg-blue-50 p-2 rounded-lg">
+                <p className="text-[10px] text-blue-600 uppercase mb-1">{t('reports.profit')}</p>
+                <p className="font-bold text-sm text-blue-700">{row.profit.toFixed(0)}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       <ConfirmationModal

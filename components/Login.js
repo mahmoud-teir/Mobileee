@@ -184,9 +184,20 @@ const Login = ({ onLogin }) => {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-rose-200 text-sm mt-6">
-          {t('login.footer').replace('{year}', new Date().getFullYear())}
-        </p>
+        <div className="text-center text-rose-200 text-sm mt-6">
+          <p>{t('login.footer').replace('{year}', new Date().getFullYear())}</p>
+          <p className="mt-1">
+            {t('footer.developedBy')} 
+            <a 
+              href="https://github.com/mahmoud-teir" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-bold hover:text-white hover:underline transition-all ml-1"
+            >
+              Mahmoud AbuTeir
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

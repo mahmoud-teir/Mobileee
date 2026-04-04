@@ -359,25 +359,22 @@ ${type === 'repair' ?
         {/* منطقة الطباعة */}
         <div id="printable-area" ref={componentRef} className="p-8 print:p-4">
           {/* رأس الفاتورة */}
-          <div className="border-b border-rose-200 pb-6 mb-6">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
+          <div className="border-b border-gray-200 pb-6 mb-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
                 {/* اللوجو */}
-                <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-1 rounded-xl shadow-lg overflow-hidden flex items-center justify-center min-w-[60px] min-h-[60px] print:bg-white print:shadow-none print:border">
-                  {settings.logo ? (
-                    <img src={settings.logo} alt="Logo" className="w-12 h-12 object-contain" />
-                  ) : (
-                    <span className="text-3xl p-2">🍒</span>
-                  )}
-                </div>
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent print:text-rose-800 print:text-2xl">
-                    {storeInfo.name || 'SmartStore POS'}
-                  </h1>
-                  <p className="text-gray-600 text-sm mt-1 print:text-xs">
-                    {settings.receiptHeader || t('app.subtitle') || 'نظام إدارة متكامل للمحلات'}
-                  </p>
-                </div>
+                {settings.logo ? (
+                  <img src={settings.logo} alt="Logo" className="h-20 w-auto object-contain" />
+                ) : (
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-800">
+                      {storeInfo.name || 'SmartStore POS'}
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">
+                      {settings.receiptHeader || t('app.subtitle') || 'نظام إدارة متكامل للمحلات'}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="text-left">
                 <div className={`px-4 py-2 rounded-xl inline-block font-bold shadow-sm ${
@@ -392,7 +389,7 @@ ${type === 'repair' ?
             </div>
             
             {/* معلومات العميل والتاريخ */}
-                <div className="mt-6 bg-rose-50 p-4 rounded-lg print:p-3">
+                <div className="mt-6 bg-gray-50 p-4 rounded-lg print:p-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="font-bold text-gray-800 text-lg print:text-base">العميل:</p>
@@ -504,13 +501,13 @@ ${type === 'repair' ?
             )}
             
             {/* ملخص الدفع والخصم (قراءة فقط) */}
-            <div className="bg-gradient-to-r from-rose-50 to-pink-50 p-6 rounded-xl border border-rose-100 mb-6">
-              <h4 className="font-bold text-xl text-indigo-800 mb-4 flex items-center gap-2">
-                <Tag className="w-5 h-5" />
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-6">
+              <h4 className="font-bold text-xl text-gray-800 mb-4 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-indigo-600" />
                 ملخص الدفع والخصم
               </h4>
 
-                <div className="p-4 bg-white rounded-lg border border-rose-100">
+                <div className="p-4 bg-white rounded-lg border border-gray-100">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium text-gray-700">المجموع الأصلي:</span>
                   <span className="font-bold text-gray-900">{type === 'repair' ? safeData.cost.toFixed(2) : (typeof safeData.subtotal !== 'undefined' ? safeData.subtotal.toFixed(2) : safeData.total.toFixed(2))} ₪</span>
@@ -523,12 +520,12 @@ ${type === 'repair' ?
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center pt-2 border-t border-indigo-200">
-                  <span className="font-bold text-lg text-indigo-800">المبلغ المستحق:</span>
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <span className="font-bold text-lg text-gray-800">المبلغ المستحق:</span>
                   <span className="font-bold text-xl text-green-600">{totalAmount} ₪</span>
                 </div>
 
-                <div className="mt-2 flex items-center justify-end text-sm text-indigo-600">
+                <div className="mt-2 flex items-center justify-end text-sm text-gray-600">
                     {(() => {
                       const paymentInfo = getPaymentMethodInfo(safeData.paymentMethod);
                       const IconComponent = paymentInfo.icon;
@@ -546,19 +543,24 @@ ${type === 'repair' ?
           
           {/* تذييل الفاتورة */}
           <div className="border-t pt-6 text-center space-y-3">
-            <div className="bg-gradient-to-r from-rose-50 to-pink-50 p-4 rounded-lg print:p-2 border border-rose-100">
-              <p className="font-bold text-lg text-rose-800 print:text-base">
+            <div className="bg-gray-50 p-4 rounded-lg print:p-2 border border-gray-100">
+              <p className="font-bold text-lg text-gray-800 print:text-base">
                 شكراً لثقتك بنا! نتمنى لك تجربة ممتعة
               </p>
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-4 text-gray-700 print:text-sm">
               <span>{storeInfo.name || 'SmartStore POS'}</span>
               <span className="hidden sm:inline">|</span>
-              <span>{storeInfo.phone || settings.phone || 'خدمة العملاء على مدار الساعة'}</span>
+              <a 
+                href={`tel:${storeInfo.phone || settings.phone}`}
+                className="hover:text-rose-600 transition-colors"
+              >
+                {storeInfo.phone || settings.phone || 'خدمة العملاء على مدار الساعة'}
+              </a>
             </div>
             
             {settings.receiptFooter && (
-              <p className="text-rose-700 text-sm italic font-medium mt-2">
+              <p className="text-gray-600 text-sm italic font-medium mt-2">
                 {settings.receiptFooter}
               </p>
             )}
@@ -580,7 +582,15 @@ ${type === 'repair' ?
             {/* معلومات المطور */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <p className="text-gray-500 text-xs">
-                نظام إدارة SmartStore POS | تطوير وتصميم: <span className="text-rose-600 font-medium">Mahmoud AbuTeir</span>
+                نظام إدارة SmartStore POS | تطوير وتصميم: 
+                <a 
+                  href="https://github.com/mahmoud-teir"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 font-medium hover:underline ml-1"
+                >
+                  Mahmoud AbuTeir
+                </a>
               </p>
             </div>
 

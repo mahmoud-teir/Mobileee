@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   DollarSign, Plus, AlertCircle, Search as SearchIcon, 
   Trash2, FileText, X, CheckCircle, Database, Edit, Printer,
-  Monitor, Smartphone, Headphones, Sticker, Package
+  Monitor, Smartphone, Headphones, Sticker, Package, User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
@@ -784,7 +784,8 @@ const Sales = ({ data, saveData, showInvoice }) => {
       )}
 
       {/* سجل المبيعات */}
-      <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
+      {/* سجل المبيعات - Desktop Only */}
+      <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-x-auto">
         <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
           <h4 className="font-bold text-lg">{t('sales.history')}</h4>
         </div>
@@ -826,6 +827,67 @@ const Sales = ({ data, saveData, showInvoice }) => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* سجل المبيعات - Mobile Only Card View */}
+      <div className="md:hidden space-y-4 pb-4">
+        <div className="bg-white p-4 rounded-xl shadow-sm border-b flex justify-between items-center">
+          <h4 className="font-bold text-lg">{t('sales.history')}</h4>
+        </div>
+        {(data.sales || []).length > 0 ? (
+          (data.sales || []).slice().reverse().map(sale => (
+            <div key={sale._id || sale.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">
+                    {new Date(sale.date).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                  </p>
+                  <h4 className="font-bold text-gray-900 mt-1">
+                    {sale.items ? (sale.items.length > 1 ? `${sale.items[0].item} +${sale.items.length - 1}` : sale.items[0].item) : sale.item}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <User className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-600">{sale.customer || '---'}</span>
+                  </div>
+                </div>
+                <div className="text-left rtl:text-right">
+                  <p className="text-rose-600 font-black text-lg">
+                    {(sale.total || 0).toFixed(2)} {t('dashboard.currency')}
+                  </p>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-tighter">
+                    {sale.paymentMethod || t('sales.cash')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-50 uppercase text-xs font-bold">
+                <button
+                  onClick={() => showInvoice({ type: 'sale', data: sale })}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg active:scale-95 transition-transform"
+                >
+                  <FileText className="w-4 h-4" />
+                  {t('common.invoice') || 'فاتورة'}
+                </button>
+                <button
+                  onClick={() => handleEditSale(sale._id || sale.id)}
+                  className="p-2 bg-indigo-50 text-indigo-600 rounded-lg active:scale-95 transition-transform"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDeleteSale(sale._id || sale.id, sale.items ? sale.items[0].item : sale.item, sale.total, 0)}
+                  className="p-2 bg-red-50 text-red-600 rounded-lg active:scale-95 transition-transform"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+            {t('inventory.noItems')}
+          </div>
+        )}
       </div>
 
       <ConfirmationModal

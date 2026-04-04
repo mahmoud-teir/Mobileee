@@ -1,5 +1,8 @@
 'use client';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { useLanguage } from './LanguageContext';
+import { Printer, X, Download } from 'lucide-react';
 
 const PrintTemplates = ({ data, onClose }) => {
   const { t, language, isRTL } = useLanguage();
@@ -29,23 +32,23 @@ const PrintTemplates = ({ data, onClose }) => {
         padding: 0;
       }
       .invoice-container { padding: 40px; }
-      .header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 40px; border-bottom: 4px solid #9d174d; padding-bottom: 20px; }
-      .store-info h1 { font-size: 32px; font-weight: 800; color: #9d174d; margin: 0; }
-      .store-info p { font-size: 14px; color: #6b7280; margin: 4px 0; }
+      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
+      .store-info h1 { font-size: 32px; font-weight: 800; color: #111827; margin: 0; }
+      .store-info p { font-size: 14px; color: #4b5563; margin: 4px 0; }
       .invoice-meta { text-align: ${isRTL ? 'left' : 'right'}; }
       .invoice-meta h2 { font-size: 24px; font-weight: 700; color: #111827; margin: 0; }
-      .invoice-meta p { font-size: 14px; color: #6b7280; margin: 4px 0; }
+      .invoice-meta p { font-size: 14px; color: #4b5563; margin: 4px 0; }
       .billing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-      .billing-box { background: #f9fafb; padding: 20px; rounded: 8px; border: 1px solid #e5e7eb; }
-      .billing-box h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #9d174d; margin: 0 0 10px 0; font-weight: 700; }
-      .items-table { w-full border-collapse: collapse; margin-bottom: 40px; }
-      .items-table th { background: #9d174d; color: white; padding: 12px; text-align: ${isRTL ? 'right' : 'left'}; font-size: 14px; }
+      .billing-box { background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; }
+      .billing-box h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin: 0 0 10px 0; font-weight: 700; }
+      .items-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+      .items-table th { background: #1f2937; color: white; padding: 12px; text-align: ${isRTL ? 'right' : 'left'}; font-size: 14px; }
       .items-table td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
-      .items-table tr:nth-child(even) { background: #fdf2f8; }
+      .items-table tr:nth-child(even) { background: #f9fafb; }
       .totals-section { display: flex; justify-content: flex-end; }
       .totals-box { width: 300px; }
       .total-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
-      .total-row.final { border-top: 2px solid #9d174d; border-bottom: none; margin-top: 10px; color: #9d174d; }
+      .total-row.final { border-top: 2px solid #111827; border-bottom: none; margin-top: 10px; color: #111827; }
       .footer { margin-top: 60px; text-align: center; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
       @media print {
         body { padding: 0; }
@@ -66,8 +69,14 @@ const PrintTemplates = ({ data, onClose }) => {
     <div ref={componentRef} className="invoice-container bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
       <div className="header">
         <div className="store-info">
-          <h1>{storeName}</h1>
-          <p>{t('app.subtitle')}</p>
+          {store.settings?.logo ? (
+            <img src={store.settings.logo} alt={storeName} style={{ height: '80px', objectFit: 'contain' }} />
+          ) : (
+            <>
+              <h1>{storeName}</h1>
+              <p>{t('app.subtitle')}</p>
+            </>
+          )}
           <p>{storeAddress}</p>
           <p>{storePhone}</p>
         </div>
@@ -151,7 +160,11 @@ const PrintTemplates = ({ data, onClose }) => {
   const ThermalReceiptTemplate = ({ sale }) => (
     <div ref={componentRef} className="w-80 bg-white text-gray-900 p-4 font-mono select-none" style={{ width: '80mm' }}>
       <div className="text-center mb-4 border-b-2 border-dashed border-gray-300 pb-4">
-        <h1 className="text-xl font-bold uppercase">{storeName}</h1>
+        {store.settings?.logo ? (
+          <img src={store.settings.logo} alt={storeName} style={{ height: '50px', marginBottom: '10px', objectFit: 'contain' }} />
+        ) : (
+          <h1 className="text-xl font-bold uppercase">{storeName}</h1>
+        )}
         <p className="text-xs">{storeAddress}</p>
         <p className="text-xs">{storePhone}</p>
         <div className="mt-2 text-lg font-black tracking-widest border-2 border-black inline-block px-2">
@@ -218,7 +231,11 @@ const PrintTemplates = ({ data, onClose }) => {
     <div ref={componentRef} className="invoice-container bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
       <div className="header" style={{ borderBottomColor: '#ca8a04' }}>
         <div className="store-info">
-          <h1 style={{ color: '#ca8a04' }}>{storeName}</h1>
+          {store.settings?.logo ? (
+            <img src={store.settings.logo} alt={storeName} style={{ height: '70px', objectFit: 'contain' }} />
+          ) : (
+            <h1 style={{ color: '#ca8a04' }}>{storeName}</h1>
+          )}
           <p>{t('repairs.title')}</p>
           <p>{storeAddress}</p>
           <p>{storePhone}</p>
@@ -279,7 +296,11 @@ const PrintTemplates = ({ data, onClose }) => {
     <div ref={componentRef} className="invoice-container bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
       <div className="header" style={{ borderBottomColor: '#059669' }}>
         <div className="store-info">
-          <h1 style={{ color: '#059669' }}>{storeName}</h1>
+          {store.settings?.logo ? (
+            <img src={store.settings.logo} alt={storeName} style={{ height: '70px', objectFit: 'contain' }} />
+          ) : (
+            <h1 style={{ color: '#059669' }}>{storeName}</h1>
+          )}
           <p>{t('print.paymentVoucher')}</p>
           <p>{storeAddress}</p>
         </div>
@@ -336,27 +357,27 @@ const PrintTemplates = ({ data, onClose }) => {
 
   // Product Card Template
   const ProductCardTemplate = ({ product, type }) => (
-    <div ref={componentRef} className="p-6 bg-white border-2 border-rose-100 rounded-3xl shadow-xl overflow-hidden relative" style={{ width: '80mm', height: '110mm' }}>
-      <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-full -z-0 opacity-50"></div>
+    <div ref={componentRef} className="p-6 bg-white border-2 border-gray-100 rounded-3xl shadow-xl overflow-hidden relative" style={{ width: '80mm', height: '110mm' }}>
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full -z-0 opacity-50"></div>
       
       <div className="relative z-10">
         <div className="text-center mb-6">
-          <div className="text-5xl mb-4 bg-rose-100 w-20 h-20 flex items-center justify-center rounded-2xl mx-auto">
+          <div className="text-5xl mb-4 bg-gray-100 w-20 h-20 flex items-center justify-center rounded-2xl mx-auto">
             {type === 'screen' ? '📱' : type === 'phone' ? '📲' : type === 'sticker' ? '🎨' : '🔌'}
           </div>
-          <h1 className="text-2xl font-black text-rose-900 leading-tight mb-1">{product.name || product.model}</h1>
-          <p className="text-sm font-bold text-rose-400 uppercase tracking-widest">
+          <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{product.name || product.model}</h1>
+          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
             {type === 'screen' ? t('inventory.screen') : 
              type === 'phone' ? t('inventory.phone') : 
              type === 'sticker' ? t('inventory.sticker') : t('inventory.accessory')}
           </p>
         </div>
 
-        <div className="bg-rose-900 rounded-2xl p-6 text-center text-white mb-6 shadow-lg shadow-rose-200">
-          <p className="text-xs uppercase font-bold text-rose-300 mb-1">{t('sales.price')}</p>
+        <div className="bg-gray-900 rounded-2xl p-6 text-center text-white mb-6 shadow-lg shadow-gray-200">
+          <p className="text-xs uppercase font-bold text-gray-300 mb-1">{t('sales.price')}</p>
           <div className="flex items-center justify-center gap-1">
             <span className="text-4xl font-black">{product.price.toFixed(2)}</span>
-            <span className="text-sm font-bold text-rose-300">{t('dashboard.currency')}</span>
+            <span className="text-sm font-bold text-gray-300">{t('dashboard.currency')}</span>
           </div>
         </div>
 
@@ -367,7 +388,7 @@ const PrintTemplates = ({ data, onClose }) => {
           </div>
           <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl text-center">
             <p className="text-[10px] uppercase font-bold text-gray-400">STORE</p>
-            <p className="text-[10px] font-black text-rose-800 truncate">{storeName}</p>
+            <p className="text-[10px] font-black text-gray-800 truncate">{storeName}</p>
           </div>
         </div>
       </div>
@@ -417,7 +438,11 @@ const PrintTemplates = ({ data, onClose }) => {
       <div ref={componentRef} className="invoice-container bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
         <div className="header" style={{ borderBottomColor: '#1e40af' }}>
           <div className="store-info">
-            <h1 style={{ color: '#1e40af' }}>{storeName}</h1>
+            {store.settings?.logo ? (
+              <img src={store.settings.logo} alt={storeName} style={{ height: '70px', objectFit: 'contain' }} />
+            ) : (
+              <h1 style={{ color: '#1e40af' }}>{storeName}</h1>
+            )}
             <p>{t('reports.dailyReport')}</p>
             <p>{storeAddress} | {storePhone}</p>
           </div>
@@ -434,15 +459,15 @@ const PrintTemplates = ({ data, onClose }) => {
             <p className="text-[10px] text-emerald-500 font-bold mt-1 uppercase">{todaySales.length} {t('nav.sales')}</p>
           </div>
 
-          <div className="bg-rose-50 border-b-4 border-rose-500 p-6 rounded-xl shadow-sm text-center">
-            <p className="text-rose-800 text-xs font-bold uppercase mb-1">{t('reports.expenses')}</p>
-            <p className="text-3xl font-black text-rose-600">{totalExpenses.toFixed(2)}</p>
-            <p className="text-[10px] text-rose-500 font-bold mt-1 uppercase">{todayExpenses.length} {t('nav.expenses')}</p>
+          <div className="bg-gray-50 border-b-4 border-gray-500 p-6 rounded-xl shadow-sm text-center">
+            <p className="text-gray-800 text-xs font-bold uppercase mb-1">{t('reports.expenses')}</p>
+            <p className="text-3xl font-black text-gray-600">{totalExpenses.toFixed(2)}</p>
+            <p className="text-[10px] text-gray-500 font-bold mt-1 uppercase">{todayExpenses.length} {t('nav.expenses')}</p>
           </div>
 
           <div className="bg-blue-50 border-b-4 border-blue-500 p-6 rounded-xl shadow-sm text-center">
             <p className="text-blue-800 text-xs font-bold uppercase mb-1 text-nowrap">{t('reports.netProfit')}</p>
-            <p className={`text-3xl font-black ${netProfit >= 0 ? 'text-blue-600' : 'text-rose-600'}`}>{netProfit.toFixed(2)}</p>
+            <p className={`text-3xl font-black ${netProfit >= 0 ? 'text-blue-600' : 'text-gray-600'}`}>{netProfit.toFixed(2)}</p>
             <p className="text-[10px] text-blue-500 font-bold mt-1 uppercase">{t('dashboard.currency')}</p>
           </div>
         </div>
@@ -463,7 +488,7 @@ const PrintTemplates = ({ data, onClose }) => {
               </thead>
               <tbody>
                 {todaySales.map(sale => (
-                  <tr key={sale.id}>
+                  <tr key={sale._id || sale.id}>
                     <td>{new Date(sale.date).toLocaleTimeString(language)}</td>
                     <td className="font-bold">{sale.items ? `${sale.items[0].item}${sale.items.length > 1 ? '...' : ''}` : sale.item}</td>
                     <td className="text-center">{sale.items ? sale.items.reduce((s, i) => s + i.quantity, 0) : sale.quantity}</td>
@@ -513,7 +538,7 @@ const PrintTemplates = ({ data, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-xl w-full max-w-6xl shadow-2xl">
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold text-rose-800">🖨️ {t('print.title')}</h2>
+          <h2 className="text-2xl font-bold text-indigo-800">🖨️ {t('print.title')}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X className="w-6 h-6" />
           </button>
@@ -528,14 +553,14 @@ const PrintTemplates = ({ data, onClose }) => {
                 <select
                   value={selectedSale?.id || ''}
                   onChange={(e) => {
-                    const sale = data.sales.find(s => s.id.toString() === e.target.value);
+                    const sale = data.sales.find(s => (s._id || s.id)?.toString() === e.target.value);
                     setSelectedSale(sale);
                   }}
                   className="w-full border p-2 rounded"
                 >
                   <option value="">{t('print.selectSale')}</option>
                   {data.sales.map(sale => (
-                    <option key={sale.id} value={sale.id}>
+                    <option key={sale._id || sale.id} value={sale.id}>
                       #{sale.id} - {sale.customer} ({sale.total.toFixed(2)} {t('dashboard.currency')})
                     </option>
                   ))}
@@ -549,14 +574,14 @@ const PrintTemplates = ({ data, onClose }) => {
                 <select
                   value={selectedRepair?.id || ''}
                   onChange={(e) => {
-                    const repair = (data.repairs || []).find(r => r.id.toString() === e.target.value);
+                    const repair = (data.repairs || []).find(r => (r._id || r.id)?.toString() === e.target.value);
                     setSelectedRepair(repair);
                   }}
                   className="w-full border p-2 rounded"
                 >
                   <option value="">{t('print.selectRepair')}</option>
                   {(data.repairs || []).map(repair => (
-                    <option key={repair.id} value={repair.id}>
+                    <option key={repair._id || repair.id} value={repair.id}>
                       #{repair.id} - {repair.device} ({repair.customerName})
                     </option>
                   ))}
@@ -572,19 +597,19 @@ const PrintTemplates = ({ data, onClose }) => {
                   onChange={(e) => {
                     const [type, id] = e.target.value.split('-');
                     let product;
-                    if (type === 'screen') product = data.screens.find(s => s.id.toString() === id);
-                    else if (type === 'phone') product = data.phones?.find(p => p.id.toString() === id);
-                    else if (type === 'sticker') product = data.stickers?.find(s => s.id.toString() === id);
-                    else product = data.accessories.find(a => a.id.toString() === id);
+                    if (type === 'screen') product = data.screens.find(s => (s._id || s.id)?.toString() === id);
+                    else if (type === 'phone') product = data.phones?.find(p => (p._id || p.id)?.toString() === id);
+                    else if (type === 'sticker') product = data.stickers?.find(s => (s._id || s.id)?.toString() === id);
+                    else product = data.accessories.find(a => (a._id || a.id)?.toString() === id);
                     if (product) setSelectedProduct({ data: product, type });
                   }}
                   className="w-full border p-2 rounded"
                 >
                   <option value="">{t('print.selectProduct')}</option>
-                  {data.screens.map(s => <option key={s.id} value={`screen-${s.id}`}>{s.model} ({t('inventory.screen')})</option>)}
-                  {data.phones?.map(p => <option key={p.id} value={`phone-${p.id}`}>{p.name || p.model} ({t('inventory.phone')})</option>)}
-                  {data.stickers?.map(s => <option key={s.id} value={`sticker-${s.id}`}>{s.name} ({t('inventory.sticker')})</option>)}
-                  {data.accessories.map(a => <option key={a.id} value={`accessory-${a.id}`}>{a.name} ({t('inventory.accessory')})</option>)}
+                  {data.screens.map(s => <option key={s._id || s.id} value={`screen-${s.id}`}>{s.model} ({t('inventory.screen')})</option>)}
+                  {data.phones?.map(p => <option key={p._id || p.id} value={`phone-${p.id}`}>{p.name || p.model} ({t('inventory.phone')})</option>)}
+                  {data.stickers?.map(s => <option key={s._id || s.id} value={`sticker-${s.id}`}>{s.name} ({t('inventory.sticker')})</option>)}
+                  {data.accessories.map(a => <option key={a._id || a.id} value={`accessory-${a.id}`}>{a.name} ({t('inventory.accessory')})</option>)}
                 </select>
               </div>
             )}
@@ -593,7 +618,7 @@ const PrintTemplates = ({ data, onClose }) => {
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={handlePrint}
-                  className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded flex items-center gap-2"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors"
                 >
                   <Printer className="w-4 h-4" />
                   {t('common.print')}
@@ -614,7 +639,7 @@ const PrintTemplates = ({ data, onClose }) => {
             <div className="space-y-2">
               <button
                 onClick={() => setTemplateType('sale-a4')}
-                className={`w-full text-right p-3 rounded ${templateType === 'sale-a4' ? 'bg-rose-500 text-white' : 'hover:bg-gray-100'}`}
+                className={`w-full text-right p-3 rounded transition-all ${templateType === 'sale-a4' ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-gray-100'}`}
               >
                 {t('print.saleA4')}
               </button>

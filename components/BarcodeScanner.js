@@ -89,7 +89,7 @@ const BarcodeScanner = ({ onClose, data }) => {
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 flex justify-between items-center">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <Camera className="w-6 h-6" />
-            {t('barcode.title')}
+            {t('barcode.scannerTitle')}
           </h3>
           <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition">
             <X className="w-5 h-5" />

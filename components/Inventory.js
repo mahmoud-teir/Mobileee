@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Search as SearchIcon, Barcode, Tag, Settings } from 'lucide-react';
+import { Plus, Trash2, Search as SearchIcon, Barcode, Tag, Settings, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 import BarcodeGenerator from './BarcodeGenerator';
@@ -345,7 +345,8 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-lg overflow-x-auto border border-gray-100">
+      {/* Table View (Desktop Only) */}
+      <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-x-auto border border-gray-100">
         <table className="w-full min-w-[600px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
@@ -431,6 +432,78 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Card View (Mobile Only) */}
+      <div className="md:hidden space-y-4 pb-4">
+        {filteredItems.length > 0 ? (
+          filteredItems.map(item => (
+            <div key={item._id || item.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h4 className="font-bold text-gray-900 text-lg">{item.model || item.name}</h4>
+                  {item.description && (
+                    <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  {item.quantity === 0 ? (
+                    <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded-full text-[10px] font-bold border border-red-100">{t('inventory.outOfStock')}</span>
+                  ) : (
+                    <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-[10px] font-bold border border-green-100">{t('inventory.available')}</span>
+                  )}
+                  <span className="text-xs text-gray-400 font-mono">ID: {(item._id || item.id || '').substring(0, 8)}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">{t('inventory.quantity')}</span>
+                  <span className="font-black text-gray-800 text-lg">{item.quantity}</span>
+                </div>
+                <div className="flex flex-col text-left rtl:text-right">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">{t('inventory.cost')}</span>
+                  <span className="font-black text-rose-600 text-lg">{(item.cost || 0).toFixed(2)} {t('dashboard.currency')}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowBarcode({
+                      ...item,
+                      name: item.model || item.name,
+                      type: ['screens', 'phones', 'stickers', 'accessories'].includes(view) ? (view === 'screens' ? 'screen' : view === 'phones' ? 'phone' : view === 'stickers' ? 'sticker' : 'accessory') : view
+                    })}
+                    className="p-2.5 bg-purple-50 text-purple-600 rounded-xl active:scale-95 transition-transform"
+                  >
+                    <Barcode className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleEditItem(item)}
+                    className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-95 transition-transform"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    const type = ['screens', 'phones', 'stickers', 'accessories'].includes(view) ? (view === 'screens' ? 'screen' : view === 'phones' ? 'phone' : view === 'stickers' ? 'sticker' : 'accessory') : 'dynamic';
+                    handleDeleteItem(item, item.model || item.name, type);
+                  }}
+                  className="flex items-center gap-2 p-2.5 bg-red-50 text-red-600 rounded-xl active:scale-95 transition-transform px-4 font-bold text-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {t('inventory.delete')}
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+            {searchTerm ? t('inventory.noResults').replace('{term}', searchTerm) : t('inventory.noItems')}
+          </div>
+        )}
       </div>
 
       <ConfirmationModal

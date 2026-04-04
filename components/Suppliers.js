@@ -170,7 +170,8 @@ const Suppliers = ({ data, saveData }) => {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
+      {/* Table View (Desktop Only) */}
+      <div className="hidden md:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <table className="w-full min-w-[600px]">
           <thead className="bg-gray-100 uppercase text-xs font-bold text-gray-600">
             <tr>
@@ -209,6 +210,63 @@ const Suppliers = ({ data, saveData }) => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Card View (Mobile Only) */}
+      <div className="md:hidden space-y-4 pb-4">
+        {filteredSuppliers.length > 0 ? (
+          filteredSuppliers.map(supplier => (
+            <div key={supplier._id || supplier.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-bold text-gray-900 text-lg">{supplier.name}</h4>
+                  <p className="text-sm text-gray-500">{supplier.address || t('common.none')}</p>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-xs text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-full">
+                    {t('suppliers.supplier')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">{t('suppliers.phone')}</span>
+                  <a href={`tel:${supplier.phone}`} className="font-mono text-gray-800 font-bold">{supplier.phone}</a>
+                </div>
+                <div className="flex flex-col text-left rtl:text-right">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">{t('suppliers.email')}</span>
+                  <span className="text-xs text-gray-600 truncate">{supplier.email || '-'}</span>
+                </div>
+              </div>
+
+              {supplier.notes && (
+                <div className="bg-amber-50 p-2 rounded text-xs text-amber-800 italic">
+                  {supplier.notes}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  onClick={() => { setFormData(supplier); setEditingSupplierId(supplier._id || supplier.id); setShowAdd(true); }}
+                  className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-95 transition-transform"
+                >
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => handleDeleteSupplier(supplier)}
+                  className="p-2.5 bg-red-50 text-red-600 rounded-xl active:scale-95 transition-transform"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+            {t('suppliers.noSuppliers')}
+          </div>
+        )}
       </div>
 
       <ConfirmationModal

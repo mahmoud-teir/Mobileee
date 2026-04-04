@@ -222,9 +222,9 @@ const Returns = ({ data, saveData }) => {
 
       {/* New Return Form */}
       {showAdd && (
-        <div className={`bg-white p-6 rounded-xl shadow-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+        <div className={`bg-white p-6 rounded-xl shadow-lg border border-orange-100 ${isRTL ? 'text-right' : 'text-left'}`}>
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold flex items-center gap-2">
+            <h3 className="text-xl font-bold flex items-center gap-2 text-orange-800">
               <RotateCcw className="text-orange-500" />
               {t('returns.addTitle')}
             </h3>
@@ -233,7 +233,7 @@ const Returns = ({ data, saveData }) => {
               setSelectedSale(null);
               setSelectedItems([]);
               setError('');
-            }} className="text-gray-500 hover:text-gray-700">
+            }} className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition">
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -250,33 +250,33 @@ const Returns = ({ data, saveData }) => {
                     type="text"
                     placeholder={t('returns.searchSalePlaceholder')}
                     onChange={(e) => setFormData({ ...formData, saleId: e.target.value })}
-                    className={`w-full border p-3 rounded-lg ${isRTL ? 'pr-3 pl-10' : 'pl-3 pr-10'}`}
+                    className={`w-full border p-3 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none ${isRTL ? 'pr-3 pl-10' : 'pl-3 pr-10'}`}
                   />
                   <SearchIcon className={`w-5 h-5 text-gray-400 absolute top-3.5 ${isRTL ? 'left-3' : 'right-3'}`} />
                 </div>
 
                 {formData.saleId && (
-                  <div className="mt-2 border rounded-lg max-h-60 overflow-y-auto">
+                  <div className="mt-2 border rounded-xl overflow-hidden shadow-sm max-h-60 overflow-y-auto">
                     {searchSales(formData.saleId).map(sale => (
                       <div
                         key={sale._id || sale.id}
                         onClick={() => selectSale(sale)}
-                        className="p-3 hover:bg-orange-50 cursor-pointer border-b last:border-b-0"
+                        className="p-3 hover:bg-orange-50 cursor-pointer border-b last:border-b-0 transition"
                       >
                         <div className="flex justify-between">
-                          <span className="font-medium">{t('nav.sales')} #{sale._id || sale.id}</span>
-                          <span className="text-orange-600 font-bold">{sale.total?.toFixed(2)} {t('dashboard.currency')}</span>
+                          <span className="font-bold text-gray-800">{t('nav.sales')} #{sale._id || sale.id}</span>
+                          <span className="text-orange-600 font-black">{sale.total?.toFixed(2)} {t('dashboard.currency')}</span>
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-600">
                           {sale.customer || t('common.unknown')} - {new Date(sale.date).toLocaleDateString(language)}
                         </div>
-                        <div className="text-sm text-gray-400">
+                        <div className="text-xs text-gray-400 mt-1">
                           {sale.items?.map(i => i.item).join(', ')}
                         </div>
                       </div>
                     ))}
                     {searchSales(formData.saleId).length === 0 && (
-                      <div className="p-4 text-center text-gray-500">
+                      <div className="p-4 text-center text-gray-400 bg-gray-50">
                         {t('returns.noSalesFound')}
                       </div>
                     )}
@@ -286,19 +286,19 @@ const Returns = ({ data, saveData }) => {
             ) : (
               <>
                 {/* Selected Sale */}
-                <div className="bg-orange-50 p-4 rounded-lg">
+                <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-orange-800">{t('returns.saleSelected')} #{selectedSale._id || selectedSale.id}</h4>
-                      <p className="text-sm text-gray-600">{selectedSale.customer || t('common.unknown')}</p>
-                      <p className="text-sm text-gray-500">{new Date(selectedSale.date).toLocaleDateString(language)}</p>
+                      <h4 className="font-bold text-orange-800 text-lg uppercase tracking-tight">{t('returns.saleSelected')} #{selectedSale._id || selectedSale.id}</h4>
+                      <p className="font-medium text-gray-700">{selectedSale.customer || t('common.unknown')}</p>
+                      <p className="text-xs text-gray-500 mt-1">{new Date(selectedSale.date).toLocaleDateString(language)}</p>
                     </div>
                     <button
                       onClick={() => {
                         setSelectedSale(null);
                         setSelectedItems([]);
                       }}
-                      className="text-orange-600 hover:text-orange-800"
+                      className="px-3 py-1 bg-white text-orange-600 border border-orange-200 rounded-lg text-sm font-bold shadow-sm hover:bg-orange-100 transition"
                     >
                       {t('common.edit')}
                     </button>
@@ -307,42 +307,43 @@ const Returns = ({ data, saveData }) => {
 
                 {/* Select Items for Return */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     {t('returns.selectItems')}
                   </label>
-                  <div className="space-y-2">
+                  <div className="grid gap-3">
                     {selectedItems.map((item, index) => (
                       <div
                         key={index}
-                        className={`p-3 border rounded-lg ${item.selected ? 'border-orange-400 bg-orange-50' : 'border-gray-200'}`}
+                        className={`p-4 border-2 rounded-xl transition-all ${item.selected ? 'border-orange-400 bg-orange-50/50 shadow-sm' : 'border-gray-100 bg-white'}`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                           <input
                             type="checkbox"
                             checked={item.selected}
                             onChange={() => toggleItemSelection(index)}
-                            className="w-5 h-5 text-orange-600 rounded"
+                            className="w-6 h-6 accent-orange-600 cursor-pointer"
                           />
                           <div className="flex-1">
-                            <span className="font-medium">{item.item}</span>
-                            <span className={`text-sm text-gray-500 ${isRTL ? 'mr-2' : 'ml-2'}`}>
-                              ({item.price?.toFixed(2)} {t('dashboard.currency')})
-                            </span>
+                            <span className="font-bold text-gray-900">{item.item}</span>
+                            <div className="text-sm font-black text-orange-600">
+                              {item.price?.toFixed(2)} {t('dashboard.currency')}
+                            </div>
                           </div>
                           {item.selected && (
-                            <div className="flex items-center gap-2">
-                              <label className="text-sm text-gray-600">{t('inventory.quantity')}:</label>
-                              <input
-                                type="number"
-                                min="1"
-                                max={selectedSale?.items?.[index]?.quantity || 1}
-                                value={item.returnQty}
-                                onChange={(e) => updateReturnQty(index, e.target.value)}
-                                className="w-20 border p-1 rounded text-center"
-                              />
-                              <span className="text-sm text-gray-500">
-                                / {selectedSale?.items?.[index]?.quantity || 1}
-                              </span>
+                            <div className="flex flex-col items-end gap-1">
+                              <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-lg border shadow-inner">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={selectedSale?.items?.[index]?.quantity || 1}
+                                  value={item.returnQty}
+                                  onChange={(e) => updateReturnQty(index, e.target.value)}
+                                  className="w-12 bg-transparent text-center font-bold outline-none"
+                                />
+                                <span className="text-xs text-gray-400 border-l pl-2">
+                                  / {selectedSale?.items?.[index]?.quantity || 1}
+                                </span>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -351,109 +352,98 @@ const Returns = ({ data, saveData }) => {
                   </div>
                 </div>
 
-                {/* Return Reason */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('returns.reason')}
-                  </label>
-                  <select
-                    value={formData.reason}
-                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                    className="w-full border p-3 rounded-lg"
-                  >
-                    <option value="">{t('returns.selectReason')}</option>
-                    {returnReasons.map(reason => (
-                      <option key={reason.id} value={reason.label}>{reason.label}</option>
-                    ))}
-                  </select>
-                </div>
+                {/* Return Reason & Refund Type */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      {t('returns.reason')}
+                    </label>
+                    <select
+                      value={formData.reason}
+                      onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                      className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none bg-white shadow-sm"
+                    >
+                      <option value="">{t('returns.selectReason')}</option>
+                      {returnReasons.map(reason => (
+                        <option key={reason.id} value={reason.label}>{reason.label}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Refund Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('returns.refundType')}
-                  </label>
-                  <div className="flex gap-4 flex-wrap">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        value="full"
-                        checked={formData.refundType === 'full'}
-                        onChange={(e) => setFormData({ ...formData, refundType: e.target.value })}
-                      />
-                      {t('returns.refundFull')}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      {t('returns.refundType')}
                     </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        value="partial"
-                        checked={formData.refundType === 'partial'}
-                        onChange={(e) => setFormData({ ...formData, refundType: e.target.value })}
-                      />
-                      {t('returns.refundPartial')}
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        value="exchange"
-                        checked={formData.refundType === 'exchange'}
-                        onChange={(e) => setFormData({ ...formData, refundType: e.target.value })}
-                      />
-                      {t('returns.exchange')}
-                    </label>
+                    <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                      {['full', 'partial', 'exchange'].map(type => (
+                        <button
+                          key={type}
+                          onClick={() => setFormData({ ...formData, refundType: type })}
+                          className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${
+                            formData.refundType === type ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                          }`}
+                        >
+                          {type === 'full' ? t('returns.refundFull') :
+                           type === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {/* Partial Refund Amount */}
                 {formData.refundType === 'partial' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       {t('returns.refundAmount')}
                     </label>
-                    <input
-                      type="number"
-                      value={formData.refundAmount}
-                      onChange={(e) => setFormData({ ...formData, refundAmount: e.target.value })}
-                      placeholder={t('common.amount') || 'Amount'}
-                      className="w-full border p-3 rounded-lg"
-                      max={calculateRefund()}
-                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={formData.refundAmount}
+                        onChange={(e) => setFormData({ ...formData, refundAmount: e.target.value })}
+                        placeholder="0.00"
+                        className="w-full border p-4 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-black text-orange-600 text-lg"
+                        max={calculateRefund()}
+                      />
+                      <span className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} text-gray-400 font-bold`}>{t('dashboard.currency')}</span>
+                    </div>
                   </div>
                 )}
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     {t('returns.notes')}
                   </label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder={t('returns.notesPlaceholder') || 'Notes'}
-                    className="w-full border p-3 rounded-lg"
+                    className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none shadow-sm"
                     rows="2"
                   />
                 </div>
 
                 {/* Refund Summary */}
-                <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200">
-                  <h4 className="font-bold text-orange-800 mb-2">{t('returns.summary')}</h4>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>{t('returns.itemCount')}:</span>
-                      <span className="font-medium">
+                <div className="bg-gradient-to-br from-orange-500 to-amber-500 p-5 rounded-2xl text-white shadow-lg shadow-orange-200">
+                  <h4 className="font-bold border-b border-white/20 pb-2 mb-3 tracking-widest uppercase text-xs opacity-90">{t('returns.summary')}</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-80 text-sm">{t('returns.itemCount')}</span>
+                      <span className="font-black">
                         {selectedItems.filter(i => i.selected).length}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>{t('returns.totalQty')}:</span>
-                      <span className="font-medium">
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-80 text-sm">{t('returns.totalQty')}</span>
+                      <span className="font-black">
                         {selectedItems.filter(i => i.selected).reduce((s, i) => s + i.returnQty, 0)}
                       </span>
                     </div>
-                    <div className="flex justify-between text-lg font-bold mt-2 pt-2 border-t border-orange-200">
-                      <span>{t('returns.refundAmount')}:</span>
-                      <span className="text-orange-600">
+                    <div className="flex justify-between items-center pt-3 border-t border-white/20 mt-1">
+                      <span className="font-bold text-lg">{t('returns.refundAmount')}</span>
+                      <span className="text-3xl font-black">
                         {formData.refundType === 'partial'
                           ? (parseFloat(formData.refundAmount) || 0).toFixed(2)
                           : calculateRefund().toFixed(2)} {t('dashboard.currency')}
@@ -463,8 +453,8 @@ const Returns = ({ data, saveData }) => {
                 </div>
 
                 {error && (
-                  <div className="p-3 bg-red-50 text-red-600 rounded-lg flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5" />
+                  <div className="p-4 bg-red-50 text-red-700 rounded-xl flex items-center gap-3 border border-red-100 font-bold">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     {error}
                   </div>
                 )}
@@ -473,7 +463,7 @@ const Returns = ({ data, saveData }) => {
                 <div className="flex gap-3">
                   <button
                     onClick={addReturn}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg font-bold hover:from-orange-600 hover:to-amber-600"
+                    className="flex-[2] bg-gray-900 text-white py-4 rounded-xl font-black text-lg hover:bg-black transition shadow-xl active:scale-95"
                   >
                     {t('returns.confirmReturn')}
                   </button>
@@ -484,7 +474,7 @@ const Returns = ({ data, saveData }) => {
                       setSelectedItems([]);
                       setError('');
                     }}
-                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300"
+                    className="flex-1 bg-gray-100 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-200 transition active:scale-95"
                   >
                     {t('common.cancel')}
                   </button>
@@ -496,23 +486,23 @@ const Returns = ({ data, saveData }) => {
       )}
 
       {/* Search Bar */}
-      <div className="bg-white p-4 rounded-xl shadow-lg">
+      <div className="bg-white p-2 rounded-2xl shadow-lg border border-gray-100">
         <div className="relative">
           <input
             type="text"
             placeholder={t('returns.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full border p-3 rounded-lg ${isRTL ? 'pr-3 pl-10' : 'pl-3 pr-10'}`}
+            className={`w-full border-none p-4 rounded-xl bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none text-lg ${isRTL ? 'pr-4 pl-12' : 'pl-4 pr-12'}`}
           />
-          <SearchIcon className={`w-5 h-5 text-gray-400 absolute top-3.5 ${isRTL ? 'left-3' : 'right-3'}`} />
+          <SearchIcon className={`w-6 h-6 text-gray-400 absolute top-4 ${isRTL ? 'left-4' : 'right-4'}`} />
         </div>
       </div>
 
-      {/* Returns Table */}
-      <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
-        <table className="w-full min-w-[800px]">
-          <thead className="bg-gray-100">
+      {/* Table View (Desktop Only) */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b uppercase text-xs font-bold text-gray-600">
             <tr>
               <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.date')}</th>
               <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('nav.sales')} #</th>
@@ -521,14 +511,85 @@ const Returns = ({ data, saveData }) => {
               <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('returns.reason')}</th>
               <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('returns.refundType')}</th>
               <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.total')}</th>
-              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.actions')}</th>
+              <th className={`p-4 ${isRTL ? 'text-center' : 'text-center'}`}>{t('common.actions')}</th>
             </tr>
           </thead>
-          <tbody>
-            {filteredReturns.length > 0 ? (
-              filteredReturns.map(ret => (
-                <tr key={ret._id || ret.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 text-sm">
+          <tbody className="divide-y divide-gray-100">
+            {filteredReturns.map(ret => (
+              <tr key={ret._id || ret.id} className="hover:bg-gray-50 transition-colors">
+                <td className="p-4 text-xs text-gray-400 font-mono">
+                  {new Date(ret.date).toLocaleDateString(language, {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </td>
+                <td className="p-4 font-bold text-indigo-600">#{ret.saleId}</td>
+                <td className="p-4 font-bold text-gray-900">{ret.customerName}</td>
+                <td className="p-4">
+                  <div className="text-xs space-y-0.5">
+                    {ret.items?.map((item, i) => (
+                      <div key={i} className="text-gray-600">
+                        • {item.item} <span className="font-bold">({item.quantity})</span>
+                      </div>
+                    ))}
+                  </div>
+                </td>
+                <td className="p-4">
+                  <span className="bg-orange-50 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-orange-100">
+                    {ret.reason}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <span className={`px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm ${
+                    ret.refundType === 'full' ? 'bg-green-50 text-green-700 border border-green-100' :
+                    ret.refundType === 'partial' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                    'bg-blue-50 text-blue-700 border border-blue-100'
+                  }`}>
+                    {ret.refundType === 'full' ? t('returns.refundFull') :
+                     ret.refundType === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <div className="text-lg font-black text-orange-600">
+                    {ret.refundAmount?.toFixed(2)} {t('dashboard.currency')}
+                  </div>
+                </td>
+                <td className="p-4">
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => handleDeleteReturn(ret)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-full transition active:scale-90"
+                      title={t('common.delete')}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {filteredReturns.length === 0 && (
+              <tr>
+                <td colSpan="8" className="p-20 text-center text-gray-300">
+                  <RotateCcw className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                  <p className="text-xl font-medium">{t('returns.noReturnsFound') || 'No returns found'}</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Card View (Mobile Only) */}
+      <div className="md:hidden space-y-4 pb-4">
+        {filteredReturns.length > 0 ? (
+          filteredReturns.map(ret => (
+            <div key={ret._id || ret.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs text-gray-400 font-mono">
                     {new Date(ret.date).toLocaleDateString(language, {
                       year: 'numeric',
                       month: '2-digit',
@@ -536,59 +597,54 @@ const Returns = ({ data, saveData }) => {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
-                  </td>
-                  <td className="p-4 font-medium">#{ret.saleId}</td>
-                  <td className="p-4">{ret.customerName}</td>
-                  <td className="p-4">
-                    <div className="text-sm">
-                      {ret.items?.map((item, i) => (
-                        <div key={i}>
-                          {item.item} ({item.quantity})
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-sm">
-                      {ret.reason}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-sm ${
-                      ret.refundType === 'full' ? 'bg-green-100 text-green-700' :
-                      ret.refundType === 'partial' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {ret.refundType === 'full' ? t('returns.refundFull') :
-                       ret.refundType === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
-                    </span>
-                  </td>
-                  <td className="p-4 font-bold text-orange-600">
+                  </p>
+                  <h4 className="font-bold text-gray-900 mt-1">{ret.customerName}</h4>
+                  <p className="text-xs text-indigo-600 font-medium">#{ret.saleId}</p>
+                </div>
+                <div className="text-left rtl:text-right">
+                  <p className="text-orange-600 font-black text-lg">
                     {ret.refundAmount?.toFixed(2)} {t('dashboard.currency')}
-                  </td>
-                  <td className="p-4">
-                    <button
-                      onClick={() => handleDeleteReturn(ret)}
-                      className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-full"
-                      title={t('common.delete')}
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="p-12 text-center text-gray-500">
-                  <div className="flex flex-col items-center">
-                    <RotateCcw className="w-16 h-16 text-gray-300 mb-4" />
-                    <p className="text-xl font-medium">{t('returns.noReturnsFound') || 'No returns found'}</p>
+                  </p>
+                  <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                    ret.refundType === 'full' ? 'bg-green-100 text-green-700' :
+                    ret.refundType === 'partial' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-blue-100 text-blue-700'
+                  }`}>
+                    {ret.refundType === 'full' ? t('returns.refundFull') :
+                     ret.refundType === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-lg space-y-1">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">{t('nav.inventory')}</p>
+                {ret.items?.map((item, i) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span className="text-gray-700 font-medium">{item.item}</span>
+                    <span className="text-gray-500 font-bold">x{item.quantity}</span>
                   </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                <span className="bg-orange-50 text-orange-700 px-2.5 py-1 rounded-full text-xs font-bold border border-orange-100">
+                  {ret.reason}
+                </span>
+                <button
+                  onClick={() => handleDeleteReturn(ret)}
+                  className="p-2.5 bg-red-50 text-red-600 rounded-xl active:scale-95 transition-transform"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+            <RotateCcw className="w-12 h-12 text-gray-200 mx-auto mb-2" />
+            <p>{t('returns.noReturnsFound') || 'No returns found'}</p>
+          </div>
+        )}
       </div>
 
       <ConfirmationModal

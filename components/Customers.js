@@ -164,7 +164,8 @@ const Customers = ({ data, saveData }) => {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
+      {/* Table View (Desktop Only) */}
+      <div className="hidden md:block bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-100 uppercase text-xs font-bold text-gray-600">
             <tr>
@@ -211,6 +212,62 @@ const Customers = ({ data, saveData }) => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Card View (Mobile Only) */}
+      <div className="md:hidden space-y-4 pb-4">
+        {filteredCustomers.length > 0 ? (
+          filteredCustomers.map(customer => (
+            <div key={customer._id || customer.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-bold text-gray-900 text-lg">{customer.name}</h4>
+                  <p className="text-sm text-gray-500">{customer.address || t('common.none')}</p>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full">
+                    {t('customers.customer')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">{t('customers.phone')}</span>
+                  <a href={`tel:${customer.phone}`} className="font-mono text-gray-800 font-bold">{customer.phone}</a>
+                </div>
+                <div className="flex flex-col text-left rtl:text-right">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">{t('customers.totalPurchases')}</span>
+                  <span className="font-black text-indigo-600">{(customer.totalPurchases || 0).toFixed(2)} {t('dashboard.currency')}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-gray-400">
+                  {t('customers.lastPurchase')}: {customer.lastPurchase ? new Date(customer.lastPurchase).toLocaleDateString(language) : '-'}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setFormData(customer); setEditingCustomerId(customer._id || customer.id); setShowAdd(true); }}
+                    className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-95 transition-transform"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCustomer(customer)}
+                    className="p-2.5 bg-red-50 text-red-600 rounded-xl active:scale-95 transition-transform"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+            {t('customers.noCustomers')}
+          </div>
+        )}
       </div>
 
       <ConfirmationModal

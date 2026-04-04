@@ -2,8 +2,10 @@
 import React, { useRef } from 'react';
 import Barcode from 'react-barcode';
 import { Printer, X, Download } from 'lucide-react';
+import { useLanguage } from './LanguageContext';
 
 const BarcodeGenerator = ({ item, onClose }) => {
+  const { t } = useLanguage();
   const printRef = useRef();
 
   // توليد رقم باركود فريد من ID المنتج
@@ -103,7 +105,7 @@ const BarcodeGenerator = ({ item, onClose }) => {
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-rose-500 to-pink-600 text-white p-4 flex justify-between items-center">
-          <h3 className="text-xl font-bold">توليد باركود</h3>
+          <h3 className="text-xl font-bold">{t('barcode.generatorTitle')}</h3>
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/20 rounded-full transition"
@@ -138,13 +140,13 @@ const BarcodeGenerator = ({ item, onClose }) => {
           {/* Info */}
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>رقم الباركود:</strong> {barcodeValue}
+              <strong>{t('barcode.number')}</strong> {barcodeValue}
             </p>
             <p className="text-sm text-blue-800 mt-1">
-              <strong>النوع:</strong> {
-                item.type === 'screen' ? 'شاشة' :
-                item.type === 'phone' ? 'جوال' :
-                item.type === 'sticker' ? 'ملصق' : 'إكسسوار'
+              <strong>{t('barcode.type')}:</strong> {
+                item.type === 'screen' ? t('inventory.screen') :
+                item.type === 'phone' ? t('inventory.phone') :
+                item.type === 'sticker' ? t('inventory.sticker') : t('inventory.accessory')
               }
             </p>
           </div>
@@ -156,14 +158,14 @@ const BarcodeGenerator = ({ item, onClose }) => {
               className="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:from-rose-600 hover:to-pink-700 transition"
             >
               <Printer className="w-5 h-5" />
-              طباعة
+              {t('barcode.print')}
             </button>
             <button
               onClick={handleDownload}
               className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:from-blue-600 hover:to-indigo-700 transition"
             >
               <Download className="w-5 h-5" />
-              تحميل
+              {t('barcode.download')}
             </button>
           </div>
         </div>

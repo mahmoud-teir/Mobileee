@@ -131,7 +131,7 @@ const Settings = () => {
           <section className="space-y-4">
             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
               <FileText className="w-5 h-5 text-rose-500" />
-              {t('settings.basicInfo') || 'Basic Info'}
+              {t('settings.basicInfo')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -144,13 +144,13 @@ const Settings = () => {
                     value={storeData.name}
                     onChange={handleChange}
                     className="w-full pr-10 pl-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition"
-                    placeholder="اسم المحل"
+                    placeholder={t('settings.storeName')}
                     required
                   />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">{t('settings.taxNumber') || 'Tax ID'}</label>
+                <label className="text-sm font-medium text-gray-700">{t('settings.taxNumber')}</label>
                 <div className="relative">
                   <Globe className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
                   <input
@@ -159,7 +159,7 @@ const Settings = () => {
                     value={storeData.settings?.taxNumber || ''}
                     onChange={handleChange}
                     className="w-full pr-10 pl-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition"
-                    placeholder="الرقم الضريبي"
+                    placeholder={t('settings.taxNumber')}
                   />
                 </div>
               </div>
@@ -173,7 +173,7 @@ const Settings = () => {
                     value={storeData.phone || ''}
                     onChange={handleChange}
                     className="w-full pr-10 pl-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition"
-                    placeholder="رقم الهاتف"
+                    placeholder={t('settings.phone')}
                   />
                 </div>
               </div>
@@ -187,7 +187,7 @@ const Settings = () => {
                     value={storeData.address || ''}
                     onChange={handleChange}
                     className="w-full pr-10 pl-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition"
-                    placeholder="عنوان المحل"
+                    placeholder={t('settings.address')}
                   />
                 </div>
               </div>
@@ -198,7 +198,7 @@ const Settings = () => {
           <section className="space-y-4">
             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
               <ImageIcon className="w-5 h-5 text-rose-500" />
-              {t('settings.branding') || 'Branding'}
+              {t('settings.branding')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* اللوجو */}
@@ -219,12 +219,12 @@ const Settings = () => {
                   ) : (
                     <div className="flex flex-col items-center text-gray-400 py-4">
                       <ImageIcon className="w-12 h-12 mb-2" />
-                      <p className="text-xs">{t('settings.uploadHint') || t('settings.imageHint')}</p>
+                      <p className="text-xs">{t('settings.uploadHint')}</p>
                     </div>
                   )}
                   <label className="cursor-pointer bg-white px-4 py-2 rounded-lg border shadow-sm hover:bg-rose-50 hover:text-rose-600 transition flex items-center gap-2">
                     <Upload className="w-4 h-4" />
-                    <span>{t('settings.chooseFile') || 'Choose Image'}</span>
+                    <span>{t('settings.chooseFile')}</span>
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} />
                   </label>
                 </div>
@@ -248,12 +248,12 @@ const Settings = () => {
                   ) : (
                     <div className="flex flex-col items-center text-gray-400 py-4">
                       <Stamp className="w-12 h-12 mb-2" />
-                      <p className="text-xs">{t('settings.uploadHint') || t('settings.imageHint')}</p>
+                      <p className="text-xs">{t('settings.uploadHint')}</p>
                     </div>
                   )}
                   <label className="cursor-pointer bg-white px-4 py-2 rounded-lg border shadow-sm hover:bg-rose-50 hover:text-rose-600 transition flex items-center gap-2">
                     <Upload className="w-4 h-4" />
-                    <span>{t('settings.chooseFile') || 'Choose Image'}</span>
+                    <span>{t('settings.chooseFile')}</span>
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'stamp')} />
                   </label>
                 </div>
@@ -265,7 +265,7 @@ const Settings = () => {
           <section className="space-y-4">
             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
               <FileText className="w-5 h-5 text-rose-500" />
-              {t('settings.invoiceCustomization') || 'Invoice Design'}
+              {t('settings.invoiceCustomization')}
             </h3>
             <div className="space-y-4">
               <div className="space-y-1">
@@ -276,7 +276,7 @@ const Settings = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition"
                   rows="2"
-                  placeholder="نص يظهر في أعلى الفاتورة (مثل كلمات ترحيبية)"
+                  placeholder={t('settings.receiptHeaderHint')}
                 ></textarea>
               </div>
               <div className="space-y-1">
@@ -287,7 +287,7 @@ const Settings = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition"
                   rows="2"
-                  placeholder="نص يظهر في أسفل الفاتورة (مثل شروط الإرجاع أو شكر)"
+                  placeholder={t('settings.receiptFooterHint')}
                 ></textarea>
               </div>
             </div>
@@ -304,7 +304,7 @@ const Settings = () => {
               ) : (
                 <Save className="w-5 h-5" />
               )}
-              {t('settings.saveButton') || 'Save Changes'}
+              {t('settings.saveButton')}
             </button>
           </div>
         </form>

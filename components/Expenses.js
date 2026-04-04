@@ -170,7 +170,8 @@ const Expenses = ({ data, saveData }) => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      {/* Table View (Desktop Only) */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
         <div className="p-4 bg-gray-50 border-b">
           <div className="relative max-w-md">
             <SearchIcon className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} text-gray-400 w-5 h-5`} />
@@ -252,6 +253,60 @@ const Expenses = ({ data, saveData }) => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Card View (Mobile Only) */}
+      <div className="md:hidden space-y-4 pb-4">
+        {filteredExpenses.length > 0 ? (
+          filteredExpenses.map(exp => (
+            <div key={exp._id || exp.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs text-gray-400 font-mono">
+                    {new Date(exp.date).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US')}
+                  </p>
+                  <h4 className="font-bold text-gray-900 mt-1">{exp.description}</h4>
+                  <span className="inline-block mt-1 px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md text-[10px] font-bold border border-amber-100">
+                    {t(`expenses.categories.${exp.category}`) || exp.category}
+                  </span>
+                </div>
+                <div className="text-left rtl:text-right">
+                  <p className="text-amber-600 font-black text-lg">
+                    {exp.amount.toFixed(2)} {t('dashboard.currency')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-50">
+                <button
+                  onClick={() => {
+                    setFormData({ 
+                      description: exp.description, 
+                      amount: String(exp.amount), 
+                      category: exp.category 
+                    });
+                    setEditingExpenseId(exp._id || exp.id);
+                    setShowAdd(true);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-95 transition-transform"
+                >
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => handleDeleteExpense(exp._id || exp.id)}
+                  className="p-2.5 bg-red-50 text-red-600 rounded-xl active:scale-95 transition-transform"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+            {t('expenses.noExpenses')}
+          </div>
+        )}
       </div>
     </div>
   );
