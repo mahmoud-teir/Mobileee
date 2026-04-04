@@ -269,27 +269,29 @@ const Sales = ({ data, saveData, showInvoice }) => {
       const newSale = {
         id: editingSaleId || Date.now(),
         date: new Date().toISOString(),
-        items: cart.map(c => ({ id: c.id, item: c.item, type: c.itemType, quantity: parseInt(c.quantity) || 0, price: parseFloat(c.price) || 0, cost: parseFloat(c.cost) || 0 })),
+        items: cart.map(c => ({ productId: c.id, item: c.item, type: c.itemType, quantity: parseInt(c.quantity) || 0, price: parseFloat(c.price) || 0, cost: parseFloat(c.cost) || 0 })),
         subtotal: rawTotal,
         totalCost: totalCost,
         total: total,
         profit: profit,
         discount: parseFloat(formData.discount) || 0,
         discountType: formData.discountType || 'percentage',
-        paymentMethod: formData.paymentMethod,
-        customer: formData.customer || 'غير معروف'
+        paymentMethod: formData.paymentMethod || 'cash',
+        customerName: formData.customer || 'عميل نقدي'
       };
       
       if (editingSaleId) {
+        const updatedSalesList = (data.sales || []).map(s => (s._id || s.id) === editingSaleId ? newSale : s);
+        
+        // reconcile stock
         const oldSale = (data.sales || []).find(s => (s._id || s.id) === editingSaleId);
         const oldMap = {};
         if (oldSale && oldSale.items && Array.isArray(oldSale.items)) {
           for (const it of oldSale.items) {
-            const key = `${it.itemType}_${it.id}`;
+            const key = `${it.type}_${it.productId}`;
             oldMap[key] = (oldMap[key] || 0) + (it.quantity || 0);
           }
         }
-
         const newMap = {};
         for (const c of cart) {
           const key = `${c.itemType}_${c.id}`;
@@ -297,61 +299,40 @@ const Sales = ({ data, saveData, showInvoice }) => {
         }
 
         const keys = Array.from(new Set([...Object.keys(oldMap), ...Object.keys(newMap)]));
-
         for (const key of keys) {
           const splitIdx = key.indexOf('_');
+          if (splitIdx === -1) continue;
           const type = key.substring(0, splitIdx);
           const id = key.substring(splitIdx + 1);
-          
-          const oldQty = oldMap[key] || 0;
-          const newQty = newMap[key] || 0;
-          const delta = newQty - oldQty;
-
+          const delta = (newMap[key] || 0) - (oldMap[key] || 0);
           if (delta === 0) continue;
 
-          if (type === 'screen') {
-            const updatedScreens = (data.screens || []).map(s => (s._id || s.id) === id ? { ...s, quantity: s.quantity - delta } : s);
-            await saveData('screens', updatedScreens);
-          } else if (type === 'phone') {
-            const updatedPhones = (data.phones || []).map(p => (p._id || p.id) === id ? { ...p, quantity: p.quantity - delta } : p);
-            await saveData('phones', updatedPhones);
-          } else if (type === 'sticker') {
-            const updatedStickers = (data.stickers || []).map(st => (st._id || st.id) === id ? { ...st, quantity: st.quantity - delta } : st);
-            await saveData('stickers', updatedStickers);
-          } else if (type === 'accessory') {
-            const updatedAccessories = (data.accessories || []).map(a => (a._id || a.id) === id ? { ...a, quantity: a.quantity - delta } : a);
-            await saveData('accessories', updatedAccessories);
-          } else {
-            // Dynamic products
-            const updatedProducts = (data.products || []).map(p => (p._id || p.id) === id ? { ...p, quantity: p.quantity - delta } : p);
-            await saveData('products', updatedProducts);
-          }
+          const collection = type === 'screen' ? 'screens' : type === 'phone' ? 'phones' : type === 'sticker' ? 'stickers' : type === 'accessory' ? 'accessories' : 'products';
+          const items = data[collection] || [];
+          const updatedItems = items.map(i => (i._id || i.id) === id ? { ...i, quantity: i.quantity - delta } : i);
+          await saveData(collection, updatedItems);
         }
 
-        const updatedSales = (data.sales || []).map(s => (s._id || s.id) === editingSaleId ? newSale : s);
-        await saveData('sales', updatedSales);
+        const success = await saveData('sales', updatedSalesList);
+        if (!success) {
+          toast.error('فشل في تحديث بيانات الفاتورة');
+          return;
+        }
       } else {
-        const updatedSales = [...(data.sales || []), newSale];
-        await saveData('sales', updatedSales);
+        const updatedSalesList = [...(data.sales || []), newSale];
+        const success = await saveData('sales', updatedSalesList);
+        if (!success) {
+          toast.error('فشل في تسجيل الفاتورة في قاعدة البيانات');
+          return;
+        }
 
+        // Update stock for new sale
         for (const c of cart) {
           const qty = parseInt(c.quantity) || 0;
-          if (c.itemType === 'screen') {
-            const u = (data.screens || []).map(s => (s._id || s.id) === c.id ? { ...s, quantity: s.quantity - qty } : s);
-            await saveData('screens', u);
-          } else if (c.itemType === 'phone') {
-            const u = (data.phones || []).map(p => (p._id || p.id) === c.id ? { ...p, quantity: p.quantity - qty } : p);
-            await saveData('phones', u);
-          } else if (c.itemType === 'sticker') {
-            const u = (data.stickers || []).map(st => (st._id || st.id) === c.id ? { ...st, quantity: st.quantity - qty } : st);
-            await saveData('stickers', u);
-          } else if (c.itemType === 'accessory') {
-            const u = (data.accessories || []).map(a => (a._id || a.id) === c.id ? { ...a, quantity: a.quantity - qty } : a);
-            await saveData('accessories', u);
-          } else {
-            const u = (data.products || []).map(p => (p._id || p.id) === c.id ? { ...p, quantity: p.quantity - qty } : p);
-            await saveData('products', u);
-          }
+          const collection = c.itemType === 'screen' ? 'screens' : c.itemType === 'phone' ? 'phones' : c.itemType === 'sticker' ? 'stickers' : c.itemType === 'accessory' ? 'accessories' : 'products';
+          const items = data[collection] || [];
+          const updatedItems = items.map(i => (i._id || i.id) === c.id ? { ...i, quantity: i.quantity - qty } : i);
+          await saveData(collection, updatedItems);
         }
       }
       
