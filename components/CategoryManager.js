@@ -1,14 +1,31 @@
 'use client';
 import React, { useState } from 'react';
-import { Plus, Trash2, Tag, ShoppingBag, X } from 'lucide-react';
+import { Plus, Trash2, Tag, ShoppingBag, X, Lock } from 'lucide-react';
 
 const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
   const [newCategory, setNewCategory] = useState({ name: '', icon: 'ShoppingBag' });
   const [error, setError] = useState('');
 
+  const hardcodedCategories = [
+    { id: 'screens', name: 'الشاشات', isHardcoded: true },
+    { id: 'phones', name: 'الجوالات', isHardcoded: true },
+    { id: 'stickers', name: 'الملصقات', isHardcoded: true },
+    { id: 'accessories', name: 'الإكسسوارات', isHardcoded: true }
+  ];
+
+  const allCategoriesToDisplay = [
+    ...hardcodedCategories,
+    ...(categories || []).map(c => ({ ...c, id: c._id || c.id, isHardcoded: false }))
+  ];
+
   const handleAddCategory = async () => {
     if (!newCategory.name.trim()) {
       setError('يرجى إدخال اسم القسم');
+      return;
+    }
+
+    if (allCategoriesToDisplay.some(c => c.name === newCategory.name.trim())) {
+      setError('هذا القسم موجود بالفعل');
       return;
     }
 
@@ -45,7 +62,6 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Form */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -74,35 +90,34 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
             </div>
           </div>
 
-          {/* List */}
-          <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400">الأقسام الحالية</h4>
-            {categories.length > 0 ? (
-              categories.map((cat) => (
-                <div key={cat._id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl group hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white dark:bg-gray-600 p-2 rounded-lg shadow-sm">
-                      <ShoppingBag className="w-4 h-4 text-rose-500" />
-                    </div>
-                    <span className="font-medium dark:text-gray-200">{cat.name}</span>
+          <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
+            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400">جميع الأقسام</h4>
+            {allCategoriesToDisplay.map((cat) => (
+              <div key={cat.id} className={`flex justify-between items-center p-3 rounded-xl transition-colors ${cat.isHardcoded ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-gray-50 dark:bg-gray-700/50 group hover:bg-rose-50 dark:hover:bg-rose-900/10'}`}>
+                <div className="flex items-center gap-3">
+                  <div className="bg-white dark:bg-gray-600 p-2 rounded-lg shadow-sm">
+                    {cat.isHardcoded ? <Lock className="w-4 h-4 text-gray-400" /> : <ShoppingBag className="w-4 h-4 text-rose-500" />}
                   </div>
+                  <span className={`font-medium ${cat.isHardcoded ? 'text-gray-500' : 'dark:text-gray-200'}`}>
+                    {cat.name} {cat.isHardcoded && <span className="text-xs font-normal">(أساسي)</span>}
+                  </span>
+                </div>
+                {!cat.isHardcoded && (
                   <button
-                    onClick={() => handleDeleteCategory(cat._id)}
+                    onClick={() => handleDeleteCategory(cat.id)}
                     className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="حذف القسم"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-400 py-4 text-sm">لا يوجد أقسام مخصصة بعد</p>
-            )}
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="p-4 bg-gray-50 dark:bg-gray-700/30 text-center">
-          <p className="text-xs text-gray-500">ملاحظة: لا يمكن حذف قسم إذا كان يحتوي على منتجات في المخزون.</p>
+          <p className="text-xs text-gray-500">ملاحظة: الأقسام الأساسية لا يمكن حذفها أو تعديلها.</p>
         </div>
       </div>
     </div>

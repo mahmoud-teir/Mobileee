@@ -55,24 +55,24 @@ const MobileShopManagement = () => {
 
       const newNotifications = [];
 
-      // تنبيهات المخزون المنخفض
-      data.screens.forEach(screen => {
-        if (screen.quantity < screen.minQuantity) {
-          newNotifications.push({
-            id: `screen-${screen.id}`,
-            type: 'stock',
-            message: `الشاشة ${screen.model} ناقص في المخزون! الكمية الحالية: ${screen.quantity}`,
-            time: new Date().toISOString()
-          });
-        }
-      });
+      // تنبيهات المخزون المنخفض لكل الأصناف
+      const stockItems = [
+        ...(data.screens || []).map(i => ({ ...i, categoryName: 'شاشة' })),
+        ...(data.phones || []).map(i => ({ ...i, categoryName: 'جوال', model: i.model || i.name })),
+        ...(data.accessories || []).map(i => ({ ...i, categoryName: 'إكسسوار' })),
+        ...(data.stickers || []).map(i => ({ ...i, categoryName: 'ملصق' })),
+        ...(data.products || []).map(i => ({ 
+            ...i, 
+            categoryName: (data.categories?.find(c => c._id === (i.categoryId?._id || i.categoryId))?.name || 'منتج')
+        }))
+      ];
 
-      data.accessories.forEach(accessory => {
-        if (accessory.quantity < accessory.minQuantity) {
+      stockItems.forEach(item => {
+        if (item.quantity < (item.minQuantity || 5)) {
           newNotifications.push({
-            id: `accessory-${accessory.id}`,
+            id: `stock-${item._id || item.id}`,
             type: 'stock',
-            message: `المنتج ${accessory.name} ناقص في المخزون! الكمية الحالية: ${accessory.quantity}`,
+            message: `${item.categoryName} ${item.model || item.name} ناقص في المخزون! الكمية: ${item.quantity}`,
             time: new Date().toISOString()
           });
         }
@@ -83,7 +83,7 @@ const MobileShopManagement = () => {
         .filter(r => r.status === 'جاهز' && !r.notified)
         .forEach(repair => {
           newNotifications.push({
-            id: `repair-${repair.id}`,
+            id: `repair-${repair._id || repair.id}`,
             type: 'repair',
             message: `جهاز ${repair.device} للعميل ${repair.customerName} جاهز للتسليم`,
             time: new Date().toISOString()
@@ -101,14 +101,18 @@ const MobileShopManagement = () => {
     try {
       const backupData = {
         screens: data.screens,
+        phones: data.phones,
         accessories: data.accessories,
+        stickers: data.stickers,
+        categories: data.categories,
+        products: data.products,
         repairs: data.repairs,
         sales: data.sales,
         expenses: data.expenses,
         customers: data.customers,
         suppliers: data.suppliers,
         timestamp: new Date().toISOString(),
-        version: '2.0'
+        version: '2.5'
       };
 
       const blob = new Blob([JSON.stringify(backupData, null, 2)], {type: 'application/json'});
@@ -147,7 +151,12 @@ const MobileShopManagement = () => {
         }
 
         // حفظ البيانات من النسخة الاحتياطية
-        const keys = ['screens', 'accessories', 'repairs', 'sales', 'expenses', 'customers', 'suppliers'];
+        const keys = [
+            'screens', 'phones', 'accessories', 'stickers', 
+            'categories', 'products', 
+            'repairs', 'sales', 'expenses', 
+            'customers', 'suppliers'
+        ];
 
         for (const key of keys) {
           if (backupData[key] !== undefined) {
