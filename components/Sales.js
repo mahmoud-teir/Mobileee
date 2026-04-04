@@ -81,7 +81,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
         name: p.name,
         quantity: p.quantity,
         cost: p.cost || 0,
-        type: p.categoryId?._id || p.categoryId || 'dynamic',
+        type: 'product',
         minQuantity: p.minQuantity
       }))
     ];

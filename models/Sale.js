@@ -35,7 +35,7 @@ const saleSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  customer: {
+  customerName: {
     type: String,
     trim: true
   },

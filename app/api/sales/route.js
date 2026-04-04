@@ -8,6 +8,7 @@ import Phone from '@/models/Phone';
 import Accessory from '@/models/Accessory';
 import Sticker from '@/models/Sticker';
 import Customer from '@/models/Customer';
+import Product from '@/models/Product';
 
 const getModelByType = (type) => {
   switch (type) {
@@ -15,6 +16,7 @@ const getModelByType = (type) => {
     case 'phone': return Phone;
     case 'accessory': return Accessory;
     case 'sticker': return Sticker;
+    case 'product': return Product;
     default: return null;
   }
 };
