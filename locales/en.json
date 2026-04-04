@@ -34,7 +34,8 @@
     "admin": "System Admin",
     "adminShort": "System",
     "settings": "Settings",
-    "settingsShort": "Settings"
+    "settingsShort": "Settings",
+    "logout": "Logout"
   },
   "login": {
     "title": "SmartStore POS",

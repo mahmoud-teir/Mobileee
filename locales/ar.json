@@ -34,7 +34,8 @@
     "database": "قاعدة البيانات",
     "databaseShort": "الداتا",
     "admin": "إدارة النظام",
-    "adminShort": "النظام"
+    "adminShort": "النظام",
+    "logout": "تسجيل الخروج"
   },
   "login": {
     "title": "SmartStore POS",

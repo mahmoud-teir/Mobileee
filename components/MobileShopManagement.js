@@ -439,10 +439,10 @@ const MobileShopManagement = () => {
             <button
               onClick={handleLogout}
               className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-              title={t('header.logout')}
+              title={t('nav.logout')}
             >
               <LogOut className="w-5 h-5" />
-              <span className="text-sm hidden sm:inline font-medium">{t('header.logout')}</span>
+              <span className="text-sm hidden sm:inline font-medium">{t('nav.logout')}</span>
             </button>
           </div>
         </div>
