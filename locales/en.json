@@ -583,5 +583,29 @@
     "success": "Installment recorded successfully!",
     "successPayment": "Payment recorded successfully!",
     "deleteMsg": "Installment deleted successfully!"
+  },
+  "admin": {
+    "store": "Store",
+    "status": "Status",
+    "owner": "Owner",
+    "stores": "Stores Management",
+    "newStore": "New Store",
+    "storeName": "Store Name",
+    "storeSlug": "Store Slug (URL)",
+    "ownerEmail": "Owner Email",
+    "ownerUsername": "Owner Username",
+    "ownerPassword": "Owner Password",
+    "plan": "Plan",
+    "plans": {
+      "free": "Free Plan",
+      "pro": "Pro Plan",
+      "enterprise": "Enterprise Plan",
+      "freeDesc": "Basic features for small shops",
+      "proDesc": "Advanced management for growing businesses",
+      "enterpriseDesc": "Complete system for large enterprises"
+    },
+    "active": "Active",
+    "inactive": "Disabled",
+    "actions": "Actions"
   }
 }

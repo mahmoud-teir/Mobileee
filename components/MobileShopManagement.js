@@ -36,7 +36,7 @@ const MobileShopManagement = () => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('activeTab');
       if (saved) return saved;
-      
+
       // Default for super_admin who is not impersonating
       if (user?.role === 'super_admin' && !localStorage.getItem('currentStoreSlug')) {
         return 'admin';
@@ -106,9 +106,9 @@ const MobileShopManagement = () => {
         ...(data.phones || []).map(i => ({ ...i, categoryName: t('inventory.phone'), model: i.model || i.name })),
         ...(data.accessories || []).map(i => ({ ...i, categoryName: t('inventory.accessory') })),
         ...(data.stickers || []).map(i => ({ ...i, categoryName: t('inventory.sticker') })),
-        ...(data.products || []).map(i => ({ 
-            ...i, 
-            categoryName: (data.categories?.find(c => c._id === (i.categoryId?._id || i.categoryId))?.name || t('inventory.product'))
+        ...(data.products || []).map(i => ({
+          ...i,
+          categoryName: (data.categories?.find(c => c._id === (i.categoryId?._id || i.categoryId))?.name || t('inventory.product'))
         }))
       ];
 
@@ -160,7 +160,7 @@ const MobileShopManagement = () => {
         version: '2.5'
       };
 
-      const blob = new Blob([JSON.stringify(backupData, null, 2)], {type: 'application/json'});
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -197,10 +197,10 @@ const MobileShopManagement = () => {
 
         // حفظ البيانات من النسخة الاحتياطية
         const keys = [
-            'screens', 'phones', 'accessories', 'stickers', 
-            'categories', 'products', 
-            'repairs', 'sales', 'expenses', 
-            'customers', 'suppliers'
+          'screens', 'phones', 'accessories', 'stickers',
+          'categories', 'products',
+          'repairs', 'sales', 'expenses',
+          'customers', 'suppliers'
         ];
 
         for (const key of keys) {
@@ -262,7 +262,7 @@ const MobileShopManagement = () => {
     if (isSuperAdmin && !isImpersonating) {
       return ['admin', 'database'].includes(tab.id);
     }
-    
+
     // Check feature gating for other roles or impersonated shops
     const storePlan = user?.currentStore?.subscription?.plan || 'free';
     if (!hasFeature(storePlan, tab.id)) {
@@ -323,7 +323,7 @@ const MobileShopManagement = () => {
             <Eye className="w-4 h-4" />
             <span className="text-sm font-bold">أنت الآن تتصفح بيانات متجر: {user?.currentStore?.name} ({user?.currentStore?.slug})</span>
           </div>
-          <button 
+          <button
             onClick={handleStopImpersonating}
             className="bg-white text-indigo-600 px-3 py-1 rounded-lg text-xs font-black hover:bg-indigo-50 transition"
           >
@@ -342,7 +342,7 @@ const MobileShopManagement = () => {
         </div>
 
         <div className="relative z-10 p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between">
-          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+          <div className="flex items-center gap-4">
             {/* اللوجو */}
             <div className="bg-white/20 backdrop-blur-sm p-3 rounded-2xl shadow-lg border border-white/30">
               <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-2 rounded-xl">
@@ -447,20 +447,18 @@ const MobileShopManagement = () => {
 
       {/* القائمة */}
       <div className="bg-white shadow-lg sticky top-0 z-10 border-b border-gray-200">
-        <div className={`flex overflow-x-auto scrollbar-thin ${isRTL ? '' : 'flex-row-reverse'}`} style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex overflow-x-auto scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`group flex-shrink-0 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 font-semibold whitespace-nowrap transition-all duration-300 relative text-xs sm:text-sm md:text-base ${
-                activeTab === tab.id
+              className={`group flex-shrink-0 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 font-semibold whitespace-nowrap transition-all duration-300 relative text-xs sm:text-sm md:text-base ${activeTab === tab.id
                   ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-rose-600'
-              }`}
+                }`}
             >
-              <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-transform duration-300 ${
-                activeTab === tab.id ? '' : 'group-hover:scale-110'
-              }`} />
+              <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-transform duration-300 ${activeTab === tab.id ? '' : 'group-hover:scale-110'
+                }`} />
               <span className="hidden md:inline">{tab.label}</span>
               <span className="md:hidden">{tab.shortLabel}</span>
 
@@ -551,7 +549,7 @@ const MobileShopManagement = () => {
 
           {/* خط فاصل */}
           <div className="border-t border-gray-700 pt-4">
-            <div className={`flex flex-col md:flex-row justify-between items-center gap-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-2">
               <p className="text-gray-400 text-sm">
                 © {new Date().getFullYear()} SmartStore POS. {t('footer.rights')}
               </p>

@@ -23,9 +23,9 @@ export async function GET(request) {
   const err = requireAuth(user);
   if (err) return err;
 
-  // Check plan feature
+  // Check plan feature (super_admin bypasses)
   const { hasFeature } = await import('@/lib/planLimits');
-  if (!hasFeature(user.currentStore?.subscription?.plan || 'free', 'installments')) {
+  if (user.role !== 'super_admin' && !hasFeature(user.currentStore?.subscription?.plan || 'free', 'installments')) {
     return NextResponse.json({ message: 'هذه الميزة غير متوفرة في باقتك الحالية' }, { status: 403 });
   }
 

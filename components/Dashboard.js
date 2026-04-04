@@ -207,7 +207,7 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
 
   return (
     <div className="space-y-6">
-      <div className={`flex justify-between items-center ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+      <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">{t('dashboard.title')}</h2>
         <button
           onClick={() => setShowPrintTemplates(true)}
@@ -271,7 +271,7 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? '' : 'flex-row-reverse'}`}>
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <LineChart className="text-blue-500" />
             {t('dashboard.monthlySales')}
           </h3>
@@ -287,7 +287,7 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? '' : 'flex-row-reverse'}`}>
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <PieChart className="text-purple-500" />
             {t('dashboard.repairStatus')}
           </h3>
@@ -304,13 +304,13 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? '' : 'flex-row-reverse'}`}>
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <AlertCircle className="text-red-500" />
             {t('dashboard.stockAlerts')}
           </h3>
           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
             {stockAlerts.slice(0, 5).map((item, idx) => (
-              <div key={idx} className={`bg-red-50 border-${isRTL ? 'r' : 'l'}-4 border-red-500 p-4 rounded-${isRTL ? 'l' : 'r'}-lg flex justify-between items-center ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+              <div key={idx} className={`bg-red-50 border-${isRTL ? 'r' : 'l'}-4 border-red-500 p-4 rounded-${isRTL ? 'l' : 'r'}-lg flex justify-between items-center`}>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <p className="font-bold text-red-800">{item.category}: {item.model || item.name}</p>
                   <p className="text-sm text-red-600">{t('inventory.quantity') || 'Qty'}: {item.quantity} ({t('inventory.min') || 'Min'}: {item.minQuantity})</p>
@@ -327,7 +327,7 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
               </div>
             ))}
             {stockAlerts.length === 0 && (
-              <div className={`bg-green-50 border-${isRTL ? 'r' : 'l'}-4 border-green-500 p-4 rounded-${isRTL ? 'l' : 'r'}-lg flex items-center gap-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+              <div className={`bg-green-50 border-${isRTL ? 'r' : 'l'}-4 border-green-500 p-4 rounded-${isRTL ? 'l' : 'r'}-lg flex items-center gap-2`}>
                 <CheckCircle className="w-5 h-5 text-green-500" />
                 <p className="text-green-700 font-medium">{t('dashboard.stockPerfect')}</p>
               </div>
@@ -336,12 +336,12 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
         </div>
         
         <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? '' : 'flex-row-reverse'}`}>
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <FileText className="text-blue-500" />
             {t('dashboard.oldDataManagement')}
           </h3>
           <div className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <div className={`p-4 rounded-lg border border-red-200 bg-red-50 flex justify-between items-center ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+            <div className="p-4 rounded-lg border border-red-200 bg-red-50 flex justify-between items-center">
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                     <h4 className="font-bold text-gray-800">{t('dashboard.oldRecords')}</h4>
                     <p className="text-sm text-gray-600">{t('dashboard.recordsToDelete').replace('{count}', oldSalesCount + oldRepairsCount)}</p>

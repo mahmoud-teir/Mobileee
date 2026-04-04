@@ -312,7 +312,7 @@ const Reports = ({ data, saveData }) => {
 
       {/* جدول الربح حسب المنتج */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-        <div className={`p-4 border-b bg-rose-50 flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="p-4 border-b bg-rose-50 flex justify-between items-center">
           <h3 className="text-xl font-bold text-rose-800">{t('reports.profitByProduct')}</h3>
           <span className="text-sm bg-rose-100 text-rose-700 px-3 py-1 rounded-full font-medium">{t('reports.profitSourceAnalysis')}</span>
         </div>
@@ -374,7 +374,7 @@ const Reports = ({ data, saveData }) => {
 
       {/* سجل المبيعات التفصيلي */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-        <div className={`p-4 border-b bg-blue-50 flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="p-4 border-b bg-blue-50 flex justify-between items-center">
           <h3 className="text-xl font-bold text-blue-800">{t('reports.detailedSalesLog')}</h3>
           <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">{t('reports.latestSales')}</span>
         </div>
@@ -403,7 +403,7 @@ const Reports = ({ data, saveData }) => {
                     <td className="p-3">
                       <div className="flex flex-col gap-1">
                         {(sale.items || []).map((it, i) => (
-                          <div key={i} className={`flex items-center justify-between gap-4 text-xs ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div key={i} className="flex items-center justify-between gap-4 text-xs">
                             <span className="text-gray-800 font-medium">{it.item} x{it.quantity}</span>
                             <span className="text-blue-600 font-bold">{((it.price - (it.cost||0)) * it.quantity).toFixed(2)} ₪ {t('reports.profit')}</span>
                           </div>
@@ -454,9 +454,9 @@ const Reports = ({ data, saveData }) => {
 
       {/* التقرير الشهري المفصل */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className={`p-4 border-b bg-gray-50 flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
           <h3 className="text-xl font-bold">{t('reports.monthlyDetailedReport')}</h3>
-          <div className={`flex items-center gap-2 text-sm text-gray-600 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
             <Calendar className="w-4 h-4" />
             <span>{t('reports.lastUpdate')}: {new Date().toLocaleDateString(isRTL ? 'ar' : 'en')}</span>
           </div>

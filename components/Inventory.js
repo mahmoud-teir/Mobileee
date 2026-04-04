@@ -178,7 +178,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
 
   return (
     <div className="space-y-6">
-      <div className={`flex justify-between items-center flex-wrap gap-4 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <h2 className="text-3xl font-bold">{t('inventory.title')}</h2>
         <div className="flex gap-2">
             <button
@@ -199,7 +199,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
         </div>
       </div>
 
-      <div className={`flex flex-wrap gap-3 mb-4 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+      <div className="flex flex-wrap gap-3 mb-4">
         {[
           { id: 'screens', name: t('inventory.screens'), count: (data.screens || []).length },
           { id: 'phones', name: t('inventory.phones'), count: (data.phones || []).length },
@@ -228,7 +228,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
       </div>
 
       <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
-        <div className={`flex flex-col md:flex-row gap-4 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+        <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <input
               type="text"
@@ -240,7 +240,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
             <SearchIcon className={`w-6 h-6 text-gray-400 absolute ${isRTL ? 'right-4' : 'left-4'} top-3.5`} />
           </div>
           
-          <div className={`flex gap-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+          <div className="flex gap-2">
             <button
               onClick={() => {
                 setSortField('name');
@@ -277,7 +277,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
 
       {showAdd && (
         <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-blue-50 ring-4 ring-blue-50/50">
-          <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? '' : 'flex-row-reverse'}`}>
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Plus className="text-blue-500" />
             {editingItemId ? t('inventory.editItem') : t('inventory.addItem')} {
               ['screens', 'phones', 'stickers', 'accessories'].includes(view) 
@@ -377,7 +377,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
                       <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-bold border border-green-100">{t('inventory.available')}</span>
                     )}
                   </td>
-                  <td className={`p-4 flex items-center gap-3 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+                  <td className="p-4 flex items-center gap-3">
                     <button
                       onClick={() => setShowBarcode({
                         ...item,
