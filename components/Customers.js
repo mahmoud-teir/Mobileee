@@ -79,11 +79,23 @@ const Customers = ({ data, saveData }) => {
     }
   };
 
+  // Helper to normalize Arabic text for better searching
+  const normalizeArabic = (text) => {
+    if (!text) return '';
+    return text.toString().toLowerCase()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[\u064B-\u065F]/g, ''); // Remove harakat
+  };
+
   const filteredCustomers = (data.customers || [])
-    .filter(customer => 
-      (customer.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (customer.phone || '').includes(searchTerm)
-    )
+    .filter(customer => {
+      const normalizedSearch = normalizeArabic(searchTerm);
+      const name = normalizeArabic(customer.name || '');
+      const phone = (customer.phone || '');
+      return name.includes(normalizedSearch) || phone.includes(searchTerm);
+    })
     .sort((a, b) => {
       if (a[sortField] < b[sortField]) return sortOrder === 'asc' ? -1 : 1;
       if (a[sortField] > b[sortField]) return sortOrder === 'asc' ? 1 : -1;

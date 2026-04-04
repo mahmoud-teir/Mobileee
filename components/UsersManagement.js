@@ -96,7 +96,12 @@ const UsersManagement = () => {
         body: JSON.stringify(body)
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Error occurred');
+      if (!response.ok) {
+        // Map common API error keys to translations
+        const errorKey = data.message;
+        const translation = t(`users.${errorKey}`, { limit: PLAN_LIMITS[currentUser?.currentStore?.subscription?.plan || 'free']?.maxUsers });
+        throw new Error(translation !== `users.${errorKey}` ? translation : (data.message || t('common.error')));
+      }
 
       toast.success(editingUser ? t('users.updateSuccess') : t('users.createSuccess'));
       setShowModal(false);
@@ -216,7 +221,7 @@ const UsersManagement = () => {
           <div className="hidden md:flex flex-col items-end">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('common.plan')}</span>
             <span className="text-sm font-black text-rose-600 uppercase tracking-tighter">
-              {PLAN_LIMITS[currentUser?.currentStore?.subscription?.plan || 'free']?.label}
+              {t(`admin.plans.${currentUser?.currentStore?.subscription?.plan || 'free'}`)}
             </span>
           </div>
 

@@ -109,6 +109,16 @@ const Sales = ({ data, saveData, showInvoice }) => {
     }
   }, [showAdd, data.screens, data.accessories, data.phones, data.stickers, data.products]);
 
+  // Helper to normalize Arabic text for better searching
+  const normalizeArabic = (text) => {
+    if (!text) return '';
+    return text.toString().toLowerCase()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[\u064B-\u065F]/g, ''); // Remove harakat
+  };
+
   // البحث عن العناصر
   useEffect(() => {
     if (!showAdd) return;
@@ -116,19 +126,20 @@ const Sales = ({ data, saveData, showInvoice }) => {
     const allItems = getAllItems();
     
     if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const keywords = searchLower.split(/\s+/).filter(k => k.length > 0);
+      const normalizedSearch = normalizeArabic(searchTerm);
+      const keywords = normalizedSearch.split(/\s+/).filter(k => k.length > 0);
       
       const results = allItems.filter(item => {
-        const textToSearch = `${item.name} ${item.barcode} ${item.description}`.toLowerCase();
+        const textToSearch = normalizeArabic(`${item.name} ${item.barcode} ${item.description}`);
         // All keywords must match
         return keywords.every(kw => textToSearch.includes(kw));
       });
       setFilteredItems(results);
-      setSearchResultsVisible(results.length > 0);
+      setSearchResultsVisible(true); // Always show if we have a term
     } else {
       setFilteredItems(allItems);
-      setSearchResultsVisible(false);
+      // Don't hide results if focused even if term is empty
+      // We rely on the input focus state for visibility when empty
     }
   }, [searchTerm, showAdd, data.screens, data.accessories, data.phones, data.stickers, data.products]);
 
@@ -549,9 +560,9 @@ const Sales = ({ data, saveData, showInvoice }) => {
                   }}
                   onFocus={() => setSearchResultsVisible(true)}
                   onBlur={() => setTimeout(() => setSearchResultsVisible(false), 200)}
-                  className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                  className={`w-full border rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 py-2 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3 text-left'}`}
                 />
-                <SearchIcon className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
+                <SearchIcon className={`w-5 h-5 text-gray-400 absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'}`} />
               </div>
               
               {searchResultsVisible && searchTerm && filteredItems.length > 0 && (

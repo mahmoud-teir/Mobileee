@@ -492,7 +492,9 @@
     "errorToggleSelf": "You cannot disable your own account",
     "errorToggle": "Failed to update user status",
     "loading": "Loading users...",
-    "limitReached": "You have reached the maximum number of users for this plan ({limit})."
+    "limit_reached": "You have reached the maximum number of users for this plan ({limit}). Please upgrade to add more.",
+    "email_exists": "Email already exists",
+    "username_exists": "Username already exists"
   },
   "database": {
     "title": "Database",

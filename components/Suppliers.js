@@ -83,11 +83,26 @@ const Suppliers = ({ data, saveData }) => {
     }
   };
 
-  const filteredSuppliers = (data.suppliers || []).filter(supplier => 
-    (supplier.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (supplier.phone || '').includes(searchTerm) ||
-    (supplier.email && supplier.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Helper to normalize Arabic text for better searching
+  const normalizeArabic = (text) => {
+    if (!text) return '';
+    return text.toString().toLowerCase()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[\u064B-\u065F]/g, ''); // Remove harakat
+  };
+
+  const filteredSuppliers = (data.suppliers || []).filter(supplier => {
+    const normalizedSearch = normalizeArabic(searchTerm);
+    const name = normalizeArabic(supplier.name || '');
+    const phone = (supplier.phone || '');
+    const email = normalizeArabic(supplier.email || '');
+    
+    return name.includes(normalizedSearch) || 
+           phone.includes(searchTerm) || 
+           email.includes(normalizedSearch);
+  });
 
   return (
     <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>

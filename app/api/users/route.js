@@ -33,14 +33,14 @@ export async function POST(request) {
     const currentUsersCount = await User.countDocuments({ storeId: user.currentStoreId });
     if (currentUsersCount >= limits.maxUsers) {
       return NextResponse.json({ 
-        message: `لقد وصلت للحد الأقصى للمستخدمين في باقتك الحالية (${limits.maxUsers}). يرجى الترقية لإضافة المزيد.` 
+        message: 'limit_reached'
       }, { status: 403 });
     }
 
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return NextResponse.json({
-        message: existingUser.email === email ? 'البريد الإلكتروني مستخدم بالفعل' : 'اسم المستخدم مستخدم بالفعل'
+        message: existingUser.email === email ? 'email_exists' : 'username_exists'
       }, { status: 400 });
     }
 
@@ -53,7 +53,7 @@ export async function POST(request) {
       storeId: user.currentStoreId
     });
     await newUser.save();
-    return NextResponse.json({ message: 'تم إنشاء المستخدم بنجاح', user: newUser.toJSON() }, { status: 201 });
+    return NextResponse.json({ message: 'create_success', user: newUser.toJSON() }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }

@@ -34,6 +34,16 @@ const Repairs = ({ data, saveData, showInvoice }) => {
     { key: 'statusCancelled', label: t('repairs.statusCancelled') || 'ملغاة' }
   ];
 
+  // Helper to normalize Arabic text for better searching
+  const normalizeArabic = (text) => {
+    if (!text) return '';
+    return text.toString().toLowerCase()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[\u064B-\u065F]/g, ''); // Remove harakat
+  };
+
   // Search Screens
   useEffect(() => {
     if (!showAdd || !formData.useScreen) return;
@@ -41,18 +51,18 @@ const Repairs = ({ data, saveData, showInvoice }) => {
     const screens = (data.screens || []).filter(s => s.quantity > 0);
 
     if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const keywords = searchLower.split(/\s+/).filter(k => k.length > 0);
+      const normalizedSearch = normalizeArabic(searchTerm);
+      const keywords = normalizedSearch.split(/\s+/).filter(k => k.length > 0);
 
       const results = screens.filter(screen => {
-        const textToSearch = `${screen.model || ''} ${screen.name || ''} ${screen.description || ''}`.toLowerCase();
+        const textToSearch = normalizeArabic(`${screen.model || ''} ${screen.name || ''} ${screen.description || ''}`);
         return keywords.every(kw => textToSearch.includes(kw));
       });
       setFilteredScreens(results);
-      setSearchResultsVisible(results.length > 0);
+      setSearchResultsVisible(true);
     } else {
       setFilteredScreens(screens);
-      setSearchResultsVisible(false);
+      // Visibility controlled by focus
     }
   }, [searchTerm, showAdd, data.screens, formData.useScreen]);
 
@@ -329,9 +339,20 @@ const Repairs = ({ data, saveData, showInvoice }) => {
                 <label className="block text-sm font-medium text-blue-800 mb-2">{t('repairs.searchScreen')}</label>
                 {!selectedScreen ? (
                   <div className="relative">
-                    <input type="text" placeholder={t('repairs.searchScreen')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full border p-2 rounded-lg pr-10 focus:ring-2 focus:ring-blue-500 outline-none" />
-                    <SearchIcon className="absolute right-3 top-2.5 text-gray-400 w-5 h-5" />
-                    {searchTerm && (
+                    <input 
+                      type="text" 
+                      placeholder={t('repairs.searchScreen')} 
+                      value={searchTerm} 
+                      onChange={e => {
+                        setSearchTerm(e.target.value);
+                        setSearchResultsVisible(true);
+                      }} 
+                      onFocus={() => setSearchResultsVisible(true)}
+                      onBlur={() => setTimeout(() => setSearchResultsVisible(false), 200)}
+                      className={`w-full border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none py-2 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3 text-left'}`} 
+                    />
+                    <SearchIcon className={`absolute top-2.5 text-gray-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
+                    {searchResultsVisible && searchTerm && (
                       <div className="absolute z-50 w-full bg-white border rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
                         {data.screens.filter(s => {
                           const searchLower = searchTerm.toLowerCase();

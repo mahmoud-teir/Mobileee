@@ -42,17 +42,27 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
               : (data.accessories || []);
     }
     
+    // Helper to normalize Arabic text for better searching
+    const normalizeArabic = (text) => {
+      if (!text) return '';
+      return text.toString().toLowerCase()
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
+        .replace(/[\u064B-\u065F]/g, ''); // Remove harakat
+    };
+
     const filtered = items.filter(item => {
-      const searchLower = searchTerm.toLowerCase();
-      const keywords = searchLower.split(/\s+/).filter(k => k.length > 0);
+      const normalizedSearch = normalizeArabic(searchTerm);
+      const keywords = normalizedSearch.split(/\s+/).filter(k => k.length > 0);
       
-      const name = (item.model || item.name || '').toLowerCase();
-      const description = (item.description || '').toLowerCase();
-      const barcode = (item.barcode || '').toLowerCase();
+      const name = (item.model || item.name || '');
+      const description = (item.description || '');
+      const barcode = (item.barcode || '');
       const price = (item.cost || 0).toString();
       const quantity = (item.quantity || 0).toString();
       
-      const textToSearch = `${name} ${description} ${barcode} ${price} ${quantity}`;
+      const textToSearch = normalizeArabic(`${name} ${description} ${barcode} ${price} ${quantity}`);
       
       return keywords.every(kw => textToSearch.includes(kw));
     });
