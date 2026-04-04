@@ -42,7 +42,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
         scope: DRIVE_SCOPE,
         callback: (resp) => {
           if (resp.error) {
-            setBackupMessage('❌ خطأ في المصادقة مع Google');
+            toast.error('خطأ في المصادقة مع Google');
             console.error('token error', resp);
             return;
           }
@@ -65,7 +65,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
         scope: DRIVE_SCOPE,
         callback: (resp) => {
           if (resp.error) {
-            setBackupMessage('❌ خطأ في المصادقة مع Google');
+            toast.error('خطأ في المصادقة مع Google');
             return;
           }
           setGDriveAccessToken(resp.access_token);
@@ -102,7 +102,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
 
   const uploadBackupToDrive = useCallback(async (filename, jsonBody) => {
     if (!gDriveAccessToken) {
-      setBackupMessage('❌ الرجاء الاتصال بـ Google Drive أولاً');
+      toast.error('الرجاء الاتصال بـ Google Drive أولاً');
       return false;
     }
 
@@ -153,11 +153,11 @@ const BackupManager = ({ data, saveData, onClose }) => {
           return true;
         }
       }
-      setBackupMessage('❌ خطأ في حفظ النسخة في Google Drive');
+      toast.error('خطأ في حفظ النسخة في Google Drive');
       return false;
     } catch (error) {
       console.error('خطأ في رفع النسخة:', error);
-      setBackupMessage('❌ خطأ في الاتصال بـ Google Drive');
+      toast.error('خطأ في الاتصال بـ Google Drive');
       return false;
     } finally {
       setIsUploadingToDrive(false);
@@ -166,7 +166,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
 
   const downloadBackupFromDrive = useCallback(async (filename) => {
     if (!gDriveAccessToken) {
-      setBackupMessage('❌ الرجاء الاتصال بـ Google Drive أولاً');
+      toast.error('الرجاء الاتصال بـ Google Drive أولاً');
       return null;
     }
 
@@ -188,7 +188,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
       return null;
     } catch (error) {
       console.error('خطأ في تحميل النسخة:', error);
-      setBackupMessage('❌ خطأ في تحميل النسخة من Google Drive');
+      toast.error('خطأ في تحميل النسخة من Google Drive');
       return null;
     }
   }, [gDriveAccessToken]);
@@ -309,7 +309,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
         uploadBackupToDrive('kerza_backup.json', backupData);
       }
     } catch (error) {
-      setBackupMessage('❌ خطأ في إنشاء النسخة الاحتياطية');
+      toast.error('خطأ في إنشاء النسخة الاحتياطية');
       console.error(error);
     } finally {
       setIsCreatingBackup(false);
@@ -363,7 +363,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
     if (isRestoringBackup) return;
 
     if (backup.encrypted && !restorePassword) {
-      setBackupMessage('❌ يرجى إدخال كلمة المرور');
+      toast.error('يرجى إدخال كلمة المرور');
       return;
     }
 
@@ -375,7 +375,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
       if (backup.encrypted) {
         const decrypted = decryptData(backup.encryptedData, restorePassword);
         if (!decrypted) {
-          setBackupMessage('❌ كلمة المرور غير صحيحة');
+          toast.error('كلمة المرور غير صحيحة');
           setIsRestoringBackup(false);
           return;
         }
@@ -406,7 +406,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
       setSelectedBackup(null);
       setTimeout(() => setBackupMessage(''), 3000);
     } catch (error) {
-      setBackupMessage('❌ خطأ في استرجاع النسخة الاحتياطية');
+      toast.error('خطأ في استرجاع النسخة الاحتياطية');
       console.error(error);
     } finally {
       setIsRestoringBackup(false);
@@ -490,7 +490,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
       setBackupMessage('✅ تم تصدير Excel بنجاح');
       setTimeout(() => setBackupMessage(''), 2000);
     } catch (error) {
-      setBackupMessage('❌ خطأ في التصدير');
+      toast.error('خطأ في التصدير');
       console.error(error);
     }
   };
@@ -559,7 +559,7 @@ const BackupManager = ({ data, saveData, onClose }) => {
       setBackupMessage('✅ تم تصدير PDF بنجاح');
       setTimeout(() => setBackupMessage(''), 2000);
     } catch (error) {
-      setBackupMessage('❌ خطأ في التصدير');
+      toast.error('خطأ في التصدير');
       console.error(error);
     }
   };

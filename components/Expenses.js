@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { FileText, Plus, Edit } from 'lucide-react';
+import { toast } from 'sonner';
 
   // Expenses Component
   const Expenses = ({ data, saveData }) => {
@@ -33,7 +34,7 @@ import { FileText, Plus, Edit } from 'lucide-react';
           });
 
           if (duplicate) {
-            alert('تم الكشف عن مصروف مطابق تم إضافته للتو. لم يتم إضافة تكرار.');
+            toast.error('تم الكشف عن مصروف مطابق تم إضافته للتو. لم يتم إضافة تكرار.');
             setIsSaving(false);
             return;
           }
@@ -43,8 +44,10 @@ import { FileText, Plus, Edit } from 'lucide-react';
           // replace existing
           const updated = (data.expenses || []).map(e => (e._id || e.id) === editingExpenseId ? newExpense : e);
           await saveData('expenses', updated);
+          toast.success('تم تحديث المصروف بنجاح!');
         } else {
           await saveData('expenses', [...(data.expenses || []), newExpense]);
+          toast.success('تم إضافة المصروف بنجاح!');
         }
 
         setShowAdd(false);
@@ -52,7 +55,7 @@ import { FileText, Plus, Edit } from 'lucide-react';
         setEditingExpenseId(null);
       } catch (err) {
         console.error('خطأ عند حفظ المصروف:', err);
-        alert('حدث خطأ أثناء حفظ المصروف. حاول مرة أخرى.');
+        toast.error('حدث خطأ أثناء حفظ المصروف. حاول مرة أخرى.');
       } finally {
         setIsSaving(false);
       }

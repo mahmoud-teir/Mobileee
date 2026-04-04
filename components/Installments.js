@@ -4,6 +4,7 @@ import {
   CreditCard, Plus, Trash2, Search as SearchIcon,
   Calendar, AlertTriangle, CheckCircle, Clock, DollarSign, X
 } from 'lucide-react';
+import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 
 const Installments = ({ data, saveData }) => {
@@ -215,10 +216,10 @@ const Installments = ({ data, saveData }) => {
       setSelectedItems([]);
       setError('');
 
-      alert('تم تسجيل القسط بنجاح!');
+      toast.success('تم تسجيل القسط بنجاح!');
     } catch (error) {
       console.error('خطأ في تسجيل القسط:', error);
-      alert('حدث خطأ أثناء تسجيل القسط');
+      toast.error('حدث خطأ أثناء تسجيل القسط');
     }
   };
 
@@ -255,10 +256,10 @@ const Installments = ({ data, saveData }) => {
       await saveData('installments', updatedInstallments);
       setPaymentModal({ isOpen: false, installmentId: null, paymentIndex: null });
 
-      alert('تم تسديد القسط بنجاح!');
+      toast.success('تم تسديد القسط بنجاح!');
     } catch (error) {
       console.error('خطأ في تسديد القسط:', error);
-      alert('حدث خطأ أثناء تسديد القسط');
+      toast.error('حدث خطأ أثناء تسديد القسط');
     }
   };
 
@@ -303,10 +304,10 @@ const Installments = ({ data, saveData }) => {
       await saveData('installments', updatedInstallments);
 
       setDeleteConfirmation({ isOpen: false, installmentId: null });
-      alert('تم حذف القسط بنجاح وتم إعادة الكميات للمخزون!');
+      toast.success('تم حذف القسط بنجاح وتم إعادة الكميات للمخزون!');
     } catch (error) {
       console.error('خطأ في حذف القسط:', error);
-      alert('حدث خطأ أثناء حذف القسط');
+      toast.error('حدث خطأ أثناء حذف القسط');
     }
   };
 

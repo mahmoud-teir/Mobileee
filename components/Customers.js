@@ -2,6 +2,7 @@
 // إضافة مكونات جديدة للعملاء والموردين
 import React, { useState } from 'react';
 import { Users, Plus, Search, Trash2, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 
 const Customers = ({ data, saveData }) => {
@@ -19,11 +20,11 @@ const Customers = ({ data, saveData }) => {
   const addCustomer = async () => {
     // التحقق من الحقول المطلوبة
     if (!formData.name?.trim()) {
-      alert('الرجاء إدخال اسم العميل');
+      toast.error('الرجاء إدخال اسم العميل');
       return;
     }
     if (!formData.phone?.trim()) {
-      alert('الرجاء إدخال رقم الهاتف');
+      toast.error('الرجاء إدخال رقم الهاتف');
       return;
     }
 
@@ -39,10 +40,10 @@ const Customers = ({ data, saveData }) => {
       await saveData('customers', [...data.customers, newCustomer]);
       setShowAdd(false);
       setFormData({});
-      alert('تم إضافة العميل بنجاح!');
+      toast.success('تم إضافة العميل بنجاح!');
     } catch (error) {
       console.error('خطأ في إضافة العميل:', error);
-      alert('حدث خطأ أثناء إضافة العميل');
+      toast.error('حدث خطأ أثناء إضافة العميل');
     }
   };
 
@@ -56,18 +57,24 @@ const Customers = ({ data, saveData }) => {
   };
 
   // دالة تأكيد الحذف الفعلي
-  const confirmDelete = () => {
-    if (deleteConfirmation.customerId) {
-      saveData('customers', data.customers.filter(c => (c._id || c.id) !== deleteConfirmation.customerId));
-      setDeleteConfirmation({ isOpen: false, customerId: null, customerName: '' });
+  const confirmDelete = async () => {
+    try {
+      if (deleteConfirmation.customerId) {
+        await saveData('customers', data.customers.filter(c => (c._id || c.id) !== deleteConfirmation.customerId));
+        setDeleteConfirmation({ isOpen: false, customerId: null, customerName: '' });
+        toast.success('تم حذف العميل بنجاح!');
+      }
+    } catch (error) {
+      console.error('خطأ في حذف العميل:', error);
+      toast.error('حدث خطأ أثناء حذف العميل');
     }
   };
 
   // البحث والفرز
-  const filteredCustomers = data.customers
+  const filteredCustomers = (data.customers || [])
     .filter(customer => 
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm) ||
+      (customer.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (customer.phone || '').includes(searchTerm) ||
       (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a, b) => {
@@ -144,10 +151,10 @@ const Customers = ({ data, saveData }) => {
             />
           </div>
           <div className="flex gap-2 mt-4">
-            <button onClick={addCustomer} className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition">
+            <button onClick={addCustomer} className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition flex-1">
               حفظ العميل
             </button>
-            <button onClick={() => setShowAdd(false)} className="bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400 transition">
+            <button onClick={() => setShowAdd(false)} className="bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400 transition flex-1">
               إلغاء
             </button>
           </div>
@@ -169,7 +176,7 @@ const Customers = ({ data, saveData }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredCustomers.map(customer => (
+            {(filteredCustomers || []).map(customer => (
               <tr key={customer._id || customer.id} className="border-b hover:bg-blue-50 transition-colors">
                 <td className="p-4 font-bold">{customer.name}</td>
                 <td className="p-4">{customer.phone}</td>
@@ -197,7 +204,7 @@ const Customers = ({ data, saveData }) => {
             ))}
           </tbody>
         </table>
-        {filteredCustomers.length === 0 && (
+        {(filteredCustomers || []).length === 0 && (
           <div className="p-8 text-center text-gray-500">
             لم يتم العثور على عملاء. أضف عميلاً جديداً لبدء الإدارة
           </div>
@@ -213,6 +220,7 @@ const Customers = ({ data, saveData }) => {
         message={`هل أنت متأكد من حذف العميل "${deleteConfirmation.customerName}"؟ سيتم حذف جميع السجلات المرتبطة بهذا العميل نهائياً.`}
         confirmText="حذف"
         cancelText="إلغاء"
+        iconType="delete"
       />
     </div>
   );

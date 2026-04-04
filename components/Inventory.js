@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Search as SearchIcon, Barcode, Tag, Settings } from 'lucide-react';
+import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 import BarcodeGenerator from './BarcodeGenerator';
 import CategoryManager from './CategoryManager';
@@ -66,17 +67,17 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
   const addItem = async () => {
     try {
       if (!formData.name && !formData.model) {
-        alert('يرجى إدخال اسم الصنف');
+        toast.error('يرجى إدخال اسم الصنف');
         return;
       }
 
       if (!formData.quantity || parseInt(formData.quantity) <= 0) {
-        alert('يرجى إدخال كمية صالحة');
+        toast.error('يرجى إدخال كمية صالحة');
         return;
       }
 
       if (!formData.cost || parseFloat(formData.cost) <= 0) {
-        alert('يرجى إدخال سعر التكلفة');
+        toast.error('يرجى إدخال سعر التكلفة');
         return;
       }
 
@@ -104,7 +105,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
           await saveData(collectionKey, updatedItems);
         }
         setEditingItemId(null);
-        alert('تم تحديث الصنف بنجاح!');
+        toast.success('تم تحديث الصنف بنجاح!');
       } else {
         // Add new item to MongoDB
         if (addItemToDb) {
@@ -115,14 +116,14 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
           const updatedItems = [...items, { id: Date.now(), created_at: new Date().toISOString(), ...newItem }];
           await saveData(collectionKey, updatedItems);
         }
-        alert('تمت إضافة الصنف بنجاح!');
+        toast.success('تمت إضافة الصنف بنجاح!');
       }
 
       setShowAdd(false);
       setFormData({});
     } catch (error) {
       console.error('خطأ في إضافة الصنف:', error);
-      alert('حدث خطأ أثناء إضافة الصنف: ' + error.message);
+      toast.error('حدث خطأ أثناء إضافة الصنف: ' + error.message);
     }
   };
 
@@ -165,11 +166,12 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
           const updatedItems = items.filter(i => i.id !== deleteConfirmation.itemId && i._id !== deleteConfirmation.itemId);
           await saveData(collectionKey, updatedItems);
         }
+        toast.success(`تم حذف "${deleteConfirmation.itemName}" بنجاح`);
         setDeleteConfirmation({ isOpen: false, itemId: null, itemName: '', itemType: '' });
       }
     } catch (error) {
       console.error('خطأ في حذف الصنف:', error);
-      alert('حدث خطأ أثناء حذف الصنف: ' + error.message);
+      toast.error('حدث خطأ أثناء حذف الصنف: ' + error.message);
     }
   };
 

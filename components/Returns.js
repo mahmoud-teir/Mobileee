@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Plus, Trash2, Search as SearchIcon, FileText, X, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 
 const Returns = ({ data, saveData }) => {
@@ -170,10 +171,10 @@ const Returns = ({ data, saveData }) => {
       setSelectedItems([]);
       setError('');
 
-      alert('تم تسجيل المرتجع بنجاح وتم إعادة الكميات للمخزون!');
+      toast.success('تم تسجيل المرتجع بنجاح وتم إعادة الكميات للمخزون!');
     } catch (error) {
       console.error('خطأ في تسجيل المرتجع:', error);
-      alert('حدث خطأ أثناء تسجيل المرتجع');
+      toast.error('حدث خطأ أثناء تسجيل المرتجع');
     }
   };
 
@@ -218,10 +219,10 @@ const Returns = ({ data, saveData }) => {
       await saveData('returns', updatedReturns);
 
       setDeleteConfirmation({ isOpen: false, returnId: null });
-      alert('تم حذف المرتجع بنجاح!');
+      toast.success('تم حذف المرتجع بنجاح!');
     } catch (error) {
       console.error('خطأ في حذف المرتجع:', error);
-      alert('حدث خطأ أثناء حذف المرتجع');
+      toast.error('حدث خطأ أثناء حذف المرتجع');
     }
   };
 

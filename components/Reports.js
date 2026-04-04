@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { BarChart as BarChartIcon, FileText, Trash2, AlertCircle, Calendar } from 'lucide-react';
+import { toast } from "sonner";
 import * as XLSX from 'xlsx';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -119,11 +120,11 @@ const Reports = ({ data, saveData }) => {
         }
         
         setDeleteConfirmation({ isOpen: false, type: '', dateRange: '', message: '', title: '' });
-        alert('تم حذف التقارير بنجاح!');
+        toast.success('تم حذف التقارير بنجاح!');
       }
     } catch (error) {
       console.error('خطأ في حذف التقارير:', error);
-      alert('حدث خطأ أثناء حذف التقارير. الرجاء المحاولة مرة أخرى.');
+      toast.error('حدث خطأ أثناء حذف التقارير. الرجاء المحاولة مرة أخرى.');
     }
   };
 
@@ -153,16 +154,48 @@ const Reports = ({ data, saveData }) => {
       
       const itemsSheet = XLSX.utils.json_to_sheet(topItems);
       
+      // ورقة تفصيل الأرباح
+      const profitByItemMap = {};
+      (data.sales || []).forEach(sale => {
+        const items = sale.items || (sale.item ? [{ item: sale.item, quantity: sale.quantity, price: sale.price, cost: sale.cost || 0 }] : []);
+        items.forEach(it => {
+          if (!profitByItemMap[it.item]) {
+            profitByItemMap[it.item] = { quantity: 0, sales: 0, cost: 0, profit: 0 };
+          }
+          const q = it.quantity || 0;
+          const s = q * (it.price || 0);
+          const c = q * (it.cost || 0);
+          profitByItemMap[it.item].quantity += q;
+          profitByItemMap[it.item].sales += s;
+          profitByItemMap[it.item].cost += c;
+          profitByItemMap[it.item].profit += (s - c);
+        });
+      });
+
+      const profitDetailRows = Object.entries(profitByItemMap)
+        .sort((a, b) => b[1].profit - a[1].profit)
+        .map(([name, stats]) => ({
+          المنتج: name,
+          'الكمية المباعة': stats.quantity,
+          'إجمالي المبيعات': stats.sales.toFixed(2),
+          'إجمالي التكلفة': stats.cost.toFixed(2),
+          'صافي الربح': stats.profit.toFixed(2),
+          'هامش الربح %': (stats.sales > 0 ? ((stats.profit / stats.sales) * 100).toFixed(1) : 0) + '%'
+        }));
+      
+      const profitSheet = XLSX.utils.json_to_sheet(profitDetailRows);
+      
       XLSX.utils.book_append_sheet(wb, salesSheet, 'التقرير الشهري');
       XLSX.utils.book_append_sheet(wb, itemsSheet, 'أفضل المنتجات');
+      XLSX.utils.book_append_sheet(wb, profitSheet, 'تفصيل الأرباح');
       
       const fileName = `reports_smartstore_pos_${new Date().toLocaleDateString('ar').replace(/\//g, '-')}.xlsx`;
       XLSX.writeFile(wb, fileName);
       
-      alert('تم تصدير التقرير بنجاح!');
+      toast.success('تم تصدير التقرير بنجاح!');
     } catch (error) {
       console.error('خطأ في تصدير البيانات:', error);
-      alert('حدث خطأ أثناء التصدير. الرجاء المحاولة مرة أخرى.');
+      toast.error('حدث خطأ أثناء التصدير. الرجاء المحاولة مرة أخرى.');
     }
   };
 
@@ -227,6 +260,65 @@ const Reports = ({ data, saveData }) => {
         </div>
       </div>
 
+      {/* جدول تفصيل الربح حسب المنتج */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b bg-rose-50 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-rose-800">تفصيل الربح حسب المنتج</h3>
+          <span className="text-sm bg-rose-100 text-rose-700 px-3 py-1 rounded-full font-medium">تحليل مصادر الربح</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-right">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="p-4 font-bold">المنتج</th>
+                <th className="p-4 font-bold">الكمية المباعة</th>
+                <th className="p-4 font-bold">إجمالي المبيعات</th>
+                <th className="p-4 font-bold">إجمالي التكلفة</th>
+                <th className="p-4 font-bold">صافي الربح</th>
+                <th className="p-4 font-bold text-center">هامش الربح</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                const profitByItem = {};
+                (data.sales || []).forEach(sale => {
+                  const items = sale.items || (sale.item ? [{ item: sale.item, quantity: sale.quantity, price: sale.price, cost: sale.cost || 0 }] : []);
+                  items.forEach(it => {
+                    if (!profitByItem[it.item]) {
+                      profitByItem[it.item] = { quantity: 0, sales: 0, cost: 0, profit: 0 };
+                    }
+                    const q = it.quantity || 0;
+                    const s = q * (it.price || 0);
+                    const c = q * (it.cost || 0);
+                    profitByItem[it.item].quantity += q;
+                    profitByItem[it.item].sales += s;
+                    profitByItem[it.item].cost += c;
+                    profitByItem[it.item].profit += (s - c);
+                  });
+                });
+
+                return Object.entries(profitByItem)
+                  .sort((a, b) => b[1].profit - a[1].profit)
+                  .map(([name, stats], idx) => (
+                    <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-4 font-medium text-gray-800">{name}</td>
+                      <td className="p-4 text-gray-600">{stats.quantity}</td>
+                      <td className="p-4 font-medium text-green-600">{stats.sales.toFixed(2)} ₪</td>
+                      <td className="p-4 text-gray-500">{stats.cost.toFixed(2)} ₪</td>
+                      <td className="p-4 font-bold text-blue-600">{stats.profit.toFixed(2)} ₪</td>
+                      <td className="p-4 text-center">
+                        <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">
+                          {stats.sales > 0 ? ((stats.profit / stats.sales) * 100).toFixed(1) : 0}%
+                        </span>
+                      </td>
+                    </tr>
+                  ));
+              })()}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* الرسم البياني */}
       <div className="bg-white p-6 rounded-xl shadow-lg">
         <h3 className="text-xl font-bold mb-4">الملخص السنوي</h3>
@@ -279,8 +371,8 @@ const Reports = ({ data, saveData }) => {
                 </td>
                 <td className={`p-4 font-medium ${
                   i > 0 && monthlyData[i-1].profit !== 0 
-                    ? (row.profit > monthlyData[i-1].profit ? 'text-green-600' : 'text-red-600')
-                    : 'text-gray-500'
+                  ? (row.profit > monthlyData[i-1].profit ? 'text-green-600' : 'text-red-600')
+                  : 'text-gray-500'
                 }`}>
                   {i > 0 && monthlyData[i-1].profit !== 0
                     ? `${(((row.profit - monthlyData[i-1].profit) / monthlyData[i-1].profit) * 100).toFixed(1)}%`

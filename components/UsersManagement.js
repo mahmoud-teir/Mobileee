@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Trash2, Search, X, Eye, EyeOff, Shield, UserCheck, UserX, Save, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 
 const UsersManagement = () => {
@@ -116,7 +117,7 @@ const UsersManagement = () => {
         throw new Error(data.message || 'حدث خطأ');
       }
 
-      setSuccess(editingUser ? 'تم تحديث المستخدم بنجاح' : 'تم إنشاء المستخدم بنجاح');
+      toast.success(editingUser ? 'تم تحديث المستخدم بنجاح' : 'تم إنشاء المستخدم بنجاح');
       setShowModal(false);
       resetForm();
       fetchUsers();
@@ -130,7 +131,7 @@ const UsersManagement = () => {
   // حذف مستخدم
   const handleDelete = async (userId) => {
     if (userId === currentUser._id) {
-      setError('لا يمكنك حذف حسابك الخاص');
+      toast.error('لا يمكنك حذف حسابك الخاص');
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -152,7 +153,7 @@ const UsersManagement = () => {
         throw new Error(data.message || 'فشل في حذف المستخدم');
       }
 
-      setSuccess('تم حذف المستخدم بنجاح');
+      toast.success('تم حذف المستخدم بنجاح');
       fetchUsers();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -164,7 +165,7 @@ const UsersManagement = () => {
   // تفعيل/تعطيل مستخدم
   const handleToggleActive = async (userId, isActive) => {
     if (userId === currentUser._id) {
-      setError('لا يمكنك تعطيل حسابك الخاص');
+      toast.error('لا يمكنك تعطيل حسابك الخاص');
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -184,7 +185,7 @@ const UsersManagement = () => {
         throw new Error(data.message || 'فشل في تحديث حالة المستخدم');
       }
 
-      setSuccess(isActive ? 'تم تعطيل المستخدم' : 'تم تفعيل المستخدم');
+      toast.success(isActive ? 'تم تعطيل المستخدم' : 'تم تفعيل المستخدم');
       fetchUsers();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {

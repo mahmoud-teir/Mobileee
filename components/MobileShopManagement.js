@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, ShoppingBag, Wrench, DollarSign, FileText, Users, Truck, AlertCircle, BarChart as BarChartIcon, Cloud, RotateCcw, CreditCard, Moon, Sun, ScanLine, LogOut, User, Shield, Database, Trash2 } from 'lucide-react';
 import { useStorage, initializeStorage, clearLocalCache } from '@/lib/storage';
 import { useAuth } from './AuthContext';
+import { Toaster, toast } from 'sonner';
 
 // استيراد المكونات
 import Dashboard from './Dashboard';
@@ -234,6 +235,9 @@ const MobileShopManagement = () => {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-100'}`} dir="rtl">
+      {/* نظام التنبيهات */}
+      <Toaster richColors position="top-center" dir="rtl" />
+
       {/* تحذير انتهاء الجلسة */}
       {sessionWarning && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white py-3 px-4 text-center shadow-lg animate-pulse">
@@ -286,6 +290,19 @@ const MobileShopManagement = () => {
               title={darkMode ? 'الوضع الفاتح' : 'الوضع المظلم'}
             >
               {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5" /> : <Moon className="w-4 h-4 md:w-5 md:h-5" />}
+            </button>
+
+            {/* زر مسح الكاش */}
+            <button
+              onClick={() => {
+                if (window.confirm('هل أنت متأكد من مسح جميع الملفات المؤقتة وإعادة تحميل التطبيق؟')) {
+                  clearLocalCache();
+                }
+              }}
+              className="bg-white/20 backdrop-blur-sm hover:bg-red-500/40 text-white p-2 md:p-2.5 rounded-xl transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
+              title="مسح الكاش والملفات المؤقتة"
+            >
+              <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
             </button>
 
             {/* مدير النسخ الاحتياطية المتقدم */}

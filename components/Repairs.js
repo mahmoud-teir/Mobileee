@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, FileText, AlertCircle, Search as SearchIcon, Package, X, Edit } from 'lucide-react';
+import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 
 const Repairs = ({ data, saveData, showInvoice }) => {
@@ -95,19 +96,19 @@ const Repairs = ({ data, saveData, showInvoice }) => {
     try {
       // التحقق من الحقول المطلوبة
       if (!formData.customerName?.trim()) {
-        alert('الرجاء إدخال اسم العميل');
+        toast.error('الرجاء إدخال اسم العميل');
         return;
       }
       if (!formData.device?.trim()) {
-        alert('الرجاء إدخال نوع الجهاز');
+        toast.error('الرجاء إدخال نوع الجهاز');
         return;
       }
       if (!formData.problem?.trim()) {
-        alert('الرجاء إدخال وصف المشكلة');
+        toast.error('الرجاء إدخال وصف المشكلة');
         return;
       }
       if (!formData.cost || parseFloat(formData.cost) <= 0) {
-        alert('الرجاء إدخال سعر الخدمة');
+        toast.error('الرجاء إدخال سعر الخدمة');
         return;
       }
 
@@ -172,7 +173,7 @@ const Repairs = ({ data, saveData, showInvoice }) => {
         setSearchTerm('');
         setEditingRepairId(null);
         setOriginalRepair(null);
-        alert('تم تحديث الصيانة بنجاح!');
+        toast.success('تم تحديث الصيانة بنجاح!');
       } else {
         // إضافة جديدة
         const newRepair = {
@@ -202,11 +203,11 @@ const Repairs = ({ data, saveData, showInvoice }) => {
         setFormData({ status: 'قيد الصيانة', paid: false, useScreen: false });
         setSelectedScreen(null);
         setSearchTerm('');
-        alert('تم إضافة الصيانة بنجاح!');
+        toast.success('تم إضافة الصيانة بنجاح!');
       }
     } catch (error) {
       console.error('خطأ في حفظ الصيانة:', error);
-      alert('حدث خطأ أثناء حفظ الصيانة.');
+      toast.error('حدث خطأ أثناء حفظ الصيانة.');
     }
   };
 
@@ -245,11 +246,11 @@ const Repairs = ({ data, saveData, showInvoice }) => {
         await saveData('repairs', updatedRepairs);
 
         setDeleteConfirmation({ isOpen: false, repairId: null, customerName: '', cost: 0 });
-        alert('تم حذف فاتورة الصيانة بنجاح!');
+        toast.success('تم حذف فاتورة الصيانة بنجاح!');
       }
     } catch (error) {
       console.error('خطأ في حذف فاتورة الصيانة:', error);
-      alert('حدث خطأ أثناء حذف فاتورة الصيانة. الرجاء المحاولة مرة أخرى.');
+      toast.error('حدث خطأ أثناء حذف فاتورة الصيانة. الرجاء المحاولة مرة أخرى.');
     }
   };
 
@@ -338,9 +339,9 @@ const Repairs = ({ data, saveData, showInvoice }) => {
                       <SearchIcon className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
 
                       {/* قائمة الشاشات */}
-                      {searchResultsVisible && filteredScreens.length > 0 && (
+                      {searchResultsVisible && (data.screens || []).filter(s => s.quantity > 0).length > 0 && (
                         <div className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-xl">
-                          {filteredScreens.map(screen => (
+                          {(data.screens || []).filter(s => s.quantity > 0).filter(screen => (screen.model || screen.name || '').toLowerCase().includes(searchTerm.toLowerCase())).map(screen => (
                             <div
                               key={screen._id || screen.id}
                               onClick={() => selectScreen(screen)}

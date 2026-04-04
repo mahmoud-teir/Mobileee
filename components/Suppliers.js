@@ -1,10 +1,12 @@
 'use client';
 import React, { useState } from 'react';
-import { Truck, Plus, Search, Trash2, FileText } from 'lucide-react';
-import ConfirmationModal from './ConfirmationModal';
 import { 
-  Package, Wrench, DollarSign, TrendingUp, AlertCircle, CheckCircle // <-- تأكد من وجودها هنا
+  Truck, Plus, Search, Trash2, FileText, 
+  Package, Wrench, DollarSign, TrendingUp, AlertCircle, CheckCircle 
 } from 'lucide-react';
+import { toast } from 'sonner';
+import ConfirmationModal from './ConfirmationModal';
+
 const Suppliers = ({ data, saveData }) => {
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({});
@@ -19,11 +21,11 @@ const Suppliers = ({ data, saveData }) => {
   const addSupplier = async () => {
     // التحقق من البيانات الإلزامية أولاً
     if (!formData.name?.trim()) {
-      alert('الرجاء إدخال اسم المورد');
+      toast.error('الرجاء إدخال اسم المورد');
       return;
     }
     if (!formData.phone?.trim()) {
-      alert('الرجاء إدخال رقم الهاتف');
+      toast.error('الرجاء إدخال رقم الهاتف');
       return;
     }
 
@@ -39,7 +41,7 @@ const Suppliers = ({ data, saveData }) => {
       };
 
       // إضافة المورد الجديد
-      const updatedSuppliers = [...data.suppliers, newSupplier];
+      const updatedSuppliers = [...(data.suppliers || []), newSupplier];
       
       // حفظ البيانات
       await saveData('suppliers', updatedSuppliers);
@@ -48,11 +50,10 @@ const Suppliers = ({ data, saveData }) => {
       setShowAdd(false);
       setFormData({});
       
-      console.log('تمت إضافة المورد بنجاح:', newSupplier);
-      alert('تمت إضافة المورد بنجاح!');
+      toast.success('تمت إضافة المورد بنجاح!');
     } catch (error) {
       console.error('خطأ في إضافة المورد:', error);
-      alert('حدث خطأ أثناء إضافة المورد. الرجاء المحاولة مرة أخرى.');
+      toast.error('حدث خطأ أثناء إضافة المورد. الرجاء المحاولة مرة أخرى.');
     }
   };
 
@@ -71,18 +72,18 @@ const Suppliers = ({ data, saveData }) => {
         const updatedSuppliers = data.suppliers.filter(s => (s._id || s.id) !== deleteConfirmation.supplierId);
         await saveData('suppliers', updatedSuppliers);
         setDeleteConfirmation({ isOpen: false, supplierId: null, supplierName: '' });
-        console.log('تم حذف المورد بنجاح');
+        toast.success('تم حذف المورد بنجاح!');
       }
     } catch (error) {
       console.error('خطأ في حذف المورد:', error);
-      alert('حدث خطأ أثناء حذف المورد. الرجاء المحاولة مرة أخرى.');
+      toast.error('حدث خطأ أثناء حذف المورد. الرجاء المحاولة مرة أخرى.');
     }
   };
 
   // البحث عن الموردين
-  const filteredSuppliers = data.suppliers.filter(supplier => 
-    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.phone.includes(searchTerm) ||
+  const filteredSuppliers = (data.suppliers || []).filter(supplier => 
+    (supplier.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (supplier.phone || '').includes(searchTerm) ||
     (supplier.products && supplier.products.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (supplier.email && supplier.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -178,7 +179,7 @@ const Suppliers = ({ data, saveData }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredSuppliers.length > 0 ? (
+            {(filteredSuppliers || []).length > 0 ? (
               filteredSuppliers.map(supplier => (
                 <tr key={supplier._id || supplier.id} className="border-b hover:bg-purple-50 transition-colors">
                   <td className="p-4 font-bold">{supplier.name}</td>
@@ -223,6 +224,7 @@ const Suppliers = ({ data, saveData }) => {
         message={`هل أنت متأكد من حذف المورد "${deleteConfirmation.supplierName}"؟ لن تتمكن من استعادة هذه البيانات.`}
         confirmText="حذف"
         cancelText="إلغاء"
+        iconType="delete"
       />
     </div>
   );

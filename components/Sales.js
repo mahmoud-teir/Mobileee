@@ -4,6 +4,7 @@ import {
   DollarSign, Plus, AlertCircle, Search as SearchIcon, 
   Trash2, FileText, X, CheckCircle, Database, Edit, Printer
 } from 'lucide-react';
+import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 import PrintTemplates from './PrintTemplates';
 
@@ -151,7 +152,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
       setStockError('');
     } catch (error) {
       console.error('خطأ عند بدء تعديل الفاتورة:', error);
-      alert('حدث خطأ عند بدء التعديل. الرجاء المحاولة مرة أخرى.');
+      toast.error('حدث خطأ عند بدء التعديل. الرجاء المحاولة مرة أخرى.');
     }
   };
 
@@ -371,10 +372,10 @@ const Sales = ({ data, saveData, showInvoice }) => {
       setItemType('');
       setStockError('');
       setEditingSaleId(null);
-      alert('تمت عملية البيع بنجاح!');
+      toast.success('تمت عملية البيع بنجاح!');
     } catch (error) {
       console.error('خطأ في عملية البيع:', error);
-      alert('حدث خطأ أثناء عملية البيع. الرجاء المحاولة مرة أخرى.');
+      toast.error('حدث خطأ أثناء عملية البيع. الرجاء المحاولة مرة أخرى.');
       setLoadingInvoice(false);
     }
   };
@@ -441,11 +442,11 @@ const Sales = ({ data, saveData, showInvoice }) => {
         await saveData('sales', updatedSales);
         
         setDeleteConfirmation({ isOpen: false, saleId: null, saleItem: '', saleTotal: 0, saleQuantity: 0 });
-        alert('تم حذف الفاتورة واستعادة الكمية بنجاح!');
+        toast.success('تم حذف الفاتورة واستعادة الكمية بنجاح!');
       }
     } catch (error) {
       console.error('خطأ في حذف الفاتورة:', error);
-      alert('حدث خطأ أثناء حذف الفاتورة. الرجاء المحاولة مرة أخرى.');
+      toast.error('حدث خطأ أثناء حذف الفاتورة. الرجاء المحاولة مرة أخرى.');
     }
   };
 
@@ -625,11 +626,22 @@ const Sales = ({ data, saveData, showInvoice }) => {
                   <input type="number" value={formData.quantity} onChange={e => { setFormData({...formData, quantity: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg" min="1" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر الوحدة</label>
-                  <input type="number" value={formData.price} onChange={e => { setFormData({...formData, price: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg" step="0.01" min="0.01" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة (للوحدة)</label>
+                  <input type="number" value={itemCost.toFixed(2)} readOnly className="w-full border p-2 rounded-lg bg-gray-100 text-gray-600" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر البيع (للوحدة)</label>
+                  <input type="number" value={formData.price} onChange={e => { setFormData({...formData, price: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg border-rose-300 focus:ring-rose-500" step="0.01" min="0.01" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">الربح المتوقع</label>
+                  <div className={`w-full border p-2 rounded-lg font-bold ${ (parseFloat(formData.price) - itemCost) >= 0 ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50' }`}>
+                    {((parseFloat(formData.price) || 0) - itemCost).toFixed(2)} ₪
+                  </div>
                 </div>
                 <div className="md:col-span-2">
-                    <button onClick={addToCart} className="w-full bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 font-bold">
+                    <button onClick={addToCart} className="w-full bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 font-bold flex items-center justify-center gap-2">
+                        <Plus className="w-5 h-5" />
                         أضف للسلة
                     </button>
                 </div>

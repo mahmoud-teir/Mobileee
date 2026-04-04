@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Plus, Trash2, Tag, ShoppingBag, X, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 
 const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
   const [newCategory, setNewCategory] = useState({ name: '', icon: 'ShoppingBag' });
@@ -33,8 +34,10 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
       await addItem('categories', { name: newCategory.name.trim(), icon: newCategory.icon });
       setNewCategory({ name: '', icon: 'ShoppingBag' });
       setError('');
+      toast.success('تم إضافة القسم بنجاح!');
     } catch (err) {
       setError(err.message || 'فشل في إضافة القسم');
+      toast.error(err.message || 'فشل في إضافة القسم');
     }
   };
 
@@ -42,8 +45,9 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
     if (window.confirm('هل أنت متأكد من حذف هذا القسم؟ لا يمكن حذفه إذا كان يحتوي على منتجات.')) {
       try {
         await deleteItem('categories', id);
+        toast.success('تم حذف القسم بنجاح!');
       } catch (err) {
-        alert(err.message || 'فشل في حذف القسم');
+        toast.error(err.message || 'فشل في حذف القسم');
       }
     }
   };
