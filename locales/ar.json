@@ -86,6 +86,10 @@
     "errorStatusUpdate": "حدث خطأ في تحديث الحالة",
     "successPlanUpdate": "تم تحديث الباقة بنجاح",
     "errorPlanUpdate": "فشل تحديث الباقة",
+    "storeNamePlaceholder": "مثلاً: محل سمارت فون",
+    "storeSlugPlaceholder": "smart-phone",
+    "ownerEmailPlaceholder": "owner@mail.com",
+    "ownerUsernamePlaceholder": "owner123",
     "plans": {
       "free": "الباقة المجانية",
       "pro": "الباقة الاحترافية",

@@ -622,6 +622,10 @@
     "errorStatusUpdate": "Error updating store status",
     "successPlanUpdate": "Plan updated successfully",
     "errorPlanUpdate": "Failed to update plan",
+    "storeNamePlaceholder": "e.g. Smart Phone Shop",
+    "storeSlugPlaceholder": "smart-phone",
+    "ownerEmailPlaceholder": "owner@mail.com",
+    "ownerUsernamePlaceholder": "owner123",
     "actions": "Actions"
   },
   "db": {

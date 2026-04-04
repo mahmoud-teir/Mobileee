@@ -172,17 +172,17 @@ const SystemAdmin = ({ onImpersonate }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.storeSlug')}</label>
-              <input type="text" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})} className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="smart-phone" />
+              <input type="text" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})} className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder={t('admin.storeSlugPlaceholder') || "smart-phone"} />
             </div>
             {!editingStoreId && (
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.ownerEmail')}</label>
-                  <input type="email" value={formData.ownerEmail} onChange={e => setFormData({...formData, ownerEmail: e.target.value})} className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="owner@mail.com" />
+                  <input type="email" value={formData.ownerEmail} onChange={e => setFormData({...formData, ownerEmail: e.target.value})} className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder={t('admin.ownerEmailPlaceholder') || "owner@mail.com"} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.ownerUsername')}</label>
-                  <input type="text" value={formData.ownerUsername} onChange={e => setFormData({...formData, ownerUsername: e.target.value})} className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="owner123" />
+                  <input type="text" value={formData.ownerUsername} onChange={e => setFormData({...formData, ownerUsername: e.target.value})} className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder={t('admin.ownerUsernamePlaceholder') || "owner123"} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.ownerPassword')}</label>
