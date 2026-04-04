@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Full-stack mobile phone shop management system ("كرزة موبايل"). Manages inventory, sales, repairs, customers, suppliers, expenses, installments, and user accounts.
+Full-stack mobile phone shop management system ("SmartStore POS"). Manages inventory, sales, repairs, customers, suppliers, expenses, installments, and user accounts.
 
 ## Commands
 
