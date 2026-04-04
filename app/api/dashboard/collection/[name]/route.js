@@ -13,11 +13,14 @@ import Repair from '@/models/Repair';
 import Expense from '@/models/Expense';
 import Return from '@/models/Return';
 import Installment from '@/models/Installment';
+import Product from '@/models/Product';
+import Category from '@/models/Category';
 
 const models = {
   users: User, screens: Screen, phones: Phone, accessories: Accessory,
   stickers: Sticker, customers: Customer, suppliers: Supplier, sales: Sale,
-  repairs: Repair, expenses: Expense, returns: Return, installments: Installment
+  repairs: Repair, expenses: Expense, returns: Return, installments: Installment,
+  products: Product, categories: Category
 };
 
 export async function GET(request, { params }) {

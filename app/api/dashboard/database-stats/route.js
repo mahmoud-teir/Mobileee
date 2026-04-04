@@ -13,6 +13,8 @@ import Repair from '@/models/Repair';
 import Expense from '@/models/Expense';
 import Return from '@/models/Return';
 import Installment from '@/models/Installment';
+import Product from '@/models/Product';
+import Category from '@/models/Category';
 
 export async function GET(request) {
   const user = await getAuthUser(request);
@@ -24,11 +26,12 @@ export async function GET(request) {
       User.countDocuments(), Screen.countDocuments(), Phone.countDocuments(),
       Accessory.countDocuments(), Sticker.countDocuments(), Customer.countDocuments(),
       Supplier.countDocuments(), Sale.countDocuments(), Repair.countDocuments(),
-      Expense.countDocuments(), Return.countDocuments(), Installment.countDocuments()
+      Expense.countDocuments(), Return.countDocuments(), Installment.countDocuments(),
+      Product.countDocuments(), Category.countDocuments()
     ]);
     const [usersCount, screensCount, phonesCount, accessoriesCount, stickersCount,
            customersCount, suppliersCount, salesCount, repairsCount, expensesCount,
-           returnsCount, installmentsCount] = counts;
+           returnsCount, installmentsCount, productsCount, categoriesCount] = counts;
     return NextResponse.json({
       collections: {
         users: { name: 'المستخدمين', count: usersCount },
@@ -42,7 +45,9 @@ export async function GET(request) {
         repairs: { name: 'الصيانات', count: repairsCount },
         expenses: { name: 'المصروفات', count: expensesCount },
         returns: { name: 'المرتجعات', count: returnsCount },
-        installments: { name: 'الأقساط', count: installmentsCount }
+        installments: { name: 'الأقساط', count: installmentsCount },
+        products: { name: 'المنتجات', count: productsCount },
+        categories: { name: 'الأقساط', count: categoriesCount }
       },
       totalRecords: counts.reduce((a, b) => a + b, 0)
     });

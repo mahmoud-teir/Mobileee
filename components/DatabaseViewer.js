@@ -24,7 +24,9 @@ import {
   Filter,
   Upload,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  ShoppingBag,
+  Layers
 } from 'lucide-react';
 const migrateLocalDataToMongoDB = async () => { return {}; };
 
@@ -56,7 +58,9 @@ const DatabaseViewer = () => {
     repairs: Wrench,
     expenses: Receipt,
     returns: RotateCcw,
-    installments: CreditCard
+    installments: CreditCard,
+    products: ShoppingBag,
+    categories: Layers
   };
 
   const collectionColors = {
@@ -71,7 +75,9 @@ const DatabaseViewer = () => {
     repairs: 'from-red-500 to-red-600',
     expenses: 'from-gray-500 to-gray-600',
     returns: 'from-cyan-500 to-cyan-600',
-    installments: 'from-teal-500 to-teal-600'
+    installments: 'from-teal-500 to-teal-600',
+    products: 'from-blue-600 to-blue-700',
+    categories: 'from-purple-600 to-purple-700'
   };
 
   // ترحيل البيانات من localStorage إلى MongoDB
@@ -518,6 +524,7 @@ const DatabaseViewer = () => {
                          column === 'role' ? 'الدور' :
                          column === 'price' ? 'السعر' :
                          column === 'cost' ? 'التكلفة' :
+                         column === 'categoryId' ? 'القسم' :
                          column}
                       </th>
                     ))}
