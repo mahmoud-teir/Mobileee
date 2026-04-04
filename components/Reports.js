@@ -88,32 +88,53 @@ const Reports = ({ data, saveData }) => {
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(currentDate.getMonth() - 3);
         
+        // Helper function to restore stock from old sales
+        const restoreStock = async (sales) => {
+          let collections = {
+              screens: [...(data.screens || [])],
+              phones: [...(data.phones || [])],
+              stickers: [...(data.stickers || [])],
+              accessories: [...(data.accessories || [])],
+              products: [...(data.products || [])]
+          };
+          let updatedKeys = new Set();
+          sales.forEach(sale => {
+            const items = sale.items && Array.isArray(sale.items) ? sale.items : [{ productId: sale.itemId, type: sale.itemType, quantity: sale.quantity }];
+            items.forEach(it => {
+              const type = it.type || it.itemType;
+              const id = it.productId || it.id;
+              const qty = it.quantity || 0;
+              let collectionKey = ['screen', 'phone', 'sticker', 'accessory'].includes(type) ? 
+                                (type === 'screen' ? 'screens' : type === 'phone' ? 'phones' : type === 'sticker' ? 'stickers' : 'accessories') :
+                                'products';
+              const idx = collections[collectionKey].findIndex(s => (s._id || s.id) === id);
+              if (idx !== -1) {
+                collections[collectionKey][idx].quantity += qty;
+                updatedKeys.add(collectionKey);
+              }
+            });
+          });
+          for (const key of updatedKeys) { await saveData(key, collections[key]); }
+        };
+        
         switch(deleteConfirmation.type) {
           case 'sales':
-            const filteredSales = data.sales.filter(sale => {
-              const saleDate = new Date(sale.date);
-              return saleDate < threeMonthsAgo;
-            });
+            const oldSales = data.sales.filter(sale => new Date(sale.date) < threeMonthsAgo);
+            await restoreStock(oldSales);
+            const filteredSales = data.sales.filter(sale => new Date(sale.date) >= threeMonthsAgo);
             await saveData('sales', filteredSales);
             break;
             
           case 'expenses':
-            const filteredExpenses = data.expenses.filter(expense => {
-              const expenseDate = new Date(expense.date);
-              return expenseDate < threeMonthsAgo;
-            });
+            const filteredExpenses = data.expenses.filter(expense => new Date(expense.date) >= threeMonthsAgo);
             await saveData('expenses', filteredExpenses);
             break;
             
           case 'all':
-            const filteredAllSales = data.sales.filter(sale => {
-              const saleDate = new Date(sale.date);
-              return saleDate < threeMonthsAgo;
-            });
-            const filteredAllExpenses = data.expenses.filter(expense => {
-              const expenseDate = new Date(expense.date);
-              return expenseDate < threeMonthsAgo;
-            });
+            const oldAllSales = data.sales.filter(sale => new Date(sale.date) < threeMonthsAgo);
+            await restoreStock(oldAllSales);
+            const filteredAllSales = data.sales.filter(sale => new Date(sale.date) >= threeMonthsAgo);
+            const filteredAllExpenses = data.expenses.filter(expense => new Date(expense.date) >= threeMonthsAgo);
             await saveData('sales', filteredAllSales);
             await saveData('expenses', filteredAllExpenses);
             break;

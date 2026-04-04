@@ -21,7 +21,7 @@ const saleItemSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['screen', 'phone', 'accessory', 'sticker'],
+    enum: ['screen', 'phone', 'accessory', 'sticker', 'product'],
     required: true
   },
   productId: {

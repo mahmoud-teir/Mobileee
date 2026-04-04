@@ -82,8 +82,8 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
             const items = sale.items && Array.isArray(sale.items) ? sale.items : [{ id: sale.itemId, itemType: sale.itemType, quantity: sale.quantity }];
             
             items.forEach(it => {
-                const type = it.itemType;
-                const id = it.id;
+                const type = it.type || it.itemType;
+                const id = it.productId || it.id;
                 const qty = it.quantity || 0;
 
                 let collectionKey = ['screen', 'phone', 'sticker', 'accessory'].includes(type) ? 
