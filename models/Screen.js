@@ -4,7 +4,8 @@ const screenSchema = new mongoose.Schema({
   model: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    unique: true
   },
   quantity: {
     type: Number,

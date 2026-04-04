@@ -4,7 +4,8 @@ const phoneSchema = new mongoose.Schema({
   model: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    unique: true
   },
   name: {
     type: String,

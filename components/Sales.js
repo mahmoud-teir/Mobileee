@@ -269,7 +269,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
       const newSale = {
         id: editingSaleId || Date.now(),
         date: new Date().toISOString(),
-        items: cart.map(c => ({ id: c.id, item: c.item, itemType: c.itemType, quantity: parseInt(c.quantity) || 0, price: parseFloat(c.price) || 0, cost: parseFloat(c.cost) || 0 })),
+        items: cart.map(c => ({ id: c.id, item: c.item, type: c.itemType, quantity: parseInt(c.quantity) || 0, price: parseFloat(c.price) || 0, cost: parseFloat(c.cost) || 0 })),
         subtotal: rawTotal,
         totalCost: totalCost,
         total: total,

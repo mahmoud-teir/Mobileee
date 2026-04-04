@@ -4,7 +4,8 @@ const stickerSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    unique: true
   },
   quantity: {
     type: Number,
