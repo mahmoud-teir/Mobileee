@@ -2,19 +2,18 @@
 
 ![Favicon](/public/favicon.svg)
 
-A modern, high-performance **Point of Sale (POS)** and **Inventory Management System** built with **Next.js 15**, **React**, and **MongoDB Atlas**. This project provides a unified, RTL-supported (Arabic) interface for managing retail business operations.
+A modern, high-performance **Point of Sale (POS)** and **Inventory Management System** built with **Next.js 15**, **React**, and **MongoDB Atlas**. This project provides a unified, multi-language interface for managing retail business operations.
 
 ## 🚀 Key Features
 
-- **📊 Comprehensive Dashboard**: High-level business stats, low-stock alerts, and ready-repair notifications.
-- **📦 Multi-Category Inventory**: Advanced tracking for Screens, Phones, Accessories, and Stickers.
+- **🌍 Multi-Language & RTL/LTR Support**: Dynamic switching between Arabic (RTL) and English (LTR) with fully localized interfaces and layouts.
+- **📊 Comprehensive Dashboard**: High-level business stats, net profit analysis, low-stock alerts, and ready-repair notifications.
+- **📦 Advanced Inventory**: Granular tracking for Screens, Phones, Accessories, Stickers, and support for Custom Categories.
 - **🛠️ Repairs Management**: Track repair status, customer info, and pricing with automatic notification triggers.
 - **💰 Sales & Finances**: Manage transactions, expense tracking, and generate PDF/Excel reports and invoices.
-- **💳 Installments & Returns**: Sophisticated handling of payment plans and product returns.
-- **👥 User & Role Management**: Secure per-user access with Admin and Manager roles.
-- **☁️ Cloud Database**: Fully integrated with MongoDB Atlas for global data persistence.
-- **🔄 Local Storage Migration**: Built-in tools to migrate legacy browser data into the cloud database.
-- **📎 Backup & Recovery**: Integrated JSON/PDF/Excel export systems for secure data offline storage.
+- **🛡️ Multi-Tenancy & Admin Tools**: Secure store isolation with Super Admin capabilities, including store management and impersonation.
+- **💎 Subscription Feature Gating**: Tiered access control (Free, Pro, Enterprise) using a robust plan-based feature module.
+- **☁️ Cloud Database Sync**: Fully integrated with MongoDB Atlas and optimized with local caching via `localStorage`.
 
 ## 💻 Tech Stack
 
@@ -22,8 +21,8 @@ A modern, high-performance **Point of Sale (POS)** and **Inventory Management Sy
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Database**: [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) & [Mongoose](https://mongoosejs.com/)
-- **Auth**: Stateless JWT Authentication.
-- **Deployment**: Optimized for Vercel, Docker, or Node.js VPS.
+- **Auth**: Stateless JWT Authentication with secure session management.
+- **I18n**: Custom multi-language context with support for RTL and LTR.
 
 ## 🛠️ Setup & Installation
 
@@ -40,7 +39,7 @@ JWT_SECRET=your_jwt_secret_key_here
 
 ### 3. Installation
 ```bash
-# Install dependencies (Next.js 15 + React 19)
+# Install dependencies
 npm install --legacy-peer-deps
 
 # Run the development server
@@ -50,11 +49,11 @@ npm run dev
 The application will be available at `http://localhost:3000`.
 
 ## 🎨 Branding
-The project uses the **SmartStore POS** identity, replacing the legacy "Karza Mobile". All icons are modern SVGs and the application is fully optimized for RTL (Right-to-Left) Arabic layouts.
+The project follows the **SmartStore POS** identity. It features a modern, clean UI with dynamic light/dark modes and a responsive design that adapts to all screen sizes.
 
 ## 👨‍💻 Credits
 Developed and Designed by **Mahmoud AbuTeir**.
-Full-stack Next.js Migration by AI Pair Programming.
+Refined and Extended with AI-Assisted Architecture and Feature Development.
 
 ---
 © 2026 SmartStore POS. All rights reserved.
