@@ -2,16 +2,18 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Tag, ShoppingBag, X, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from './LanguageContext';
 
 const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
+  const { t } = useLanguage();
   const [newCategory, setNewCategory] = useState({ name: '', icon: 'ShoppingBag' });
   const [error, setError] = useState('');
 
   const hardcodedCategories = [
-    { id: 'screens', name: 'الشاشات', isHardcoded: true },
-    { id: 'phones', name: 'الجوالات', isHardcoded: true },
-    { id: 'stickers', name: 'الملصقات', isHardcoded: true },
-    { id: 'accessories', name: 'الإكسسوارات', isHardcoded: true }
+    { id: 'screens', name: t('inventory.screens'), isHardcoded: true },
+    { id: 'phones', name: t('inventory.phones'), isHardcoded: true },
+    { id: 'stickers', name: t('inventory.stickers'), isHardcoded: true },
+    { id: 'accessories', name: t('inventory.accessories'), isHardcoded: true }
   ];
 
   const allCategoriesToDisplay = [
@@ -21,12 +23,12 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
 
   const handleAddCategory = async () => {
     if (!newCategory.name.trim()) {
-      setError('يرجى إدخال اسم القسم');
+      setError(t('categories.errorName'));
       return;
     }
 
     if (allCategoriesToDisplay.some(c => c.name === newCategory.name.trim())) {
-      setError('هذا القسم موجود بالفعل');
+      setError(t('categories.errorExists'));
       return;
     }
 
@@ -34,22 +36,30 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
       await addItem('categories', { name: newCategory.name.trim(), icon: newCategory.icon });
       setNewCategory({ name: '', icon: 'ShoppingBag' });
       setError('');
-      toast.success('تم إضافة القسم بنجاح!');
+      toast.success(t('categories.successAdd'));
     } catch (err) {
-      setError(err.message || 'فشل في إضافة القسم');
-      toast.error(err.message || 'فشل في إضافة القسم');
+      setError(err.message || t('categories.errorAdd'));
+      toast.error(err.message || t('categories.errorAdd'));
     }
   };
 
   const handleDeleteCategory = async (id) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا القسم؟ لا يمكن حذفه إذا كان يحتوي على منتجات.')) {
-      try {
-        await deleteItem('categories', id);
-        toast.success('تم حذف القسم بنجاح!');
-      } catch (err) {
-        toast.error(err.message || 'فشل في حذف القسم');
+    toast(t('categories.confirmDelete'), {
+      action: {
+        label: t('common.delete'),
+        onClick: async () => {
+          try {
+            await deleteItem('categories', id);
+            toast.success(t('categories.successDelete'));
+          } catch (err) {
+            toast.error(err.message || t('categories.errorDelete'));
+          }
+        }
+      },
+      cancel: {
+        label: t('common.cancel')
       }
-    }
+    });
   };
 
   return (
@@ -58,7 +68,7 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
         <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-rose-50 dark:bg-rose-900/20">
           <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
             <Tag className="w-5 h-5" />
-            <h3 className="text-xl font-bold">إدارة الأقسام</h3>
+            <h3 className="text-xl font-bold">{t('categories.title')}</h3>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-6 h-6" />
@@ -69,12 +79,12 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                اسم القسم الجديد
+                {t('categories.newName')}
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="مثلاً: تابلت، شواحن..."
+                  placeholder={t('categories.newNamePlaceholder')}
                   value={newCategory.name}
                   onChange={(e) => {
                     setNewCategory({ ...newCategory, name: e.target.value });
@@ -84,10 +94,10 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
                 />
                 <button
                   onClick={handleAddCategory}
-                  className="bg-rose-600 text-white px-4 py-2 rounded-xl hover:bg-rose-700 transition flex items-center gap-2"
+                  className="bg-rose-600 text-white px-4 py-2 rounded-xl hover:bg-rose-700 transition flex items-center gap-2 whitespace-nowrap"
                 >
                   <Plus className="w-5 h-5" />
-                  إضافة
+                  {t('categories.add')}
                 </button>
               </div>
               {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
@@ -95,7 +105,7 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
           </div>
 
           <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
-            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400">جميع الأقسام</h4>
+            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400">{t('categories.allCategories')}</h4>
             {allCategoriesToDisplay.map((cat) => (
               <div key={cat.id} className={`flex justify-between items-center p-3 rounded-xl transition-colors ${cat.isHardcoded ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-gray-50 dark:bg-gray-700/50 group hover:bg-rose-50 dark:hover:bg-rose-900/10'}`}>
                 <div className="flex items-center gap-3">
@@ -103,14 +113,14 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
                     {cat.isHardcoded ? <Lock className="w-4 h-4 text-gray-400" /> : <ShoppingBag className="w-4 h-4 text-rose-500" />}
                   </div>
                   <span className={`font-medium ${cat.isHardcoded ? 'text-gray-500' : 'dark:text-gray-200'}`}>
-                    {cat.name} {cat.isHardcoded && <span className="text-xs font-normal">(أساسي)</span>}
+                    {cat.name} {cat.isHardcoded && <span className="text-xs font-normal">({t('categories.basic')})</span>}
                   </span>
                 </div>
                 {!cat.isHardcoded && (
                   <button
                     onClick={() => handleDeleteCategory(cat.id)}
                     className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="حذف القسم"
+                    title={t('categories.deleteTitle')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -121,7 +131,7 @@ const CategoryManager = ({ categories, addItem, deleteItem, onClose }) => {
         </div>
 
         <div className="p-4 bg-gray-50 dark:bg-gray-700/30 text-center">
-          <p className="text-xs text-gray-500">ملاحظة: الأقسام الأساسية لا يمكن حذفها أو تعديلها.</p>
+          <p className="text-xs text-gray-500">{t('categories.note')}</p>
         </div>
       </div>
     </div>
