@@ -150,8 +150,6 @@
     "price": "سعر البيع",
     "minQuantity": "الحد الأدنى",
     "actions": "إجراءات",
-    "confirmDelete": "تأكيد الحذف",
-    "deleteMessage": "هل أنت متأكد من الحذف؟",
     "successAdd": "تم إضافة الصنف بنجاح!",
     "successUpdate": "تم تحديث الصنف بنجاح!",
     "successDelete": "تم حذف الصنف بنجاح!",
@@ -166,7 +164,7 @@
     "errorCost": "الرجاء إدخال سعر التكلفة",
     "updateSuccess": "تم تحديث الصنف بنجاح!",
     "addSuccess": "تم إضافة الصنف بنجاح!",
-    "deleteSuccess": "تم حذف الصنف بنجاح!",
+    "deleteSuccess": "تم حذف الصنف '{name}' بنجاح!",
     "addItem": "إضافة صنف",
     "editItem": "تعديل صنف",
     "screen": "شاشة",
@@ -184,7 +182,7 @@
     "noResults": "لا توجد نتائج للبحث عن '{term}'",
     "noItems": "لا توجد أصناف مضافة",
     "deleteConfirmTitle": "تأكيد الحذف",
-    "deleteConfirmMsg": "هل أنت متأكد من حذف هذا الصنف؟ لا يمكن التراجع عن هذه الخطوة."
+    "deleteConfirmMsg": "هل أنت متأكد من حذف الصنف '{name}'؟ لا يمكن التراجع عن هذه الخطوة."
   },
   "print": {
     "title": "قوالب الطباعة المتقدمة",
