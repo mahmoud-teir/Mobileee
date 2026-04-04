@@ -56,15 +56,15 @@ const MobileShopManagement = () => {
     return false;
   });
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const [isImpersonating, setIsImpersonating] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const slugFromUrl = window.location.pathname.split('/')[1];
-      const savedSlug = localStorage.getItem('currentStoreSlug');
-      // If we are at a slug URL and we are a super_admin, we are impersonating
-      return !!slugFromUrl && slugFromUrl !== 'api' && slugFromUrl !== 'admin';
-    }
-    return false;
-  });
+  // التحقق من حالة التصفح كمدير (Impersonation)
+  const isSuperAdmin = user?.role === 'super_admin';
+  const isAdmin = user?.role === 'admin' || isSuperAdmin;
+  const isOwner = user?.role === 'owner' || isAdmin;
+
+  const isImpersonating = isSuperAdmin && (typeof window !== 'undefined' ? (() => {
+    const slugFromUrl = window.location.pathname.split('/')[1];
+    return !!slugFromUrl && slugFromUrl !== 'api' && slugFromUrl !== 'admin';
+  })() : false);
 
   const handleImpersonate = (slug) => {
     localStorage.setItem('currentStoreSlug', slug);
@@ -227,11 +227,6 @@ const MobileShopManagement = () => {
       logout();
     }
   };
-
-  // التحقق من الصلاحيات
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-  const isOwner = user?.role === 'owner' || isAdmin;
-  const isSuperAdmin = user?.role === 'super_admin';
 
   // قائمة التبويبات
   const tabs = [
