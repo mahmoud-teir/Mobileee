@@ -25,9 +25,11 @@ export async function GET(request) {
   const user = await getAuthUser(request);
   const err = requireAuth(user);
   if (err) return err;
+
   try {
     await connectDB();
-    const sales = await Sale.find().sort({ date: -1 });
+    // Filter by storeId
+    const sales = await Sale.find({ storeId: user.currentStoreId }).sort({ date: -1 });
     return NextResponse.json(sales);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -38,22 +40,33 @@ export async function POST(request) {
   const user = await getAuthUser(request);
   const err = requireAuth(user);
   if (err) return err;
+
   try {
     await connectDB();
     const saleData = await request.json();
 
+    // Ensure storeId is set to the current store
+    saleData.storeId = user.currentStoreId;
+
     for (const item of saleData.items) {
       const Model = getModelByType(item.type);
       if (Model && item.productId) {
-        await Model.findByIdAndUpdate(item.productId, { $inc: { quantity: -item.quantity } });
+        // SECURITY: Ensure item belongs to the same store
+        await Model.findOneAndUpdate(
+          { _id: item.productId, storeId: user.currentStoreId }, 
+          { $inc: { quantity: -item.quantity } }
+        );
       }
     }
 
     if (saleData.customerId) {
-      await Customer.findByIdAndUpdate(saleData.customerId, {
-        $inc: { totalPurchases: saleData.total },
-        lastPurchase: new Date()
-      });
+      await Customer.findOneAndUpdate(
+        { _id: saleData.customerId, storeId: user.currentStoreId },
+        {
+          $inc: { totalPurchases: saleData.total },
+          lastPurchase: new Date()
+        }
+      );
     }
 
     const sale = new Sale(saleData);

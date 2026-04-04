@@ -11,7 +11,7 @@ export async function GET(request) {
 
   try {
     await connectDB();
-    const phones = await Phone.find().sort({ createdAt: -1 });
+    const phones = await Phone.find({ storeId: user.currentStoreId }).sort({ createdAt: -1 });
     return NextResponse.json(phones);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -26,6 +26,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
+    body.storeId = user.currentStoreId; // Inject storeId
     const phone = new Phone(body);
     const newPhone = await phone.save();
     return NextResponse.json(newPhone, { status: 201 });

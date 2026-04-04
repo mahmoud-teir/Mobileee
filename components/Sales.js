@@ -1,14 +1,19 @@
-'use client';
 import React, { useState, useEffect } from 'react';
 import { 
   DollarSign, Plus, AlertCircle, Search as SearchIcon, 
-  Trash2, FileText, X, CheckCircle, Database, Edit, Printer
+  Trash2, FileText, X, CheckCircle, Database, Edit, Printer,
+  Monitor, Smartphone, Headphones, Sticker, Package
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 import PrintTemplates from './PrintTemplates';
+import { useLanguage } from './LanguageContext';
 
 const Sales = ({ data, saveData, showInvoice }) => {
+  const { t, language } = useLanguage();
+  const isRTL = language === 'ar';
+
+
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({
     item: '',
@@ -47,6 +52,8 @@ const Sales = ({ data, saveData, showInvoice }) => {
       ...(data.screens || []).map(s => ({
         id: s._id || s.id,
         name: s.model,
+        barcode: s.barcode || '',
+        description: s.description || '',
         quantity: s.quantity,
         cost: s.cost || 0,
         type: 'screen',
@@ -55,6 +62,8 @@ const Sales = ({ data, saveData, showInvoice }) => {
       ...(data.phones || []).map(p => ({
         id: p._id || p.id,
         name: p.model || p.name,
+        barcode: p.barcode || '',
+        description: p.description || '',
         quantity: p.quantity,
         cost: p.cost || 0,
         type: 'phone',
@@ -63,6 +72,8 @@ const Sales = ({ data, saveData, showInvoice }) => {
       ...(data.accessories || []).map(a => ({
         id: a._id || a.id,
         name: a.name,
+        barcode: a.barcode || '',
+        description: a.description || '',
         quantity: a.quantity,
         cost: a.cost || 0,
         type: 'accessory',
@@ -71,6 +82,8 @@ const Sales = ({ data, saveData, showInvoice }) => {
       ...(data.stickers || []).map(st => ({
         id: st._id || st.id,
         name: st.name,
+        barcode: st.barcode || '',
+        description: st.description || '',
         quantity: st.quantity,
         cost: st.cost || 0,
         type: 'sticker',
@@ -79,6 +92,8 @@ const Sales = ({ data, saveData, showInvoice }) => {
       ...(data.products || []).map(p => ({
         id: p._id || p.id,
         name: p.name,
+        barcode: p.barcode || '',
+        description: p.description || '',
         quantity: p.quantity,
         cost: p.cost || 0,
         type: 'product',
@@ -101,9 +116,14 @@ const Sales = ({ data, saveData, showInvoice }) => {
     const allItems = getAllItems();
     
     if (searchTerm) {
-      const results = allItems.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const searchLower = searchTerm.toLowerCase();
+      const keywords = searchLower.split(/\s+/).filter(k => k.length > 0);
+      
+      const results = allItems.filter(item => {
+        const textToSearch = `${item.name} ${item.barcode} ${item.description}`.toLowerCase();
+        // All keywords must match
+        return keywords.every(kw => textToSearch.includes(kw));
+      });
       setFilteredItems(results);
       setSearchResultsVisible(results.length > 0);
     } else {
@@ -134,7 +154,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
       if (!saleToEdit) return;
 
       if (saleToEdit.items && Array.isArray(saleToEdit.items)) {
-        setCart(saleToEdit.items.map(it => ({ id: it.id, item: it.item, itemType: it.itemType, quantity: it.quantity, price: it.price, cost: it.cost || 0 })));
+        setCart(saleToEdit.items.map(it => ({ id: it.productId || it.id, item: it.item, itemType: it.type || it.itemType, quantity: it.quantity, price: it.price, cost: it.cost || 0 })));
       } else {
         setCart([{ id: saleToEdit.itemId || null, item: saleToEdit.item || '', itemType: saleToEdit.itemType || 'accessory', quantity: saleToEdit.quantity || 1, price: saleToEdit.price || 0, cost: saleToEdit.cost || 0 }]);
       }
@@ -151,33 +171,33 @@ const Sales = ({ data, saveData, showInvoice }) => {
       setShowAdd(true);
       setStockError('');
     } catch (error) {
-      console.error('خطأ عند بدء تعديل الفاتورة:', error);
-      toast.error('حدث خطأ عند بدء التعديل. الرجاء المحاولة مرة أخرى.');
+      console.error('Error starting invoice edit:', error);
+      toast.error(t('sales.errorUpdate'));
     }
   };
 
   const validateCartStock = () => {
     if (!cart || cart.length === 0) {
-      setStockError('الرجاء إضافة منتج واحد على الأقل إلى السلة');
+      setStockError(t('sales.errorNoProduct'));
       return false;
     }
 
     for (const c of cart) {
       const qty = parseInt(c.quantity) || 0;
       if (qty <= 0) {
-        setStockError('الكمية يجب أن تكون أكبر من الصفر لكل سلعة في السلة');
+        setStockError(t('sales.errorQuantity'));
         return false;
       }
 
       const stockItem = findStockByIdAndType(c.id, c.itemType);
 
       if (!stockItem) {
-        setStockError(`المنتج ${c.item} غير موجود في المخزون`);
+        setStockError(t('sales.errorNoProduct'));
         return false;
       }
 
       if (stockItem.quantity < qty) {
-        setStockError(`الكمية غير كافية للمنتج ${c.item}. المتوفر: ${stockItem.quantity}`);
+        setStockError(`${t('sales.errorStock')} ${c.item}. ${t('sales.available')} ${stockItem.quantity}`);
         return false;
       }
     }
@@ -188,14 +208,15 @@ const Sales = ({ data, saveData, showInvoice }) => {
 
   const addToCart = () => {
     if (!formData.item || !itemId) {
-      setStockError('الرجاء اختيار منتج لإضافته إلى السلة');
+      setStockError(t('sales.errorNoProduct'));
       return;
     }
+
     const qty = parseInt(formData.quantity) || 0;
     const price = parseFloat(formData.price) || 0;
     const cost = itemCost || 0;
     if (qty <= 0 || price <= 0) {
-      setStockError('الكمية والسعر يجب أن يكونا أكبر من الصفر');
+      setStockError(t('sales.errorQuantity') || 'Quantity and price must be greater than zero');
       return;
     }
 
@@ -243,9 +264,10 @@ const Sales = ({ data, saveData, showInvoice }) => {
 
     try {
       if (!formData.paymentMethod) {
-        setStockError('الرجاء اختيار طريقة الدفع');
+        setStockError(t('sales.errorPayment'));
         return;
       }
+
       let rawTotal = 0;
       let totalCost = 0;
       for (const c of cart) {
@@ -277,8 +299,9 @@ const Sales = ({ data, saveData, showInvoice }) => {
         discount: parseFloat(formData.discount) || 0,
         discountType: formData.discountType || 'percentage',
         paymentMethod: formData.paymentMethod || 'cash',
-        customerName: formData.customer || 'عميل نقدي'
+        customerName: formData.customer || t('sales.cashCustomer')
       };
+
       
       if (editingSaleId) {
         const updatedSalesList = (data.sales || []).map(s => (s._id || s.id) === editingSaleId ? newSale : s);
@@ -315,16 +338,18 @@ const Sales = ({ data, saveData, showInvoice }) => {
 
         const success = await saveData('sales', updatedSalesList);
         if (!success) {
-          toast.error('فشل في تحديث بيانات الفاتورة');
+          toast.error(t('sales.errorUpdate'));
           return;
         }
+
       } else {
         const updatedSalesList = [...(data.sales || []), newSale];
         const success = await saveData('sales', updatedSalesList);
         if (!success) {
-          toast.error('فشل في تسجيل الفاتورة في قاعدة البيانات');
+          toast.error(t('sales.errorRegister'));
           return;
         }
+
 
         // Update stock for new sale
         for (const c of cart) {
@@ -353,12 +378,13 @@ const Sales = ({ data, saveData, showInvoice }) => {
       setItemType('');
       setStockError('');
       setEditingSaleId(null);
-      toast.success('تمت عملية البيع بنجاح!');
+      toast.success(t('sales.success'));
     } catch (error) {
-      console.error('خطأ في عملية البيع:', error);
-      toast.error('حدث خطأ أثناء عملية البيع. الرجاء المحاولة مرة أخرى.');
+      console.error('Sale process error:', error);
+      toast.error(t('sales.errorRegister'));
       setLoadingInvoice(false);
     }
+
   };
 
   const handleDeleteSale = (id, item, total, quantity) => {
@@ -423,12 +449,13 @@ const Sales = ({ data, saveData, showInvoice }) => {
         await saveData('sales', updatedSales);
         
         setDeleteConfirmation({ isOpen: false, saleId: null, saleItem: '', saleTotal: 0, saleQuantity: 0 });
-        toast.success('تم حذف الفاتورة واستعادة الكمية بنجاح!');
+        toast.success(t('sales.successDelete'));
       }
     } catch (error) {
-      console.error('خطأ في حذف الفاتورة:', error);
-      toast.error('حدث خطأ أثناء حذف الفاتورة. الرجاء المحاولة مرة أخرى.');
+      console.error('Delete sale error:', error);
+      toast.error(t('sales.errorDelete'));
     }
+
   };
 
   const cancelSale = () => {
@@ -472,29 +499,29 @@ const Sales = ({ data, saveData, showInvoice }) => {
   const cartDiscountAmount = (cartSubtotal - cartDiscounted).toFixed(2);
 
   const getTypeName = (type) => {
-    if (type === 'screen') return 'شاشة';
-    if (type === 'phone') return 'جوال';
-    if (type === 'sticker') return 'ملصق';
-    if (type === 'accessory') return 'إكسسوار';
+    if (type === 'screen') return t('inventory.screen');
+    if (type === 'phone') return t('inventory.phone');
+    if (type === 'sticker') return t('inventory.sticker');
+    if (type === 'accessory') return t('inventory.accessory');
     const cat = (data.categories || []).find(c => c._id === type);
-    return cat ? cat.name : 'صنف';
+    return cat ? cat.name : t('inventory.product');
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center flex-wrap gap-4">
-        <h2 className="text-3xl font-bold">المبيعات</h2>
+        <h2 className="text-3xl font-bold">{t('sales.title')}</h2>
         <div className="flex gap-4 items-center flex-wrap">
           <div className="bg-rose-500 text-white px-6 py-3 rounded-lg">
-            <p className="text-sm">إجمالي المبيعات</p>
-            <p className="text-2xl font-bold">{totalSales.toFixed(2)} ₪</p>
+            <p className="text-sm">{t('sales.totalSales')}</p>
+            <p className="text-2xl font-bold">{totalSales.toFixed(2)} {t('dashboard.currency')}</p>
           </div>
           <button
             onClick={() => setShowAdd(true)}
             className="bg-rose-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-rose-700"
           >
             <Plus className="w-5 h-5" />
-            عملية بيع جديدة
+            {t('sales.newSale')}
           </button>
         </div>
       </div>
@@ -503,18 +530,18 @@ const Sales = ({ data, saveData, showInvoice }) => {
         <div className="bg-white p-6 rounded-xl shadow-lg">
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <DollarSign className="text-rose-500" />
-            {editingSaleId ? 'تعديل فاتورة بيع' : 'تسجيل عملية بيع جديدة'}
+            {editingSaleId ? t('sales.editSale') : t('sales.registerSale')}
           </h3>
           
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                اختيار المنتج
+                {t('sales.selectProduct')}
               </label>
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="ابحث عن منتج..."
+                  placeholder={t('sales.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -531,43 +558,57 @@ const Sales = ({ data, saveData, showInvoice }) => {
                 <div className="absolute z-50 w-full md:w-1/2 lg:w-1/3 bg-white border border-gray-200 rounded-lg mt-1 max-h-80 overflow-y-auto shadow-xl animate-fade-in">
                   <div className="p-2 bg-rose-50 border-b border-rose-100 sticky top-0 z-10">
                     <p className="text-sm font-medium text-rose-800">
-                      {filteredItems.length} نتيجة بحث - اختر منتج
+                      {filteredItems.length} {t('sales.searchResults')}
                     </p>
                   </div>
-                  {filteredItems.map(item => (
-                    <div
-                      key={item.id}
-                      onClick={() => selectItem(item)}
-                      className={`p-3 cursor-pointer transition-colors ${
-                        item.quantity < item.minQuantity 
-                          ? 'bg-red-50 hover:bg-red-100' 
-                          : item.quantity < item.minQuantity * 2 
-                          ? 'bg-yellow-50 hover:bg-yellow-100' 
-                          : 'hover:bg-rose-50'
-                      } border-b last:border-b-0`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-800 truncate">{item.name}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium`}>{getTypeName(item.type)}</span>
+                  {filteredItems.map(item => {
+                    const getItemIcon = () => {
+                      switch(item.type) {
+                        case 'screen': return <Monitor className="w-4 h-4 text-orange-500" />;
+                        case 'phone': return <Smartphone className="w-4 h-4 text-blue-500" />;
+                        case 'accessory': return <Headphones className="w-4 h-4 text-purple-500" />;
+                        case 'sticker': return <Sticker className="w-4 h-4 text-pink-500" />;
+                        default: return <Package className="w-4 h-4 text-gray-500" />;
+                      }
+                    };
+
+                    return (
+                      <div 
+                        key={`${item.type}-${item.id}`}
+                        onClick={() => selectItem(item)}
+                        className="p-3 hover:bg-rose-50 cursor-pointer border-b border-gray-100 last:border-0 transition flex justify-between items-center group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${
+                            item.type === 'screen' ? 'bg-orange-50' : 
+                            item.type === 'phone' ? 'bg-blue-50' : 
+                            item.type === 'accessory' ? 'bg-purple-50' : 
+                            item.type === 'sticker' ? 'bg-pink-50' : 'bg-rose-50'
+                          } group-hover:bg-white transition shadow-sm`}>
+                            {getItemIcon()}
                           </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              item.quantity < item.minQuantity ? 'bg-red-100 text-red-800' : 'bg-rose-100 text-rose-800'
-                            }`}>
-                              <Database className="w-3 h-3 mr-1" />
-                              {item.quantity} وحدة
-                            </span>
+                          <div>
+                            <div className="font-bold text-gray-800">{item.name}</div>
+                            <div className="text-xs text-gray-500 flex gap-2">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                item.type === 'screen' ? 'bg-orange-100 text-orange-700' : 
+                                item.type === 'phone' ? 'bg-blue-100 text-blue-700' : 
+                                item.type === 'accessory' ? 'bg-purple-100 text-purple-700' : 
+                                item.type === 'sticker' ? 'bg-pink-100 text-pink-700' : 'bg-rose-100 text-rose-700'
+                              }`}>{getTypeName(item.type)}</span>
+                              {item.barcode && <span>• {item.barcode}</span>}
+                            </div>
                           </div>
                         </div>
-                        <div className="text-left">
-                          <span className="font-bold text-gray-600 block">{(item.cost || 0).toFixed(2)} ₪</span>
-                          <span className="text-xs text-gray-500 mt-0.5">التكلفة</span>
+                        <div className="text-left rtl:text-right">
+                          <div className={`text-sm font-medium ${item.quantity <= (item.minQuantity || 5) ? 'text-red-600' : 'text-green-600'}`}>
+                            {t('sales.itemsCount', { count: item.quantity })}
+                          </div>
+                          <div className="text-[10px] text-gray-400">{(item.cost || 0).toFixed(2)} {t('dashboard.currency')}</div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
               
@@ -581,7 +622,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
                       </div>
                       <div className="flex items-center gap-1 mt-1">
                         <Database className="w-4 h-4 text-rose-500" />
-                        <span className="font-medium">المتوفر:</span>
+                        <span className="font-medium">{t('sales.available')}</span>
                         <span className="font-bold">{itemId ? (findStockById(itemId)?.quantity ?? '---') : '---'}</span>
                       </div>
                     </div>
@@ -603,27 +644,27 @@ const Sales = ({ data, saveData, showInvoice }) => {
             {formData.item && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">الكمية</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('inventory.quantity')}</label>
                   <input type="number" value={formData.quantity} onChange={e => { setFormData({...formData, quantity: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg" min="1" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة (للوحدة)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.cost')}</label>
                   <input type="number" value={itemCost.toFixed(2)} readOnly className="w-full border p-2 rounded-lg bg-gray-100 text-gray-600" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر البيع (للوحدة)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.price')}</label>
                   <input type="number" value={formData.price} onChange={e => { setFormData({...formData, price: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg border-rose-300 focus:ring-rose-500" step="0.01" min="0.01" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">الربح المتوقع</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.expectedProfit')}</label>
                   <div className={`w-full border p-2 rounded-lg font-bold ${ (parseFloat(formData.price) - itemCost) >= 0 ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50' }`}>
-                    {((parseFloat(formData.price) || 0) - itemCost).toFixed(2)} ₪
+                    {((parseFloat(formData.price) || 0) - itemCost).toFixed(2)} {t('dashboard.currency')}
                   </div>
                 </div>
                 <div className="md:col-span-2">
                     <button onClick={addToCart} className="w-full bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 font-bold flex items-center justify-center gap-2">
                         <Plus className="w-5 h-5" />
-                        أضف للسلة
+                        {t('sales.addToCart')}
                     </button>
                 </div>
               </div>
@@ -631,43 +672,43 @@ const Sales = ({ data, saveData, showInvoice }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">الخصم</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.discount')}</label>
                   <input type="number" value={formData.discount} onChange={e => setFormData({...formData, discount: e.target.value})} className="w-full border p-2 rounded-lg" step="0.01" min="0" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">نوع الخصم</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.discountType')}</label>
                   <select value={formData.discountType} onChange={e => setFormData({...formData, discountType: e.target.value})} className="w-full border p-2 rounded-lg">
-                    <option value="percentage">نسبة %</option>
-                    <option value="amount">مبلغ</option>
+                    <option value="percentage">{t('sales.percentage')}</option>
+                    <option value="amount">{t('sales.amount')}</option>
                   </select>
                 </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">اسم العميل</label>
-              <input type="text" value={formData.customer} onChange={e => setFormData({...formData, customer: e.target.value})} className="w-full border p-2 rounded-lg" placeholder="اسم العميل" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.customerName')}</label>
+              <input type="text" value={formData.customer} onChange={e => setFormData({...formData, customer: e.target.value})} className="w-full border p-2 rounded-lg" placeholder={t('sales.customerName')} />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">طريقة الدفع</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.paymentMethod')}</label>
               <select value={formData.paymentMethod} onChange={e => { setFormData({...formData, paymentMethod: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg" required>
-                <option value="">اختر طريقة الدفع</option>
-                <option value="cash">نقداً</option>
-                <option value="card">بطاقة</option>
-                <option value="bank">تحويل بنكي</option>
-                <option value="mobile">محفظة</option>
+                <option value="">{t('sales.selectPayment')}</option>
+                <option value="cash">{t('sales.cash')}</option>
+                <option value="card">{t('sales.card')}</option>
+                <option value="bank">{t('sales.bankTransfer')}</option>
+                <option value="mobile">{t('sales.wallet')}</option>
               </select>
             </div>
             
             {cart.length > 0 && (
               <div className="bg-white p-4 rounded-xl border border-gray-200">
-                <h4 className="font-bold mb-2">سلة المشتريات</h4>
+                <h4 className="font-bold mb-2">{t('sales.cart')}</h4>
                 <div className="space-y-2">
                   {cart.map((c, idx) => (
                     <div key={idx} className="flex justify-between items-center p-2 border rounded">
                       <div className="flex-1">
                         <div className="font-medium">{c.item}</div>
-                        <div className="text-sm text-gray-500">{getTypeName(c.itemType)} - {c.price.toFixed(2)} ₪</div>
+                        <div className="text-sm text-gray-500">{getTypeName(c.itemType)} - {c.price.toFixed(2)} {t('dashboard.currency')}</div>
                       </div>
                       <div className="flex items-center gap-4">
                         {editingCartIndex === idx ? (
@@ -679,14 +720,14 @@ const Sales = ({ data, saveData, showInvoice }) => {
                               newCart[idx] = { ...newCart[idx], quantity: parseInt(editQty)||0, price: parseFloat(editPrice)||0 };
                               setCart(newCart);
                               setEditingCartIndex(null);
-                            }} className="bg-rose-500 text-white px-3 py-1 rounded">حفظ</button>
-                            <button onClick={() => setEditingCartIndex(null)} className="bg-gray-200 px-3 py-1 rounded">إلغاء</button>
+                            }} className="bg-rose-500 text-white px-3 py-1 rounded">{t('common.save')}</button>
+                            <button onClick={() => setEditingCartIndex(null)} className="bg-gray-200 px-3 py-1 rounded">{t('common.cancel')}</button>
                           </div>
                         ) : (
                           <>
                             <div className="font-bold text-rose-600">{c.quantity}</div>
-                            <button onClick={() => { setEditingCartIndex(idx); setEditQty(String(c.quantity)); setEditPrice(String(c.price)); }} className="text-rose-600 hover:text-rose-800">تعديل</button>
-                            <button onClick={() => removeFromCart(c.id, c.itemType)} className="text-red-500 hover:text-red-700">إزالة</button>
+                            <button onClick={() => { setEditingCartIndex(idx); setEditQty(String(c.quantity)); setEditPrice(String(c.price)); }} className="text-rose-600 hover:text-rose-800">{t('common.edit')}</button>
+                            <button onClick={() => removeFromCart(c.id, c.itemType)} className="text-red-500 hover:text-red-700">{t('common.delete')}</button>
                           </>
                         )}
                       </div>
@@ -700,16 +741,16 @@ const Sales = ({ data, saveData, showInvoice }) => {
               <div className="bg-gradient-to-r from-rose-50 to-pink-50 p-4 rounded-xl border border-rose-200">
                 <h4 className="font-bold text-rose-800 mb-2 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-rose-500" />
-                  ملخص العملية
+                  {t('sales.summary')}
                 </h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>الإجمالي الفرعي:</span>
-                    <span>{(cart.length > 0 ? cartSubtotal : previewRawTotal).toFixed(2)} ₪</span>
+                    <span>{t('sales.subtotal')}</span>
+                    <span>{(cart.length > 0 ? cartSubtotal : previewRawTotal).toFixed(2)} {t('dashboard.currency')}</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg mt-2">
-                    <span className="text-gray-800">الإجمالي النهائي:</span>
-                    <span className="text-rose-600">{(cart.length > 0 ? cartDiscounted : previewDiscounted).toFixed(2)} ₪</span>
+                    <span className="text-gray-800">{t('sales.finalTotal')}</span>
+                    <span className="text-rose-600">{(cart.length > 0 ? cartDiscounted : previewDiscounted).toFixed(2)} {t('dashboard.currency')}</span>
                   </div>
                 </div>
               </div>
@@ -721,10 +762,10 @@ const Sales = ({ data, saveData, showInvoice }) => {
                 disabled={cart.length === 0 || !formData.paymentMethod || loadingInvoice}
                 className={`flex-1 py-3 rounded-lg font-bold text-lg transition ${ (cart.length > 0 && formData.paymentMethod && !loadingInvoice) ? 'bg-rose-500 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }`}
               >
-                {loadingInvoice ? 'جاري التحميل...' : 'تسجيل البيع'}
+                {loadingInvoice ? t('common.loading') : t('sales.registerSale')}
               </button>
               <button onClick={cancelSale} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold text-lg hover:bg-gray-300">
-                إلغاء
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -734,28 +775,28 @@ const Sales = ({ data, saveData, showInvoice }) => {
       {/* سجل المبيعات */}
       <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
         <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
-          <h4 className="font-bold text-lg">سجل المبيعات</h4>
+          <h4 className="font-bold text-lg">{t('sales.history')}</h4>
         </div>
         <table className="w-full min-w-[700px]">
           <thead className="bg-gray-100">
             <tr>
-              <th className="p-4 text-right">التاريخ</th>
-              <th className="p-4 text-right">المنتج</th>
-              <th className="p-4 text-right">الإجمالي</th>
-              <th className="p-4 text-right">العميل</th>
-              <th className="p-4 text-right">الإجراءات</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('sales.date')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('sales.product')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.total')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('sales.customerName')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {(data.sales || []).slice().reverse().map(sale => (
               <tr key={sale._id || sale.id} className="border-b hover:bg-gray-50">
                 <td className="p-4 whitespace-nowrap text-sm">
-                  {new Date(sale.date).toLocaleString('ar-EG')}
+                  {new Date(sale.date).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
                 </td>
                 <td className="p-4 font-medium">
                   {sale.items ? (sale.items.length > 1 ? `${sale.items[0].item} +${sale.items.length - 1}` : sale.items[0].item) : sale.item}
                 </td>
-                <td className="p-4 font-bold text-rose-600">{(sale.total || 0).toFixed(2)} ₪</td>
+                <td className="p-4 font-bold text-rose-600">{(sale.total || 0).toFixed(2)} {t('dashboard.currency')}</td>
                 <td className="p-4">{sale.customer || '---'}</td>
                 <td className="p-4">
                   <div className="flex gap-2">
@@ -780,10 +821,10 @@ const Sales = ({ data, saveData, showInvoice }) => {
         isOpen={deleteConfirmation.isOpen}
         onClose={() => setDeleteConfirmation({ isOpen: false, saleId: null, saleItem: '', saleTotal: 0, saleQuantity: 0 })}
         onConfirm={confirmDeleteSale}
-        title="تأكيد حذف الفاتورة"
-        message={`هل أنت متأكد من حذف هذه الفاتورة؟ سيتم استعادة الكميات المباعة إلى المخزون.`}
-        confirmText="حذف"
-        cancelText="إلغاء"
+        title={t('inventory.confirmDelete')}
+        message={t('inventory.deleteMessage')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
       />
 
       {showPrintTemplates && (

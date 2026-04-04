@@ -11,7 +11,11 @@ export async function PATCH(request, { params }) {
   try {
     await connectDB();
     const { quantity } = await request.json();
-    const phone = await Phone.findByIdAndUpdate(params.id, { $inc: { quantity } }, { new: true });
+    const phone = await Phone.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      { $inc: { quantity } }, 
+      { new: true }
+    );
     if (!phone) return NextResponse.json({ message: 'Phone not found' }, { status: 404 });
     return NextResponse.json(phone);
   } catch (error) {

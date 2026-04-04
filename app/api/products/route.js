@@ -14,7 +14,10 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get('categoryId');
     
-    const query = categoryId ? { categoryId } : {};
+    // Scoped to storeId
+    const query = { storeId: user.currentStoreId };
+    if (categoryId) query.categoryId = categoryId;
+
     const products = await Product.find(query).sort({ createdAt: -1 });
     return NextResponse.json(products);
   } catch (error) {
@@ -30,6 +33,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
+    body.storeId = user.currentStoreId;
     const product = new Product(body);
     const newProduct = await product.save();
     return NextResponse.json(newProduct, { status: 201 });

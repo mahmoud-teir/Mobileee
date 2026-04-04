@@ -24,7 +24,7 @@ export async function GET(request) {
   if (err) return err;
   try {
     await connectDB();
-    const returns = await Return.find().sort({ date: -1 });
+    const returns = await Return.find({ storeId: user.currentStoreId }).sort({ date: -1 });
     return NextResponse.json(returns);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -38,11 +38,17 @@ export async function POST(request) {
   try {
     await connectDB();
     const returnData = await request.json();
+    returnData.storeId = user.currentStoreId;
+
     // Restore inventory for returned items
     for (const item of returnData.items) {
       const Model = getModelByType(item.type);
       if (Model && item.productId) {
-        await Model.findByIdAndUpdate(item.productId, { $inc: { quantity: item.quantity } });
+        // Scoped to storeId for security
+        await Model.findOneAndUpdate(
+          { _id: item.productId, storeId: user.currentStoreId },
+          { $inc: { quantity: item.quantity } }
+        );
       }
     }
     const returnDoc = new Return(returnData);

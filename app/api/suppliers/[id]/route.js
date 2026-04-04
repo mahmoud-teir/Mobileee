@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const supplier = await Supplier.findById(params.id);
+    const supplier = await Supplier.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!supplier) return NextResponse.json({ message: 'Supplier not found' }, { status: 404 });
     return NextResponse.json(supplier);
   } catch (error) {
@@ -23,7 +23,11 @@ export async function PUT(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const supplier = await Supplier.findByIdAndUpdate(params.id, await request.json(), { new: true, runValidators: true });
+    const supplier = await Supplier.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      await request.json(), 
+      { new: true, runValidators: true }
+    );
     if (!supplier) return NextResponse.json({ message: 'Supplier not found' }, { status: 404 });
     return NextResponse.json(supplier);
   } catch (error) {
@@ -37,7 +41,7 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const supplier = await Supplier.findByIdAndDelete(params.id);
+    const supplier = await Supplier.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     if (!supplier) return NextResponse.json({ message: 'Supplier not found' }, { status: 404 });
     return NextResponse.json({ message: 'Supplier deleted successfully' });
   } catch (error) {

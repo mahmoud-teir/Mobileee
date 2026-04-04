@@ -57,9 +57,15 @@ const returnSchema = new mongoose.Schema({
   notes: {
     type: String,
     trim: true
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Return', returnSchema);
+module.exports = mongoose.models.Return || mongoose.model('Return', returnSchema);

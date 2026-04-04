@@ -7,7 +7,7 @@ export async function GET(request) {
     if (!user) {
       return NextResponse.json({ message: 'غير مصرح' }, { status: 401 });
     }
-    return NextResponse.json(user.toJSON());
+    return NextResponse.json(user);
   } catch (error) {
     return NextResponse.json({ message: 'غير مصرح' }, { status: 401 });
   }

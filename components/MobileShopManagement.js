@@ -1,8 +1,10 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ShoppingBag, Wrench, DollarSign, FileText, Users, Truck, AlertCircle, BarChart as BarChartIcon, Cloud, RotateCcw, CreditCard, Moon, Sun, ScanLine, LogOut, User, Shield, Database, Trash2 } from 'lucide-react';
+import { TrendingUp, ShoppingBag, Wrench, DollarSign, FileText, Users, Truck, AlertCircle, BarChart as BarChartIcon, Cloud, RotateCcw, CreditCard, Moon, Sun, ScanLine, LogOut, User, Shield, Database, Trash2, Languages, Eye } from 'lucide-react';
 import { useStorage, initializeStorage, clearLocalCache } from '@/lib/storage';
+import { hasFeature } from '@/lib/planLimits';
 import { useAuth } from './AuthContext';
+import { useLanguage } from './LanguageContext';
 import { Toaster, toast } from 'sonner';
 
 // استيراد المكونات
@@ -21,6 +23,7 @@ import Installments from './Installments';
 import BarcodeScanner from './BarcodeScanner';
 import UsersManagement from './UsersManagement';
 import DatabaseViewer from './DatabaseViewer';
+import SystemAdmin from './SystemAdmin';
 
 // تهيئة localStorage عند التشغيل
 initializeStorage();
@@ -28,16 +31,52 @@ initializeStorage();
 const MobileShopManagement = () => {
   const { data, saveData, addItem, updateItem, deleteItem, loading } = useStorage();
   const { user, logout, sessionWarning } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const { t, language, toggleLanguage, isRTL } = useLanguage();
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('activeTab');
+      if (saved) return saved;
+      
+      // Default for super_admin who is not impersonating
+      if (user?.role === 'super_admin' && !localStorage.getItem('currentStoreSlug')) {
+        return 'admin';
+      }
+    }
+    return 'dashboard';
+  });
   const [notifications, setNotifications] = useState([]);
   const [printInvoice, setPrintInvoice] = useState(null);
   const [inventoryView, setInventoryView] = useState('screens');
   const [showBackupManager, setShowBackupManager] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved === 'true';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('darkMode');
+      return saved === 'true';
+    }
+    return false;
   });
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [isImpersonating, setIsImpersonating] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const slugFromUrl = window.location.pathname.split('/')[1];
+      const savedSlug = localStorage.getItem('currentStoreSlug');
+      // If we are at a slug URL and we are a super_admin, we are impersonating
+      return !!slugFromUrl && slugFromUrl !== 'api' && slugFromUrl !== 'admin';
+    }
+    return false;
+  });
+
+  const handleImpersonate = (slug) => {
+    localStorage.setItem('currentStoreSlug', slug);
+    localStorage.setItem('activeTab', 'dashboard');
+    window.location.href = `/${slug}`;
+  };
+
+  const handleStopImpersonating = () => {
+    localStorage.removeItem('currentStoreSlug');
+    localStorage.setItem('activeTab', 'admin');
+    window.location.href = '/';
+  };
 
   // تطبيق الوضع المظلم
   useEffect(() => {
@@ -49,6 +88,11 @@ const MobileShopManagement = () => {
     }
   }, [darkMode]);
 
+  // حفظ التبويب النشط
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
   // التحقق من التنبيهات
   useEffect(() => {
     const checkNotifications = () => {
@@ -58,13 +102,13 @@ const MobileShopManagement = () => {
 
       // تنبيهات المخزون المنخفض لكل الأصناف
       const stockItems = [
-        ...(data.screens || []).map(i => ({ ...i, categoryName: 'شاشة' })),
-        ...(data.phones || []).map(i => ({ ...i, categoryName: 'جوال', model: i.model || i.name })),
-        ...(data.accessories || []).map(i => ({ ...i, categoryName: 'إكسسوار' })),
-        ...(data.stickers || []).map(i => ({ ...i, categoryName: 'ملصق' })),
+        ...(data.screens || []).map(i => ({ ...i, categoryName: t('inventory.screen') })),
+        ...(data.phones || []).map(i => ({ ...i, categoryName: t('inventory.phone'), model: i.model || i.name })),
+        ...(data.accessories || []).map(i => ({ ...i, categoryName: t('inventory.accessory') })),
+        ...(data.stickers || []).map(i => ({ ...i, categoryName: t('inventory.sticker') })),
         ...(data.products || []).map(i => ({ 
             ...i, 
-            categoryName: (data.categories?.find(c => c._id === (i.categoryId?._id || i.categoryId))?.name || 'منتج')
+            categoryName: (data.categories?.find(c => c._id === (i.categoryId?._id || i.categoryId))?.name || t('inventory.product'))
         }))
       ];
 
@@ -73,7 +117,7 @@ const MobileShopManagement = () => {
           newNotifications.push({
             id: `stock-${item._id || item.id}`,
             type: 'stock',
-            message: `${item.categoryName} ${item.model || item.name} ناقص في المخزون! الكمية: ${item.quantity}`,
+            message: `${item.categoryName} ${item.model || item.name} ${t('notifications.stockLow')} ${item.quantity}`,
             time: new Date().toISOString()
           });
         }
@@ -86,7 +130,7 @@ const MobileShopManagement = () => {
           newNotifications.push({
             id: `repair-${repair._id || repair.id}`,
             type: 'repair',
-            message: `جهاز ${repair.device} للعميل ${repair.customerName} جاهز للتسليم`,
+            message: `${t('notifications.repairReady')} ${repair.device} ${t('notifications.forCustomer')} ${repair.customerName}`,
             time: new Date().toISOString()
           });
         });
@@ -95,7 +139,7 @@ const MobileShopManagement = () => {
     };
 
     checkNotifications();
-  }, [data, loading]);
+  }, [data, loading, t]);
 
   // دالة النسخ الاحتياطي
   const handleBackup = () => {
@@ -129,10 +173,10 @@ const MobileShopManagement = () => {
         URL.revokeObjectURL(url);
       }, 0);
 
-      alert('تم إنشاء نسخة احتياطية ناجحة!');
+      alert(t('header.backupSuccess') || 'Success!');
     } catch (error) {
-      console.error('خطأ في إنشاء النسخة الاحتياطية:', error);
-      alert('حدث خطأ أثناء إنشاء النسخة الاحتياطية. الرجاء المحاولة مرة أخرى.');
+      console.error('Error creating backup:', error);
+      alert(t('header.backupError') || 'Error!');
     }
   };
 
@@ -147,7 +191,7 @@ const MobileShopManagement = () => {
         const content = e.target.result;
         const backupData = JSON.parse(content);
 
-        if (!window.confirm('تحذير: سيتم استبدال جميع البيانات الحالية بالبيانات من النسخة الاحتياطية. هل أنت متأكد؟')) {
+        if (!window.confirm(t('header.restoreConfirm'))) {
           return;
         }
 
@@ -165,11 +209,11 @@ const MobileShopManagement = () => {
           }
         }
 
-        alert('تمت استعادة النسخة الاحتياطية بنجاح!');
+        alert(t('header.restoreSuccess'));
         window.location.reload();
       } catch (error) {
-        console.error('خطأ في استعادة النسخة الاحتياطية:', error);
-        alert('حدث خطأ أثناء استعادة النسخة الاحتياطية. الرجاء التحقق من ملف النسخة الاحتياطية.');
+        console.error('Error restoring backup:', error);
+        alert(t('header.restoreError'));
       }
     };
 
@@ -179,32 +223,56 @@ const MobileShopManagement = () => {
 
   // دالة تسجيل الخروج
   const handleLogout = () => {
-    if (window.confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+    if (window.confirm(t('header.logoutConfirm'))) {
       logout();
     }
   };
 
-  // التحقق من صلاحية المدير
-  const isAdmin = user?.role === 'admin';
+  // التحقق من الصلاحيات
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const isOwner = user?.role === 'owner' || isAdmin;
+  const isSuperAdmin = user?.role === 'super_admin';
 
   // قائمة التبويبات
   const tabs = [
-    { id: 'dashboard', label: 'لوحة التحكم', shortLabel: 'الرئيسية', icon: TrendingUp },
-    { id: 'inventory', label: 'المخزون', shortLabel: 'مخزون', icon: ShoppingBag },
-    { id: 'repairs', label: 'الصيانة', shortLabel: 'صيانة', icon: Wrench },
-    { id: 'sales', label: 'المبيعات', shortLabel: 'مبيعات', icon: DollarSign },
-    { id: 'expenses', label: 'المصاريف', shortLabel: 'مصاريف', icon: FileText },
-    { id: 'customers', label: 'العملاء', shortLabel: 'عملاء', icon: Users },
-    { id: 'suppliers', label: 'الموردين', shortLabel: 'موردين', icon: Truck },
-    { id: 'returns', label: 'المرتجعات', shortLabel: 'مرتجع', icon: RotateCcw },
-    { id: 'installments', label: 'الأقساط', shortLabel: 'أقساط', icon: CreditCard },
-    { id: 'reports', label: 'التقارير', shortLabel: 'تقارير', icon: BarChartIcon },
-    // تبويبات المدير فقط
+    { id: 'dashboard', label: t('nav.dashboard'), shortLabel: t('nav.dashboardShort'), icon: TrendingUp },
+    { id: 'inventory', label: t('nav.inventory'), shortLabel: t('nav.inventoryShort'), icon: ShoppingBag },
+    { id: 'repairs', label: t('nav.repairs'), shortLabel: t('nav.repairsShort'), icon: Wrench },
+    { id: 'sales', label: t('nav.sales'), shortLabel: t('nav.salesShort'), icon: DollarSign },
+    { id: 'expenses', label: t('nav.expenses'), shortLabel: t('nav.expensesShort'), icon: FileText },
+    { id: 'customers', label: t('nav.customers'), shortLabel: t('nav.customersShort'), icon: Users },
+    { id: 'suppliers', label: t('nav.suppliers'), shortLabel: t('nav.suppliersShort'), icon: Truck },
+    { id: 'returns', label: t('nav.returns'), shortLabel: t('nav.returnsShort'), icon: RotateCcw },
+    { id: 'installments', label: t('nav.installments'), shortLabel: t('nav.installmentsShort'), icon: CreditCard },
+    { id: 'reports', label: t('nav.reports'), shortLabel: t('nav.reportsShort'), icon: BarChartIcon },
+    // تبويبات الإدارة والمستخدمين
+    ...(isOwner ? [
+      { id: 'users', label: t('nav.users'), shortLabel: t('nav.usersShort'), icon: Shield }
+    ] : []),
+    // تبويب قاعدة البيانات للمدراء فقط
     ...(isAdmin ? [
-      { id: 'users', label: 'المستخدمين', shortLabel: 'مستخدمين', icon: Shield },
-      { id: 'database', label: 'قاعدة البيانات', shortLabel: 'قاعدة', icon: Database }
+      { id: 'database', label: t('nav.database'), shortLabel: t('nav.databaseShort'), icon: Database }
+    ] : []),
+    // تبويب مدير النظام الشامل
+    ...(isSuperAdmin ? [
+      { id: 'admin', label: 'إدارة النظام', shortLabel: 'النظام', icon: Shield }
     ] : [])
-  ];
+  ].filter(tab => {
+    // Super Admin sees everything ONLY when impersonating
+    if (isSuperAdmin && !isImpersonating) {
+      return ['admin', 'database'].includes(tab.id);
+    }
+    
+    // Check feature gating for other roles or impersonated shops
+    const storePlan = user?.currentStore?.subscription?.plan || 'free';
+    if (!hasFeature(storePlan, tab.id)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const isTabVisible = (tabId) => tabs.some(t => t.id === tabId);
 
   if (loading) {
     return (
@@ -217,7 +285,7 @@ const MobileShopManagement = () => {
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">SmartStore POS</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('login.title')}</h2>
 
           {/* مؤشر التحميل */}
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -226,27 +294,44 @@ const MobileShopManagement = () => {
             <div className="w-3 h-3 bg-rose-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
           </div>
 
-          <p className="text-gray-600 font-medium">جاري تحميل النظام...</p>
-          <p className="text-gray-400 text-sm mt-2">تطوير: Mahmoud AbuTeir</p>
+          <p className="text-gray-600 font-medium">{t('login.loading')}</p>
+          <p className="text-gray-400 text-sm mt-2">{t('footer.developedBy')}: Mahmoud AbuTeir</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-100'}`} dir="rtl">
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-100'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* نظام التنبيهات */}
-      <Toaster richColors position="top-center" dir="rtl" />
+      <Toaster richColors position="top-center" dir={isRTL ? 'rtl' : 'ltr'} />
 
       {/* تحذير انتهاء الجلسة */}
       {sessionWarning && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white py-3 px-4 text-center shadow-lg animate-pulse">
           <div className="flex items-center justify-center gap-2">
             <AlertCircle className="w-5 h-5" />
-            <span className="font-medium">تحذير: ستنتهي الجلسة خلال دقيقة واحدة بسبب عدم النشاط. قم بأي نشاط للبقاء متصلاً.</span>
+            <span>{sessionWarning}</span>
           </div>
         </div>
       )}
+
+      {/* تنبيه وضع المحاكاة / الدخول كمتجر */}
+      {isImpersonating && (
+        <div className="bg-indigo-600 text-white py-2 px-4 flex justify-between items-center shadow-lg">
+          <div className="flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            <span className="text-sm font-bold">أنت الآن تتصفح بيانات متجر: {user?.currentStore?.name} ({user?.currentStore?.slug})</span>
+          </div>
+          <button 
+            onClick={handleStopImpersonating}
+            className="bg-white text-indigo-600 px-3 py-1 rounded-lg text-xs font-black hover:bg-indigo-50 transition"
+          >
+            العودة للوحة الإدارة
+          </button>
+        </div>
+      )}
+
 
       {/* الهيدر */}
       <div className="bg-gradient-to-r from-rose-600 via-rose-700 to-pink-800 text-white shadow-2xl relative overflow-hidden">
@@ -257,7 +342,7 @@ const MobileShopManagement = () => {
         </div>
 
         <div className="relative z-10 p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
             {/* اللوجو */}
             <div className="bg-white/20 backdrop-blur-sm p-3 rounded-2xl shadow-lg border border-white/30">
               <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-2 rounded-xl">
@@ -265,20 +350,31 @@ const MobileShopManagement = () => {
               </div>
             </div>
 
-            <div>
+            <div className={isRTL ? 'text-right' : 'text-left'}>
               <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2 drop-shadow-lg">
-                SmartStore POS
+                {t('login.title')}
               </h1>
-              <p className="text-rose-100 mt-1 hidden md:block text-sm">نظام إدارة متكامل للمحلات</p>
+              <p className="text-rose-100 mt-1 hidden md:block text-sm">{t('login.subtitle')}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-3 mt-4 md:mt-0 flex-wrap justify-end">
+          <div className={`flex items-center gap-2 md:gap-3 mt-4 md:mt-0 flex-wrap ${isRTL ? 'justify-end' : 'justify-start'}`}>
+            {/* Language Switcher */}
+            <button
+              onClick={toggleLanguage}
+              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-2 md:px-4 md:py-2 rounded-xl flex items-center gap-2 transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              <Languages className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="text-sm hidden md:inline font-medium">
+                {language === 'ar' ? 'English' : 'العربية'}
+              </span>
+            </button>
+
             {/* زر ماسح الباركود */}
             <button
               onClick={() => setShowBarcodeScanner(true)}
               className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-2 md:p-2.5 rounded-xl transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
-              title="مسح باركود"
+              title={t('header.scanBarcode')}
             >
               <ScanLine className="w-4 h-4 md:w-5 md:h-5" />
             </button>
@@ -287,7 +383,7 @@ const MobileShopManagement = () => {
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-2 md:p-2.5 rounded-xl transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
-              title={darkMode ? 'الوضع الفاتح' : 'الوضع المظلم'}
+              title={darkMode ? t('header.lightMode') : t('header.darkMode')}
             >
               {darkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5" /> : <Moon className="w-4 h-4 md:w-5 md:h-5" />}
             </button>
@@ -295,12 +391,12 @@ const MobileShopManagement = () => {
             {/* زر مسح الكاش */}
             <button
               onClick={() => {
-                if (window.confirm('هل أنت متأكد من مسح جميع الملفات المؤقتة وإعادة تحميل التطبيق؟')) {
+                if (window.confirm(t('header.clearCache'))) {
                   clearLocalCache();
                 }
               }}
               className="bg-white/20 backdrop-blur-sm hover:bg-red-500/40 text-white p-2 md:p-2.5 rounded-xl transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
-              title="مسح الكاش والملفات المؤقتة"
+              title={t('header.clearCache')}
             >
               <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
             </button>
@@ -309,37 +405,10 @@ const MobileShopManagement = () => {
             <button
               onClick={() => setShowBackupManager(true)}
               className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-2 md:px-4 md:py-2 rounded-xl flex items-center gap-2 transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
-              title="مدير النسخ الاحتياطية"
+              title={t('header.backupManager')}
             >
               <Cloud className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-sm hidden md:inline font-medium">نسخ احتياطية</span>
-            </button>
-
-            {/* استعادة النسخة الاحتياطية - مخفي على الجوال */}
-            <div className="relative group hidden sm:block">
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleRestore}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                id="restore-backup"
-              />
-              <label
-                htmlFor="restore-backup"
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-2 md:p-2.5 rounded-xl cursor-pointer flex items-center justify-center transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
-                title="استعادة نسخة احتياطية"
-              >
-                <FileText className="w-4 h-4 md:w-5 md:h-5" />
-              </label>
-            </div>
-
-            {/* النسخ الاحتياطي - مخفي على الجوال */}
-            <button
-              onClick={handleBackup}
-              className="hidden sm:flex bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-2 md:p-2.5 rounded-xl transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
-              title="إنشاء نسخة احتياطية"
-            >
-              <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="text-sm hidden md:inline font-medium">{t('header.backups')}</span>
             </button>
 
             {/* إشعارات */}
@@ -357,33 +426,20 @@ const MobileShopManagement = () => {
               </button>
             </div>
 
-            {/* زر مسح الكاش */}
-            <button
-              onClick={() => {
-                if(window.confirm('هل أنت متأكد من مسح الذاكرة المؤقتة؟ سيتم حذف النسخ الاحتياطية المحلية وإعادة تحميل الصفحة.')) {
-                  clearLocalCache();
-                }
-              }}
-              className="bg-orange-500/80 hover:bg-orange-600 text-white p-2 md:p-2.5 rounded-xl transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl hover:scale-105"
-              title="مسح الذاكرة المؤقتة"
-            >
-              <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-
             {/* معلومات المستخدم */}
             <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-2 rounded-xl flex items-center gap-2 border border-white/30">
               <User className="w-5 h-5" />
-              <span className="text-sm font-medium">{user?.name || user?.username || 'مستخدم'}</span>
+              <span className="text-sm font-medium">{user?.name || user?.username || t('header.user')}</span>
             </div>
 
             {/* زر تسجيل الخروج */}
             <button
               onClick={handleLogout}
               className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-              title="تسجيل الخروج"
+              title={t('header.logout')}
             >
               <LogOut className="w-5 h-5" />
-              <span className="text-sm hidden sm:inline font-medium">خروج</span>
+              <span className="text-sm hidden sm:inline font-medium">{t('header.logout')}</span>
             </button>
           </div>
         </div>
@@ -391,7 +447,7 @@ const MobileShopManagement = () => {
 
       {/* القائمة */}
       <div className="bg-white shadow-lg sticky top-0 z-10 border-b border-gray-200">
-        <div className="flex overflow-x-auto scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className={`flex overflow-x-auto scrollbar-thin ${isRTL ? '' : 'flex-row-reverse'}`} style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -419,18 +475,19 @@ const MobileShopManagement = () => {
 
       {/* المحتوى */}
       <div className="p-4 md:p-6">
-        {activeTab === 'dashboard' && <Dashboard data={data} setActiveTab={setActiveTab} setView={setInventoryView} saveData={saveData} />}
-        {activeTab === 'inventory' && <Inventory data={data} saveData={saveData} addItem={addItem} updateItem={updateItem} deleteItem={deleteItem} view={inventoryView} setView={setInventoryView} />}
-        {activeTab === 'repairs' && <Repairs data={data} saveData={saveData} showInvoice={setPrintInvoice} />}
-        {activeTab === 'sales' && <Sales data={data} saveData={saveData} showInvoice={setPrintInvoice} />}
-        {activeTab === 'expenses' && <Expenses data={data} saveData={saveData} />}
-        {activeTab === 'customers' && <Customers data={data} saveData={saveData} />}
-        {activeTab === 'suppliers' && <Suppliers data={data} saveData={saveData} />}
-        {activeTab === 'returns' && <Returns data={data} saveData={saveData} />}
-        {activeTab === 'installments' && <Installments data={data} saveData={saveData} />}
-        {activeTab === 'reports' && <Reports data={data} />}
-        {activeTab === 'users' && isAdmin && <UsersManagement />}
-        {activeTab === 'database' && isAdmin && <DatabaseViewer />}
+        {activeTab === 'dashboard' && isTabVisible('dashboard') && <Dashboard data={data} setActiveTab={setActiveTab} setView={setInventoryView} saveData={saveData} />}
+        {activeTab === 'inventory' && isTabVisible('inventory') && <Inventory data={data} saveData={saveData} addItem={addItem} updateItem={updateItem} deleteItem={deleteItem} view={inventoryView} setView={setInventoryView} />}
+        {activeTab === 'repairs' && isTabVisible('repairs') && <Repairs data={data} saveData={saveData} showInvoice={setPrintInvoice} />}
+        {activeTab === 'sales' && isTabVisible('sales') && <Sales data={data} saveData={saveData} showInvoice={setPrintInvoice} />}
+        {activeTab === 'expenses' && isTabVisible('expenses') && <Expenses data={data} saveData={saveData} />}
+        {activeTab === 'customers' && isTabVisible('customers') && <Customers data={data} saveData={saveData} />}
+        {activeTab === 'suppliers' && isTabVisible('suppliers') && <Suppliers data={data} saveData={saveData} />}
+        {activeTab === 'returns' && isTabVisible('returns') && <Returns data={data} saveData={saveData} />}
+        {activeTab === 'installments' && isTabVisible('installments') && <Installments data={data} saveData={saveData} />}
+        {activeTab === 'reports' && isTabVisible('reports') && <Reports data={data} saveData={saveData} />}
+        {activeTab === 'users' && isTabVisible('users') && <UsersManagement />}
+        {activeTab === 'database' && isTabVisible('database') && <DatabaseViewer />}
+        {activeTab === 'admin' && isTabVisible('admin') && <SystemAdmin onImpersonate={handleImpersonate} />}
 
         {/* الفاتورة المنبثقة */}
         {printInvoice && (
@@ -461,32 +518,32 @@ const MobileShopManagement = () => {
 
       {/* فوتر */}
       <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-8 mt-12">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 text-right">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* معلومات النظام */}
-            <div className="text-center md:text-right">
+            <div className={`text-center ${isRTL ? 'md:text-right' : 'md:text-left'}`}>
               <h3 className="text-xl font-bold text-rose-400 mb-2 flex items-center justify-center md:justify-start gap-2">
                 <ShoppingBag className="w-6 h-6" />
-                SmartStore POS
+                {t('login.title')}
               </h3>
-              <p className="text-gray-400 text-sm">نظام إدارة متكامل لمحلات الموبايلات</p>
-              <p className="text-gray-500 text-xs mt-1">الإصدار 2.0</p>
+              <p className="text-gray-400 text-sm">{t('footer.subtitle')}</p>
+              <p className="text-gray-500 text-xs mt-1">{t('footer.version')}</p>
             </div>
 
             {/* روابط سريعة */}
             <div className="text-center">
-              <h4 className="text-sm font-semibold text-gray-300 mb-2">الميزات الرئيسية</h4>
+              <h4 className="text-sm font-semibold text-gray-300 mb-2">{t('footer.features')}</h4>
               <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-400">
-                <span className="bg-gray-700/50 px-2 py-1 rounded">المبيعات</span>
-                <span className="bg-gray-700/50 px-2 py-1 rounded">المخزون</span>
-                <span className="bg-gray-700/50 px-2 py-1 rounded">الصيانة</span>
-                <span className="bg-gray-700/50 px-2 py-1 rounded">التقارير</span>
+                <span className="bg-gray-700/50 px-2 py-1 rounded">{t('nav.sales')}</span>
+                <span className="bg-gray-700/50 px-2 py-1 rounded">{t('nav.inventory')}</span>
+                <span className="bg-gray-700/50 px-2 py-1 rounded">{t('nav.repairs')}</span>
+                <span className="bg-gray-700/50 px-2 py-1 rounded">{t('nav.reports')}</span>
               </div>
             </div>
 
             {/* معلومات المطور */}
-            <div className="text-center md:text-left">
-              <h4 className="text-sm font-semibold text-gray-300 mb-2">تطوير وتصميم</h4>
+            <div className={`text-center ${isRTL ? 'md:text-left' : 'md:text-right'}`}>
+              <h4 className="text-sm font-semibold text-gray-300 mb-2">{t('footer.developedBy')}</h4>
               <p className="text-rose-400 font-bold text-lg">Mahmoud AbuTeir</p>
               <p className="text-gray-500 text-xs mt-1">Full Stack Developer</p>
             </div>
@@ -494,14 +551,14 @@ const MobileShopManagement = () => {
 
           {/* خط فاصل */}
           <div className="border-t border-gray-700 pt-4">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-2">
+            <div className={`flex flex-col md:flex-row justify-between items-center gap-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
               <p className="text-gray-400 text-sm">
-                © {new Date().getFullYear()} SmartStore POS. جميع الحقوق محفوظة.
+                © {new Date().getFullYear()} SmartStore POS. {t('footer.rights')}
               </p>
               <p className="text-gray-500 text-xs flex items-center gap-1">
-                <span>صنع بـ</span>
+                <span>{t('footer.madeWith')}</span>
                 <span className="text-red-500">❤</span>
-                <span>بواسطة</span>
+                <span>{t('footer.by')}</span>
                 <span className="text-rose-400 font-medium">Mahmoud AbuTeir</span>
               </p>
             </div>

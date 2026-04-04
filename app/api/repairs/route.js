@@ -11,7 +11,7 @@ export async function GET(request) {
   if (err) return err;
   try {
     await connectDB();
-    const repairs = await Repair.find().sort({ date: -1 });
+    const repairs = await Repair.find({ storeId: user.currentStoreId }).sort({ date: -1 });
     return NextResponse.json(repairs);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -25,8 +25,14 @@ export async function POST(request) {
   try {
     await connectDB();
     const repairData = await request.json();
+    repairData.storeId = user.currentStoreId;
+
     if (repairData.useScreen && repairData.screenId) {
-      await Screen.findByIdAndUpdate(repairData.screenId, { $inc: { quantity: -1 } });
+      // Scoped to storeId for security
+      await Screen.findOneAndUpdate(
+        { _id: repairData.screenId, storeId: user.currentStoreId },
+        { $inc: { quantity: -1 } }
+      );
     }
     const repair = new Repair(repairData);
     const newRepair = await repair.save();

@@ -11,7 +11,7 @@ export async function GET(request) {
 
   try {
     await connectDB();
-    const screens = await Screen.find().sort({ createdAt: -1 });
+    const screens = await Screen.find({ storeId: user.currentStoreId }).sort({ createdAt: -1 });
     return NextResponse.json(screens);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -26,6 +26,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
+    body.storeId = user.currentStoreId;
     const screen = new Screen(body);
     const newScreen = await screen.save();
     return NextResponse.json(newScreen, { status: 201 });

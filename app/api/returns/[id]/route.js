@@ -24,7 +24,7 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const returnDoc = await Return.findById(params.id);
+    const returnDoc = await Return.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!returnDoc) return NextResponse.json({ message: 'Return not found' }, { status: 404 });
     return NextResponse.json(returnDoc);
   } catch (error) {
@@ -38,7 +38,11 @@ export async function PUT(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const returnDoc = await Return.findByIdAndUpdate(params.id, await request.json(), { new: true, runValidators: true });
+    const returnDoc = await Return.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      await request.json(), 
+      { new: true, runValidators: true }
+    );
     if (!returnDoc) return NextResponse.json({ message: 'Return not found' }, { status: 404 });
     return NextResponse.json(returnDoc);
   } catch (error) {
@@ -52,16 +56,19 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const returnDoc = await Return.findById(params.id);
+    const returnDoc = await Return.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!returnDoc) return NextResponse.json({ message: 'Return not found' }, { status: 404 });
-    // Re-deduct inventory (undo the return)
+    // Re-deduct inventory (undo the return) - Scoped to storeId
     for (const item of returnDoc.items) {
       const Model = getModelByType(item.type);
       if (Model && item.productId) {
-        await Model.findByIdAndUpdate(item.productId, { $inc: { quantity: -item.quantity } });
+        await Model.findOneAndUpdate(
+          { _id: item.productId, storeId: user.currentStoreId },
+          { $inc: { quantity: -item.quantity } }
+        );
       }
     }
-    await Return.findByIdAndDelete(params.id);
+    await Return.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     return NextResponse.json({ message: 'Return deleted successfully' });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

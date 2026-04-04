@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
 
   try {
     await connectDB();
-    const phone = await Phone.findById(params.id);
+    const phone = await Phone.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!phone) return NextResponse.json({ message: 'Phone not found' }, { status: 404 });
     return NextResponse.json(phone);
   } catch (error) {
@@ -27,7 +27,11 @@ export async function PUT(request, { params }) {
   try {
     await connectDB();
     const body = await request.json();
-    const phone = await Phone.findByIdAndUpdate(params.id, body, { new: true, runValidators: true });
+    const phone = await Phone.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      body, 
+      { new: true, runValidators: true }
+    );
     if (!phone) return NextResponse.json({ message: 'Phone not found' }, { status: 404 });
     return NextResponse.json(phone);
   } catch (error) {
@@ -42,7 +46,7 @@ export async function DELETE(request, { params }) {
 
   try {
     await connectDB();
-    const phone = await Phone.findByIdAndDelete(params.id);
+    const phone = await Phone.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     if (!phone) return NextResponse.json({ message: 'Phone not found' }, { status: 404 });
     return NextResponse.json({ message: 'Phone deleted successfully' });
   } catch (error) {

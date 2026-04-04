@@ -4,8 +4,7 @@ const screenSchema = new mongoose.Schema({
   model: {
     type: String,
     required: true,
-    trim: true,
-    unique: true
+    trim: true
   },
   quantity: {
     type: Number,
@@ -26,9 +25,17 @@ const screenSchema = new mongoose.Schema({
   description: {
     type: String,
     trim: true
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Screen', screenSchema);
+screenSchema.index({ storeId: 1, model: 1 }, { unique: true });
+
+module.exports = mongoose.models.Screen || mongoose.model('Screen', screenSchema);

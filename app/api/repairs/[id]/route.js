@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const repair = await Repair.findById(params.id);
+    const repair = await Repair.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!repair) return NextResponse.json({ message: 'Repair not found' }, { status: 404 });
     return NextResponse.json(repair);
   } catch (error) {
@@ -25,7 +25,11 @@ export async function PUT(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const repair = await Repair.findByIdAndUpdate(params.id, await request.json(), { new: true, runValidators: true });
+    const repair = await Repair.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      await request.json(), 
+      { new: true, runValidators: true }
+    );
     if (!repair) return NextResponse.json({ message: 'Repair not found' }, { status: 404 });
     return NextResponse.json(repair);
   } catch (error) {
@@ -39,15 +43,19 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const repair = await Repair.findById(params.id);
+    const repair = await Repair.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!repair) return NextResponse.json({ message: 'Repair not found' }, { status: 404 });
 
     // Restore screen to inventory if it was used
     if (repair.useScreen && repair.screenId) {
-      await Screen.findByIdAndUpdate(repair.screenId, { $inc: { quantity: 1 } });
+      // Scoped to storeId for security
+      await Screen.findOneAndUpdate(
+        { _id: repair.screenId, storeId: user.currentStoreId },
+        { $inc: { quantity: 1 } }
+      );
     }
 
-    await Repair.findByIdAndDelete(params.id);
+    await Repair.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     return NextResponse.json({ message: 'Repair deleted successfully' });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

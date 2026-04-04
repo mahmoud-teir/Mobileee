@@ -13,10 +13,10 @@ export async function GET(request) {
   try {
     await connectDB();
     const [screens, phones, accessories, stickers] = await Promise.all([
-      Screen.find({ $expr: { $lte: ['$quantity', '$minQuantity'] } }),
-      Phone.find({ $expr: { $lte: ['$quantity', '$minQuantity'] } }),
-      Accessory.find({ $expr: { $lte: ['$quantity', '$minQuantity'] } }),
-      Sticker.find({ $expr: { $lte: ['$quantity', '$minQuantity'] } })
+      Screen.find({ storeId: user.currentStoreId, $expr: { $lte: ['$quantity', '$minQuantity'] } }),
+      Phone.find({ storeId: user.currentStoreId, $expr: { $lte: ['$quantity', '$minQuantity'] } }),
+      Accessory.find({ storeId: user.currentStoreId, $expr: { $lte: ['$quantity', '$minQuantity'] } }),
+      Sticker.find({ storeId: user.currentStoreId, $expr: { $lte: ['$quantity', '$minQuantity'] } })
     ]);
     return NextResponse.json({
       screens, phones, accessories, stickers,

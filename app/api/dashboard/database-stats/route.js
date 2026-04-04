@@ -23,11 +23,20 @@ export async function GET(request) {
   try {
     await connectDB();
     const counts = await Promise.all([
-      User.countDocuments(), Screen.countDocuments(), Phone.countDocuments(),
-      Accessory.countDocuments(), Sticker.countDocuments(), Customer.countDocuments(),
-      Supplier.countDocuments(), Sale.countDocuments(), Repair.countDocuments(),
-      Expense.countDocuments(), Return.countDocuments(), Installment.countDocuments(),
-      Product.countDocuments(), Category.countDocuments()
+      User.countDocuments({ storeId: user.currentStoreId }), 
+      Screen.countDocuments({ storeId: user.currentStoreId }), 
+      Phone.countDocuments({ storeId: user.currentStoreId }),
+      Accessory.countDocuments({ storeId: user.currentStoreId }), 
+      Sticker.countDocuments({ storeId: user.currentStoreId }), 
+      Customer.countDocuments({ storeId: user.currentStoreId }),
+      Supplier.countDocuments({ storeId: user.currentStoreId }), 
+      Sale.countDocuments({ storeId: user.currentStoreId }), 
+      Repair.countDocuments({ storeId: user.currentStoreId }),
+      Expense.countDocuments({ storeId: user.currentStoreId }), 
+      Return.countDocuments({ storeId: user.currentStoreId }), 
+      Installment.countDocuments({ storeId: user.currentStoreId }),
+      Product.countDocuments({ storeId: user.currentStoreId }), 
+      Category.countDocuments({ storeId: user.currentStoreId })
     ]);
     const [usersCount, screensCount, phonesCount, accessoriesCount, stickersCount,
            customersCount, suppliersCount, salesCount, repairsCount, expensesCount,
@@ -47,7 +56,7 @@ export async function GET(request) {
         returns: { name: 'المرتجعات', count: returnsCount },
         installments: { name: 'الأقساط', count: installmentsCount },
         products: { name: 'المنتجات', count: productsCount },
-        categories: { name: 'الأقساط', count: categoriesCount }
+        categories: { name: 'الأقسام', count: categoriesCount }
       },
       totalRecords: counts.reduce((a, b) => a + b, 0)
     });

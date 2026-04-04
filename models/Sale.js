@@ -74,9 +74,15 @@ const saleSchema = new mongoose.Schema({
   notes: {
     type: String,
     trim: true
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Sale', saleSchema);
+module.exports = mongoose.models.Sale || mongoose.model('Sale', saleSchema);

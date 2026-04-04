@@ -3,8 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { RotateCcw, Plus, Trash2, Search as SearchIcon, FileText, X, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
+import { useLanguage } from './LanguageContext';
 
 const Returns = ({ data, saveData }) => {
+  const { t, language, isRTL } = useLanguage();
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({
     saleId: '',
@@ -23,18 +25,18 @@ const Returns = ({ data, saveData }) => {
   });
   const [error, setError] = useState('');
 
-  // أسباب الإرجاع
+  // Return Reasons
   const returnReasons = [
-    'منتج معيب',
-    'منتج خاطئ',
-    'غير راضٍ عن المنتج',
-    'تغيير الرأي',
-    'وجد سعر أفضل',
-    'تكرار الطلب',
-    'أخرى'
+    { id: 'defective', label: t('returns.reasons.defective') },
+    { id: 'wrong', label: t('returns.reasons.wrong') },
+    { id: 'unsatisfied', label: t('returns.reasons.unsatisfied') },
+    { id: 'changeMind', label: t('returns.reasons.changeMind') },
+    { id: 'betterPrice', label: t('returns.reasons.betterPrice') },
+    { id: 'duplicate', label: t('returns.reasons.duplicate') },
+    { id: 'other', label: t('returns.reasons.other') }
   ];
 
-  // تصفية المرتجعات
+  // Filter Returns
   useEffect(() => {
     const returns = data.returns || [];
     const filtered = returns.filter(r => {
@@ -48,7 +50,7 @@ const Returns = ({ data, saveData }) => {
     setFilteredReturns(filtered.sort((a, b) => new Date(b.date) - new Date(a.date)));
   }, [data.returns, searchTerm]);
 
-  // البحث عن فاتورة
+  // Search for Sale
   const searchSales = (term) => {
     if (!term) return [];
     return (data.sales || []).filter(sale => {
@@ -65,7 +67,7 @@ const Returns = ({ data, saveData }) => {
   const selectSale = (sale) => {
     setSelectedSale(sale);
     setFormData({ ...formData, saleId: sale._id || sale.id });
-    // تحديد كل العناصر بشكل افتراضي
+    // Select all items by default
     setSelectedItems(sale.items?.map(item => ({ ...item, selected: true, returnQty: item.quantity })) || []);
     setError('');
   };
@@ -83,7 +85,7 @@ const Returns = ({ data, saveData }) => {
     setSelectedItems(updated);
   };
 
-  // حساب مبلغ الاسترداد
+  // Calculate Refund
   const calculateRefund = () => {
     if (!selectedItems.length) return 0;
     return selectedItems
@@ -91,22 +93,22 @@ const Returns = ({ data, saveData }) => {
       .reduce((sum, item) => sum + (item.returnQty * item.price), 0);
   };
 
-  // إضافة مرتجع
+  // Add Return
   const addReturn = async () => {
     try {
       if (!selectedSale) {
-        setError('الرجاء اختيار فاتورة');
+        setError(t('returns.errorNoSale'));
         return;
       }
 
       const itemsToReturn = selectedItems.filter(item => item.selected);
       if (itemsToReturn.length === 0) {
-        setError('الرجاء اختيار منتج واحد على الأقل للإرجاع');
+        setError(t('returns.errorNoItems'));
         return;
       }
 
       if (!formData.reason) {
-        setError('الرجاء اختيار سبب الإرجاع');
+        setError(t('returns.errorNoReason'));
         return;
       }
 
@@ -118,11 +120,11 @@ const Returns = ({ data, saveData }) => {
         id: Date.now(),
         date: new Date().toISOString(),
         saleId: selectedSale._id || selectedSale.id,
-        customerName: selectedSale.customer || 'غير معروف',
+        customerName: selectedSale.customer || t('common.unknown'),
         items: itemsToReturn.map(item => ({
-          id: item.id,
+          id: item.productId || item.id,
           item: item.item,
-          itemType: item.itemType,
+          itemType: item.type || item.itemType,
           quantity: item.returnQty,
           price: item.price
         })),
@@ -134,51 +136,35 @@ const Returns = ({ data, saveData }) => {
         status: 'completed'
       };
 
-      // إضافة المرتجع
+      // Add Return record
       const updatedReturns = [...(data.returns || []), newReturn];
       await saveData('returns', updatedReturns);
 
-      // إعادة الكميات للمخزون
+      // Restore quantities to stock
       for (const item of itemsToReturn) {
         const qty = item.returnQty;
-        if (item.itemType === 'screen') {
-          const updatedScreens = (data.screens || []).map(s =>
-            (s._id || s.id) === item.id ? { ...s, quantity: s.quantity + qty } : s
-          );
-          await saveData('screens', updatedScreens);
-        } else if (item.itemType === 'phone') {
-          const updatedPhones = (data.phones || []).map(p =>
-            (p._id || p.id) === item.id ? { ...p, quantity: p.quantity + qty } : p
-          );
-          await saveData('phones', updatedPhones);
-        } else if (item.itemType === 'sticker') {
-          const updatedStickers = (data.stickers || []).map(st =>
-            (st._id || st.id) === item.id ? { ...st, quantity: st.quantity + qty } : st
-          );
-          await saveData('stickers', updatedStickers);
-        } else {
-          const updatedAccessories = (data.accessories || []).map(a =>
-            (a._id || a.id) === item.id ? { ...a, quantity: a.quantity + qty } : a
-          );
-          await saveData('accessories', updatedAccessories);
-        }
+        const type = item.type || item.itemType;
+        const collection = type === 'screen' ? 'screens' : type === 'phone' ? 'phones' : type === 'sticker' ? 'stickers' : type === 'accessory' ? 'accessories' : 'products';
+        const items = data[collection] || [];
+        const updatedItems = items.map(i => (i._id || i.id) === (item.productId || item.id) ? { ...i, quantity: i.quantity + qty } : i);
+        await saveData(collection, updatedItems);
       }
 
-      // إعادة تعيين النموذج
+      // Reset form
       setShowAdd(false);
       setFormData({ saleId: '', reason: '', refundType: 'full', refundAmount: '', notes: '' });
       setSelectedSale(null);
       setSelectedItems([]);
       setError('');
 
-      toast.success('تم تسجيل المرتجع بنجاح وتم إعادة الكميات للمخزون!');
+      toast.success(t('returns.success'));
     } catch (error) {
-      console.error('خطأ في تسجيل المرتجع:', error);
-      toast.error('حدث خطأ أثناء تسجيل المرتجع');
+      console.error('Error recording return:', error);
+      toast.error(t('returns.errorRegister') || 'Error recording return');
     }
   };
 
-  // حذف مرتجع
+  // Delete Return
   const handleDeleteReturn = (ret) => {
     setDeleteConfirmation({ isOpen: true, returnId: ret._id || ret.id });
   };
@@ -188,30 +174,14 @@ const Returns = ({ data, saveData }) => {
       const returnToDelete = (data.returns || []).find(r => (r._id || r.id) === deleteConfirmation.returnId);
 
       if (returnToDelete) {
-        // خصم الكميات من المخزون (عكس عملية الإرجاع)
+        // Deduct quantities from stock (reverse return)
         for (const item of returnToDelete.items || []) {
           const qty = item.quantity;
-          if (item.itemType === 'screen') {
-            const updatedScreens = (data.screens || []).map(s =>
-              (s._id || s.id) === item.id ? { ...s, quantity: Math.max(0, s.quantity - qty) } : s
-            );
-            await saveData('screens', updatedScreens);
-          } else if (item.itemType === 'phone') {
-            const updatedPhones = (data.phones || []).map(p =>
-              (p._id || p.id) === item.id ? { ...p, quantity: Math.max(0, p.quantity - qty) } : p
-            );
-            await saveData('phones', updatedPhones);
-          } else if (item.itemType === 'sticker') {
-            const updatedStickers = (data.stickers || []).map(st =>
-              (st._id || st.id) === item.id ? { ...st, quantity: Math.max(0, st.quantity - qty) } : st
-            );
-            await saveData('stickers', updatedStickers);
-          } else {
-            const updatedAccessories = (data.accessories || []).map(a =>
-              (a._id || a.id) === item.id ? { ...a, quantity: Math.max(0, a.quantity - qty) } : a
-            );
-            await saveData('accessories', updatedAccessories);
-          }
+          const type = item.itemType;
+          const collection = type === 'screen' ? 'screens' : type === 'phone' ? 'phones' : type === 'sticker' ? 'stickers' : type === 'accessory' ? 'accessories' : 'products';
+          const items = data[collection] || [];
+          const updatedItems = items.map(i => (i._id || i.id) === (item.productId || item.id) ? { ...i, quantity: Math.max(0, i.quantity - qty) } : i);
+          await saveData(collection, updatedItems);
         }
       }
 
@@ -219,44 +189,44 @@ const Returns = ({ data, saveData }) => {
       await saveData('returns', updatedReturns);
 
       setDeleteConfirmation({ isOpen: false, returnId: null });
-      toast.success('تم حذف المرتجع بنجاح!');
+      toast.success(t('returns.successDelete'));
     } catch (error) {
-      console.error('خطأ في حذف المرتجع:', error);
-      toast.error('حدث خطأ أثناء حذف المرتجع');
+      console.error('Error deleting return:', error);
+      toast.error(t('returns.errorDelete'));
     }
   };
 
   const totalReturns = (data.returns || []).reduce((sum, r) => sum + (r.refundAmount || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center flex-wrap gap-4">
         <h2 className="text-3xl font-bold flex items-center gap-3">
           <RotateCcw className="w-8 h-8 text-orange-500" />
-          المرتجعات
+          {t('returns.title')}
         </h2>
         <div className="flex gap-4 items-center flex-wrap">
           <div className="bg-orange-500 text-white px-6 py-3 rounded-lg">
-            <p className="text-sm">إجمالي المرتجعات</p>
-            <p className="text-2xl font-bold">{totalReturns.toFixed(2)} ₪</p>
+            <p className="text-sm">{t('returns.totalReturns')}</p>
+            <p className="text-2xl font-bold">{totalReturns.toFixed(2)} {t('dashboard.currency')}</p>
           </div>
           <button
             onClick={() => setShowAdd(true)}
             className="bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-700"
           >
             <Plus className="w-5 h-5" />
-            تسجيل مرتجع
+            {t('returns.newReturn')}
           </button>
         </div>
       </div>
 
-      {/* نموذج إضافة مرتجع */}
+      {/* New Return Form */}
       {showAdd && (
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div className={`bg-white p-6 rounded-xl shadow-lg ${isRTL ? 'text-right' : 'text-left'}`}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <RotateCcw className="text-orange-500" />
-              تسجيل مرتجع جديد
+              {t('returns.addTitle')}
             </h3>
             <button onClick={() => {
               setShowAdd(false);
@@ -269,20 +239,20 @@ const Returns = ({ data, saveData }) => {
           </div>
 
           <div className="space-y-4">
-            {/* البحث عن فاتورة */}
+            {/* Search for Sale */}
             {!selectedSale ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  البحث عن فاتورة البيع
+                  {t('returns.selectSale')}
                 </label>
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="ابحث برقم الفاتورة أو اسم العميل أو المنتج..."
+                    placeholder={t('returns.searchSalePlaceholder')}
                     onChange={(e) => setFormData({ ...formData, saleId: e.target.value })}
-                    className="w-full border p-3 rounded-lg pl-10"
+                    className={`w-full border p-3 rounded-lg ${isRTL ? 'pr-3 pl-10' : 'pl-3 pr-10'}`}
                   />
-                  <SearchIcon className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
+                  <SearchIcon className={`w-5 h-5 text-gray-400 absolute top-3.5 ${isRTL ? 'left-3' : 'right-3'}`} />
                 </div>
 
                 {formData.saleId && (
@@ -294,11 +264,11 @@ const Returns = ({ data, saveData }) => {
                         className="p-3 hover:bg-orange-50 cursor-pointer border-b last:border-b-0"
                       >
                         <div className="flex justify-between">
-                          <span className="font-medium">فاتورة #{sale._id || sale.id}</span>
-                          <span className="text-orange-600 font-bold">{sale.total?.toFixed(2)} ₪</span>
+                          <span className="font-medium">{t('nav.sales')} #{sale._id || sale.id}</span>
+                          <span className="text-orange-600 font-bold">{sale.total?.toFixed(2)} {t('dashboard.currency')}</span>
                         </div>
                         <div className="text-sm text-gray-500">
-                          {sale.customer || 'غير معروف'} - {new Date(sale.date).toLocaleDateString('ar')}
+                          {sale.customer || t('common.unknown')} - {new Date(sale.date).toLocaleDateString(language)}
                         </div>
                         <div className="text-sm text-gray-400">
                           {sale.items?.map(i => i.item).join(', ')}
@@ -307,7 +277,7 @@ const Returns = ({ data, saveData }) => {
                     ))}
                     {searchSales(formData.saleId).length === 0 && (
                       <div className="p-4 text-center text-gray-500">
-                        لم يتم العثور على فواتير
+                        {t('returns.noSalesFound')}
                       </div>
                     )}
                   </div>
@@ -315,13 +285,13 @@ const Returns = ({ data, saveData }) => {
               </div>
             ) : (
               <>
-                {/* الفاتورة المختارة */}
+                {/* Selected Sale */}
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-orange-800">فاتورة #{selectedSale._id || selectedSale.id}</h4>
-                      <p className="text-sm text-gray-600">{selectedSale.customer || 'غير معروف'}</p>
-                      <p className="text-sm text-gray-500">{new Date(selectedSale.date).toLocaleDateString('ar')}</p>
+                      <h4 className="font-bold text-orange-800">{t('returns.saleSelected')} #{selectedSale._id || selectedSale.id}</h4>
+                      <p className="text-sm text-gray-600">{selectedSale.customer || t('common.unknown')}</p>
+                      <p className="text-sm text-gray-500">{new Date(selectedSale.date).toLocaleDateString(language)}</p>
                     </div>
                     <button
                       onClick={() => {
@@ -330,15 +300,15 @@ const Returns = ({ data, saveData }) => {
                       }}
                       className="text-orange-600 hover:text-orange-800"
                     >
-                      تغيير
+                      {t('common.edit')}
                     </button>
                   </div>
                 </div>
 
-                {/* اختيار المنتجات للإرجاع */}
+                {/* Select Items for Return */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    اختر المنتجات للإرجاع
+                    {t('returns.selectItems')}
                   </label>
                   <div className="space-y-2">
                     {selectedItems.map((item, index) => (
@@ -355,13 +325,13 @@ const Returns = ({ data, saveData }) => {
                           />
                           <div className="flex-1">
                             <span className="font-medium">{item.item}</span>
-                            <span className="text-sm text-gray-500 mr-2">
-                              ({item.price?.toFixed(2)} ₪)
+                            <span className={`text-sm text-gray-500 ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                              ({item.price?.toFixed(2)} {t('dashboard.currency')})
                             </span>
                           </div>
                           {item.selected && (
                             <div className="flex items-center gap-2">
-                              <label className="text-sm text-gray-600">الكمية:</label>
+                              <label className="text-sm text-gray-600">{t('inventory.quantity')}:</label>
                               <input
                                 type="number"
                                 min="1"
@@ -381,29 +351,29 @@ const Returns = ({ data, saveData }) => {
                   </div>
                 </div>
 
-                {/* سبب الإرجاع */}
+                {/* Return Reason */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    سبب الإرجاع
+                    {t('returns.reason')}
                   </label>
                   <select
                     value={formData.reason}
                     onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                     className="w-full border p-3 rounded-lg"
                   >
-                    <option value="">اختر السبب...</option>
+                    <option value="">{t('returns.selectReason')}</option>
                     {returnReasons.map(reason => (
-                      <option key={reason} value={reason}>{reason}</option>
+                      <option key={reason.id} value={reason.label}>{reason.label}</option>
                     ))}
                   </select>
                 </div>
 
-                {/* نوع الاسترداد */}
+                {/* Refund Type */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    نوع الاسترداد
+                    {t('returns.refundType')}
                   </label>
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 flex-wrap">
                     <label className="flex items-center gap-2">
                       <input
                         type="radio"
@@ -411,7 +381,7 @@ const Returns = ({ data, saveData }) => {
                         checked={formData.refundType === 'full'}
                         onChange={(e) => setFormData({ ...formData, refundType: e.target.value })}
                       />
-                      استرداد كامل
+                      {t('returns.refundFull')}
                     </label>
                     <label className="flex items-center gap-2">
                       <input
@@ -420,7 +390,7 @@ const Returns = ({ data, saveData }) => {
                         checked={formData.refundType === 'partial'}
                         onChange={(e) => setFormData({ ...formData, refundType: e.target.value })}
                       />
-                      استرداد جزئي
+                      {t('returns.refundPartial')}
                     </label>
                     <label className="flex items-center gap-2">
                       <input
@@ -429,64 +399,64 @@ const Returns = ({ data, saveData }) => {
                         checked={formData.refundType === 'exchange'}
                         onChange={(e) => setFormData({ ...formData, refundType: e.target.value })}
                       />
-                      استبدال
+                      {t('returns.exchange')}
                     </label>
                   </div>
                 </div>
 
-                {/* مبلغ الاسترداد الجزئي */}
+                {/* Partial Refund Amount */}
                 {formData.refundType === 'partial' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      مبلغ الاسترداد
+                      {t('returns.refundAmount')}
                     </label>
                     <input
                       type="number"
                       value={formData.refundAmount}
                       onChange={(e) => setFormData({ ...formData, refundAmount: e.target.value })}
-                      placeholder="أدخل المبلغ..."
+                      placeholder={t('common.amount') || 'Amount'}
                       className="w-full border p-3 rounded-lg"
                       max={calculateRefund()}
                     />
                   </div>
                 )}
 
-                {/* ملاحظات */}
+                {/* Notes */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ملاحظات (اختياري)
+                    {t('returns.notes')}
                   </label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="أي ملاحظات إضافية..."
+                    placeholder={t('returns.notesPlaceholder') || 'Notes'}
                     className="w-full border p-3 rounded-lg"
                     rows="2"
                   />
                 </div>
 
-                {/* ملخص الاسترداد */}
+                {/* Refund Summary */}
                 <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200">
-                  <h4 className="font-bold text-orange-800 mb-2">ملخص المرتجع</h4>
+                  <h4 className="font-bold text-orange-800 mb-2">{t('returns.summary')}</h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span>عدد المنتجات:</span>
+                      <span>{t('returns.itemCount')}:</span>
                       <span className="font-medium">
                         {selectedItems.filter(i => i.selected).length}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>إجمالي الكميات:</span>
+                      <span>{t('returns.totalQty')}:</span>
                       <span className="font-medium">
                         {selectedItems.filter(i => i.selected).reduce((s, i) => s + i.returnQty, 0)}
                       </span>
                     </div>
                     <div className="flex justify-between text-lg font-bold mt-2 pt-2 border-t border-orange-200">
-                      <span>مبلغ الاسترداد:</span>
+                      <span>{t('returns.refundAmount')}:</span>
                       <span className="text-orange-600">
                         {formData.refundType === 'partial'
                           ? (parseFloat(formData.refundAmount) || 0).toFixed(2)
-                          : calculateRefund().toFixed(2)} ₪
+                          : calculateRefund().toFixed(2)} {t('dashboard.currency')}
                       </span>
                     </div>
                   </div>
@@ -499,13 +469,13 @@ const Returns = ({ data, saveData }) => {
                   </div>
                 )}
 
-                {/* أزرار */}
+                {/* Buttons */}
                 <div className="flex gap-3">
                   <button
                     onClick={addReturn}
                     className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg font-bold hover:from-orange-600 hover:to-amber-600"
                   >
-                    تأكيد المرتجع
+                    {t('returns.confirmReturn')}
                   </button>
                   <button
                     onClick={() => {
@@ -516,7 +486,7 @@ const Returns = ({ data, saveData }) => {
                     }}
                     className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300"
                   >
-                    إلغاء
+                    {t('common.cancel')}
                   </button>
                 </div>
               </>
@@ -525,33 +495,33 @@ const Returns = ({ data, saveData }) => {
         </div>
       )}
 
-      {/* شريط البحث */}
+      {/* Search Bar */}
       <div className="bg-white p-4 rounded-xl shadow-lg">
         <div className="relative">
           <input
             type="text"
-            placeholder="بحث في المرتجعات..."
+            placeholder={t('returns.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full border p-3 rounded-lg pl-10"
+            className={`w-full border p-3 rounded-lg ${isRTL ? 'pr-3 pl-10' : 'pl-3 pr-10'}`}
           />
-          <SearchIcon className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
+          <SearchIcon className={`w-5 h-5 text-gray-400 absolute top-3.5 ${isRTL ? 'left-3' : 'right-3'}`} />
         </div>
       </div>
 
-      {/* جدول المرتجعات */}
+      {/* Returns Table */}
       <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
         <table className="w-full min-w-[800px]">
           <thead className="bg-gray-100">
             <tr>
-              <th className="p-4 text-right">التاريخ</th>
-              <th className="p-4 text-right">رقم الفاتورة</th>
-              <th className="p-4 text-right">العميل</th>
-              <th className="p-4 text-right">المنتجات</th>
-              <th className="p-4 text-right">السبب</th>
-              <th className="p-4 text-right">نوع الاسترداد</th>
-              <th className="p-4 text-right">المبلغ</th>
-              <th className="p-4 text-right">الإجراءات</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.date')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('nav.sales')} #</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('customers.name') || t('common.name')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('nav.inventory')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('returns.reason')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('returns.refundType')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.total')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -559,7 +529,7 @@ const Returns = ({ data, saveData }) => {
               filteredReturns.map(ret => (
                 <tr key={ret._id || ret.id} className="border-b hover:bg-gray-50">
                   <td className="p-4 text-sm">
-                    {new Date(ret.date).toLocaleDateString('ar', {
+                    {new Date(ret.date).toLocaleDateString(language, {
                       year: 'numeric',
                       month: '2-digit',
                       day: '2-digit',
@@ -589,18 +559,18 @@ const Returns = ({ data, saveData }) => {
                       ret.refundType === 'partial' ? 'bg-yellow-100 text-yellow-700' :
                       'bg-blue-100 text-blue-700'
                     }`}>
-                      {ret.refundType === 'full' ? 'كامل' :
-                       ret.refundType === 'partial' ? 'جزئي' : 'استبدال'}
+                      {ret.refundType === 'full' ? t('returns.refundFull') :
+                       ret.refundType === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
                     </span>
                   </td>
                   <td className="p-4 font-bold text-orange-600">
-                    {ret.refundAmount?.toFixed(2)} ₪
+                    {ret.refundAmount?.toFixed(2)} {t('dashboard.currency')}
                   </td>
                   <td className="p-4">
                     <button
                       onClick={() => handleDeleteReturn(ret)}
                       className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-full"
-                      title="حذف المرتجع"
+                      title={t('common.delete')}
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -612,8 +582,7 @@ const Returns = ({ data, saveData }) => {
                 <td colSpan="8" className="p-12 text-center text-gray-500">
                   <div className="flex flex-col items-center">
                     <RotateCcw className="w-16 h-16 text-gray-300 mb-4" />
-                    <p className="text-xl font-medium">لا توجد مرتجعات</p>
-                    <p className="text-sm">سجل أول عملية مرتجع</p>
+                    <p className="text-xl font-medium">{t('returns.noReturnsFound') || 'No returns found'}</p>
                   </div>
                 </td>
               </tr>
@@ -626,10 +595,10 @@ const Returns = ({ data, saveData }) => {
         isOpen={deleteConfirmation.isOpen}
         onClose={() => setDeleteConfirmation({ isOpen: false, returnId: null })}
         onConfirm={confirmDelete}
-        title="تأكيد حذف المرتجع"
-        message="هل أنت متأكد من حذف هذا المرتجع؟ سيتم خصم الكميات من المخزون."
-        confirmText="حذف"
-        cancelText="إلغاء"
+        title={t('returns.deleteTitle')}
+        message={t('returns.deleteMsg')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
       />
     </div>
   );

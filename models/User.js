@@ -1,5 +1,27 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+
+const StoreSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  address: String,
+  phone: String,
+  settings: {
+    logo: String,
+    currency: { type: String, default: 'ILS' },
+    receiptHeader: String,
+    receiptFooter: String
+  },
+  subscription: {
+    plan: { type: String, enum: ['free', 'pro', 'enterprise'], default: 'free' },
+    status: { type: String, enum: ['active', 'past_due', 'canceled'], default: 'active' },
+    expiresAt: Date
+  },
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true });
+
+export const Store = mongoose.models.Store || mongoose.model('Store', StoreSchema);
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -27,16 +49,16 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'manager', 'employee'],
+    enum: ['super_admin', 'owner', 'admin', 'manager', 'employee'],
     default: 'employee'
   },
-  isActive: {
-    type: Boolean,
-    default: true
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    index: true
   },
-  lastLogin: {
-    type: Date
-  }
+  isActive: { type: Boolean, default: true },
+  lastLogin: { type: Date }
 }, {
   timestamps: true
 });
@@ -62,4 +84,5 @@ userSchema.methods.toJSON = function() {
   return user;
 };
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+export default User;

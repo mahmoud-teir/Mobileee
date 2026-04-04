@@ -10,7 +10,7 @@ export async function GET(request) {
   if (err) return err;
   try {
     await connectDB();
-    const items = await Accessory.find().sort({ createdAt: -1 });
+    const items = await Accessory.find({ storeId: user.currentStoreId }).sort({ createdAt: -1 });
     return NextResponse.json(items);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -23,7 +23,9 @@ export async function POST(request) {
   if (err) return err;
   try {
     await connectDB();
-    const item = new Accessory(await request.json());
+    const body = await request.json();
+    body.storeId = user.currentStoreId;
+    const item = new Accessory(body);
     return NextResponse.json(await item.save(), { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 400 });

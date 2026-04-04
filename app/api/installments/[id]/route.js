@@ -24,7 +24,7 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const inst = await Installment.findById(params.id);
+    const inst = await Installment.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!inst) return NextResponse.json({ message: 'Installment not found' }, { status: 404 });
     return NextResponse.json(inst);
   } catch (error) {
@@ -38,7 +38,11 @@ export async function PUT(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const inst = await Installment.findByIdAndUpdate(params.id, await request.json(), { new: true, runValidators: true });
+    const inst = await Installment.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      await request.json(), 
+      { new: true, runValidators: true }
+    );
     if (!inst) return NextResponse.json({ message: 'Installment not found' }, { status: 404 });
     return NextResponse.json(inst);
   } catch (error) {
@@ -52,16 +56,21 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const inst = await Installment.findById(params.id);
+    const inst = await Installment.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!inst) return NextResponse.json({ message: 'Installment not found' }, { status: 404 });
+    
     // Restore inventory
     for (const item of inst.items) {
       const Model = getModelByType(item.type);
       if (Model && item.productId) {
-        await Model.findByIdAndUpdate(item.productId, { $inc: { quantity: item.quantity } });
+        // Scoped to storeId for security
+        await Model.findOneAndUpdate(
+          { _id: item.productId, storeId: user.currentStoreId },
+          { $inc: { quantity: item.quantity } }
+        );
       }
     }
-    await Installment.findByIdAndDelete(params.id);
+    await Installment.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     return NextResponse.json({ message: 'Installment deleted successfully' });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

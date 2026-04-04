@@ -65,9 +65,15 @@ const repairSchema = new mongoose.Schema({
   notified: {
     type: Boolean,
     default: false
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Repair', repairSchema);
+module.exports = mongoose.models.Repair || mongoose.model('Repair', repairSchema);

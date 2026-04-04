@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const item = await Accessory.findById(params.id);
+    const item = await Accessory.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!item) return NextResponse.json({ message: 'Accessory not found' }, { status: 404 });
     return NextResponse.json(item);
   } catch (error) {
@@ -24,7 +24,11 @@ export async function PUT(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const item = await Accessory.findByIdAndUpdate(params.id, await request.json(), { new: true, runValidators: true });
+    const item = await Accessory.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      await request.json(), 
+      { new: true, runValidators: true }
+    );
     if (!item) return NextResponse.json({ message: 'Accessory not found' }, { status: 404 });
     return NextResponse.json(item);
   } catch (error) {
@@ -38,7 +42,7 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const item = await Accessory.findByIdAndDelete(params.id);
+    const item = await Accessory.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     if (!item) return NextResponse.json({ message: 'Accessory not found' }, { status: 404 });
     return NextResponse.json({ message: 'Accessory deleted successfully' });
   } catch (error) {

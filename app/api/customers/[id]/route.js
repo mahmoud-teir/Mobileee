@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const customer = await Customer.findById(params.id);
+    const customer = await Customer.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!customer) return NextResponse.json({ message: 'Customer not found' }, { status: 404 });
     return NextResponse.json(customer);
   } catch (error) {
@@ -24,7 +24,11 @@ export async function PUT(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const customer = await Customer.findByIdAndUpdate(params.id, await request.json(), { new: true, runValidators: true });
+    const customer = await Customer.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      await request.json(), 
+      { new: true, runValidators: true }
+    );
     if (!customer) return NextResponse.json({ message: 'Customer not found' }, { status: 404 });
     return NextResponse.json(customer);
   } catch (error) {
@@ -38,7 +42,7 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const customer = await Customer.findByIdAndDelete(params.id);
+    const customer = await Customer.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     if (!customer) return NextResponse.json({ message: 'Customer not found' }, { status: 404 });
     return NextResponse.json({ message: 'Customer deleted successfully' });
   } catch (error) {

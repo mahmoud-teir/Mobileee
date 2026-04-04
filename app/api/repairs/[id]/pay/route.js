@@ -9,7 +9,11 @@ export async function PATCH(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const repair = await Repair.findByIdAndUpdate(params.id, { paid: true }, { new: true });
+    const repair = await Repair.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      { paid: true }, 
+      { new: true }
+    );
     if (!repair) return NextResponse.json({ message: 'Repair not found' }, { status: 404 });
     return NextResponse.json(repair);
   } catch (error) {

@@ -4,8 +4,7 @@ const stickerSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true,
-    unique: true
+    trim: true
   },
   quantity: {
     type: Number,
@@ -26,9 +25,17 @@ const stickerSchema = new mongoose.Schema({
   description: {
     type: String,
     trim: true
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Sticker', stickerSchema);
+stickerSchema.index({ storeId: 1, name: 1 }, { unique: true });
+
+module.exports = mongoose.models.Sticker || mongoose.model('Sticker', stickerSchema);

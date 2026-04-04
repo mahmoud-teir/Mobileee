@@ -30,10 +30,19 @@ export async function POST(request) {
 
     const token = signToken(user._id);
 
+    // Get store slug if available
+    let storeSlug = null;
+    if (user.storeId) {
+      const { Store } = await import('@/models/User');
+      const store = await Store.findById(user.storeId);
+      if (store) storeSlug = store.slug;
+    }
+
     return NextResponse.json({
       message: 'تم تسجيل الدخول بنجاح',
-      user: user.toJSON(),
-      token
+      user: { ...user.toJSON(), storeSlug },
+      token,
+      storeSlug // Explicit for convenience
     });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

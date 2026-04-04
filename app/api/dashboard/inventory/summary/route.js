@@ -13,7 +13,10 @@ export async function GET(request) {
   try {
     await connectDB();
     const [screens, phones, accessories, stickers] = await Promise.all([
-      Screen.find(), Phone.find(), Accessory.find(), Sticker.find()
+      Screen.find({ storeId: user.currentStoreId }), 
+      Phone.find({ storeId: user.currentStoreId }), 
+      Accessory.find({ storeId: user.currentStoreId }), 
+      Sticker.find({ storeId: user.currentStoreId })
     ]);
     const calcValue = (items) => items.reduce((sum, i) => sum + (i.cost * i.quantity), 0);
     const calcCount = (items) => items.reduce((sum, i) => sum + i.quantity, 0);

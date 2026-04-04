@@ -6,8 +6,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
+import { useLanguage } from './LanguageContext';
 
 const Installments = ({ data, saveData }) => {
+  const { t, isRTL } = useLanguage();
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
@@ -54,7 +56,8 @@ const Installments = ({ data, saveData }) => {
       ...(data.screens || []).map(s => ({ ...s, name: s.model, type: 'screen' })),
       ...(data.phones || []).map(p => ({ ...p, name: p.model || p.name, type: 'phone' })),
       ...(data.stickers || []).map(st => ({ ...st, type: 'sticker' })),
-      ...(data.accessories || []).map(a => ({ ...a, type: 'accessory' }))
+      ...(data.accessories || []).map(a => ({ ...a, type: 'accessory' })),
+      ...(data.products || []).map(p => ({ ...p, type: 'product' }))
     ];
     return allProducts.filter(p =>
       p.name?.toLowerCase().includes(term.toLowerCase()) && p.quantity > 0
@@ -83,7 +86,12 @@ const Installments = ({ data, saveData }) => {
   const updateProductQty = (id, type, qty) => {
     setSelectedItems(selectedItems.map(i => {
       if ((i._id || i.id) === id && i.type === type) {
-        const collectionKey = i.type === 'accessory' ? 'accessories' : i.type + 's';
+        let collectionKey = 'products';
+        if (i.type === 'accessory') collectionKey = 'accessories';
+        else if (i.type === 'screen') collectionKey = 'screens';
+        else if (i.type === 'phone') collectionKey = 'phones';
+        else if (i.type === 'sticker') collectionKey = 'stickers';
+
         const maxQty = (data[collectionKey] || [])
           .find(p => (p._id || p.id) === id)?.quantity || 1;
         return { ...i, quantity: Math.min(Math.max(1, qty), maxQty) };
@@ -123,15 +131,15 @@ const Installments = ({ data, saveData }) => {
   const addInstallment = async () => {
     try {
       if (!formData.customerName.trim()) {
-        setError('الرجاء إدخال اسم العميل');
+        setError(t('installments.errorNoCustomer'));
         return;
       }
       if (!formData.phone.trim()) {
-        setError('الرجاء إدخال رقم الهاتف');
+        setError(t('installments.errorNoPhone'));
         return;
       }
       if (selectedItems.length === 0) {
-        setError('الرجاء إضافة منتج واحد على الأقل');
+        setError(t('installments.errorNoProducts'));
         return;
       }
 
@@ -140,7 +148,7 @@ const Installments = ({ data, saveData }) => {
       const numberOfInstallments = parseInt(formData.numberOfInstallments) || 3;
 
       if (downPayment >= totalAmount) {
-        setError('الدفعة الأولى يجب أن تكون أقل من المبلغ الإجمالي');
+        setError(t('installments.errorDownPayment'));
         return;
       }
 
@@ -179,28 +187,37 @@ const Installments = ({ data, saveData }) => {
       // خصم الكميات من المخزون
       for (const item of selectedItems) {
         const itemId = item._id || item.id;
-        if (item.type === 'screen') {
-          const updated = (data.screens || []).map(s =>
-            (s._id || s.id) === itemId ? { ...s, quantity: s.quantity - item.quantity } : s
-          );
-          await saveData('screens', updated);
-        } else if (item.type === 'phone') {
-          const updated = (data.phones || []).map(p =>
-            (p._id || p.id) === itemId ? { ...p, quantity: p.quantity - item.quantity } : p
-          );
-          await saveData('phones', updated);
-        } else if (item.type === 'sticker') {
-          const updated = (data.stickers || []).map(st =>
-            (st._id || st.id) === itemId ? { ...st, quantity: st.quantity - item.quantity } : st
-          );
-          await saveData('stickers', updated);
-        } else {
-          const updated = (data.accessories || []).map(a =>
-            (a._id || a.id) === itemId ? { ...a, quantity: a.quantity - item.quantity } : a
-          );
-          await saveData('accessories', updated);
-        }
+        let collectionKey = 'products';
+        if (item.type === 'accessory') collectionKey = 'accessories';
+        else if (item.type === 'screen') collectionKey = 'screens';
+        else if (item.type === 'phone') collectionKey = 'phones';
+        else if (item.type === 'sticker') collectionKey = 'stickers';
+
+        const updated = (data[collectionKey] || []).map(p =>
+          (p._id || p.id) === itemId ? { ...p, quantity: p.quantity - item.quantity } : p
+        );
+        await saveData(collectionKey, updated);
       }
+
+      // إضافة عملية بيع للتقارير (اختياري، يفضل إضافتها كفاتورة بيع بنوع "تقسيط")
+      const newSale = {
+        id: Date.now(),
+        date: new Date().toISOString(),
+        customer: formData.customerName.trim(),
+        items: selectedItems.map(item => ({
+          id: item.id,
+          item: item.name,
+          itemType: item.type,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: totalAmount,
+        paymentMethod: 'installments',
+        paidAmount: downPayment,
+        installmentId: newInstallment.id
+      };
+      const updatedSales = [...(data.sales || []), newSale];
+      await saveData('sales', updatedSales);
 
       // إعادة تعيين النموذج
       setShowAdd(false);
@@ -216,21 +233,27 @@ const Installments = ({ data, saveData }) => {
       setSelectedItems([]);
       setError('');
 
-      toast.success('تم تسجيل القسط بنجاح!');
+      toast.success(t('installments.success'));
     } catch (error) {
-      console.error('خطأ في تسجيل القسط:', error);
-      toast.error('حدث خطأ أثناء تسجيل القسط');
+      console.error('Error recording installment:', error);
+      toast.error(isRTL ? 'حدث خطأ أثناء تسجيل القسط' : 'An error occurred while recording the installment');
     }
   };
 
   // تسديد قسط
-  const payInstallment = async () => {
+  const handlePayment = (installmentId, paymentIndex) => {
+    setPaymentModal({ isOpen: true, installmentId, paymentIndex });
+  };
+
+  const confirmPayment = async () => {
     try {
       const { installmentId, paymentIndex } = paymentModal;
-      const installment = (data.installments || []).find(i => (i._id || i.id) === installmentId);
+      const allInstallments = data.installments || [];
+      const installmentIndex = allInstallments.findIndex(i => (i._id || i.id) === installmentId);
 
-      if (!installment) return;
+      if (installmentIndex === -1) return;
 
+      const installment = allInstallments[installmentIndex];
       const updatedSchedule = [...installment.paymentSchedule];
       updatedSchedule[paymentIndex] = {
         ...updatedSchedule[paymentIndex],
@@ -245,21 +268,25 @@ const Installments = ({ data, saveData }) => {
       const updatedInstallment = {
         ...installment,
         paymentSchedule: updatedSchedule,
-        remainingAmount: remaining,
+        remainingAmount: Math.max(0, remaining),
         status: allPaid ? 'completed' : installment.status
       };
 
-      const updatedInstallments = (data.installments || []).map(i =>
-        (i._id || i.id) === installmentId ? updatedInstallment : i
-      );
+      const updatedInstallments = [...allInstallments];
+      updatedInstallments[installmentIndex] = updatedInstallment;
 
       await saveData('installments', updatedInstallments);
-      setPaymentModal({ isOpen: false, installmentId: null, paymentIndex: null });
+      
+      // تحديث التفاصيل المعروضة إذا كانت مفتوحة
+      if (viewDetails && (viewDetails._id || viewDetails.id) === installmentId) {
+        setViewDetails(updatedInstallment);
+      }
 
-      toast.success('تم تسديد القسط بنجاح!');
+      setPaymentModal({ isOpen: false, installmentId: null, paymentIndex: null });
+      toast.success(t('installments.successPayment'));
     } catch (error) {
-      console.error('خطأ في تسديد القسط:', error);
-      toast.error('حدث خطأ أثناء تسديد القسط');
+      console.error('Error recording payment:', error);
+      toast.error(isRTL ? 'حدث خطأ أثناء تسديد القسط' : 'An error occurred while paying the installment');
     }
   };
 
@@ -276,27 +303,16 @@ const Installments = ({ data, saveData }) => {
         // إعادة الكميات للمخزون
         for (const item of installmentToDelete.items || []) {
           const itemId = item._id || item.id;
-          if (item.type === 'screen') {
-            const updated = (data.screens || []).map(s =>
-              (s._id || s.id) === itemId ? { ...s, quantity: s.quantity + item.quantity } : s
-            );
-            await saveData('screens', updated);
-          } else if (item.type === 'phone') {
-            const updated = (data.phones || []).map(p =>
-              (p._id || p.id) === itemId ? { ...p, quantity: p.quantity + item.quantity } : p
-            );
-            await saveData('phones', updated);
-          } else if (item.type === 'sticker') {
-            const updated = (data.stickers || []).map(st =>
-              (st._id || st.id) === itemId ? { ...st, quantity: st.quantity + item.quantity } : st
-            );
-            await saveData('stickers', updated);
-          } else {
-            const updated = (data.accessories || []).map(a =>
-              (a._id || a.id) === itemId ? { ...a, quantity: a.quantity + item.quantity } : a
-            );
-            await saveData('accessories', updated);
-          }
+          let collectionKey = 'products';
+          if (item.type === 'accessory') collectionKey = 'accessories';
+          else if (item.type === 'screen') collectionKey = 'screens';
+          else if (item.type === 'phone') collectionKey = 'phones';
+          else if (item.type === 'sticker') collectionKey = 'stickers';
+
+          const updated = (data[collectionKey] || []).map(p =>
+            (p._id || p.id) === itemId ? { ...p, quantity: p.quantity + item.quantity } : p
+          );
+          await saveData(collectionKey, updated);
         }
       }
 
@@ -304,10 +320,10 @@ const Installments = ({ data, saveData }) => {
       await saveData('installments', updatedInstallments);
 
       setDeleteConfirmation({ isOpen: false, installmentId: null });
-      toast.success('تم حذف القسط بنجاح وتم إعادة الكميات للمخزون!');
+      toast.success(t('installments.deleteMsg'));
     } catch (error) {
-      console.error('خطأ في حذف القسط:', error);
-      toast.error('حدث خطأ أثناء حذف القسط');
+      console.error('Error deleting installment:', error);
+      toast.error(isRTL ? 'حدث خطأ أثناء حذف القسط' : 'An error occurred while deleting the installment');
     }
   };
 
@@ -318,7 +334,7 @@ const Installments = ({ data, saveData }) => {
       const overdue = inst.paymentSchedule?.filter(p =>
         !p.paid && new Date(p.dueDate) < today
       ).length || 0;
-      return count + overdue;
+      return count + (inst.status !== 'completed' ? overdue : 0);
     }, 0);
   };
 
@@ -330,20 +346,20 @@ const Installments = ({ data, saveData }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center flex-wrap gap-4">
         <h2 className="text-3xl font-bold flex items-center gap-3">
           <CreditCard className="w-8 h-8 text-purple-500" />
-          الأقساط والتقسيط
+          {t('installments.title')}
         </h2>
         <div className="flex gap-4 items-center flex-wrap">
           <div className="bg-purple-500 text-white px-6 py-3 rounded-lg">
-            <p className="text-sm">المبالغ المتبقية</p>
+            <p className="text-sm">{t('installments.remainingAmount')}</p>
             <p className="text-2xl font-bold">{getTotalRemaining().toFixed(2)} ₪</p>
           </div>
           {getOverdueCount() > 0 && (
             <div className="bg-red-500 text-white px-6 py-3 rounded-lg">
-              <p className="text-sm">أقساط متأخرة</p>
+              <p className="text-sm">{t('installments.overdueCount')}</p>
               <p className="text-2xl font-bold">{getOverdueCount()}</p>
             </div>
           )}
@@ -352,18 +368,18 @@ const Installments = ({ data, saveData }) => {
             className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700"
           >
             <Plus className="w-5 h-5" />
-            بيع بالتقسيط
+            {t('installments.newInstallment')}
           </button>
         </div>
       </div>
 
       {/* نموذج إضافة قسط */}
       {showAdd && (
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div className={`bg-white p-6 rounded-xl shadow-lg ${isRTL ? 'text-right' : 'text-left'}`}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <CreditCard className="text-purple-500" />
-              بيع بالتقسيط
+              {t('installments.newInstallment')}
             </h3>
             <button onClick={() => {
               setShowAdd(false);
@@ -377,37 +393,37 @@ const Installments = ({ data, saveData }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* معلومات العميل */}
             <div className="space-y-4">
-              <h4 className="font-bold text-gray-700 border-b pb-2">معلومات العميل</h4>
+              <h4 className="font-bold text-gray-700 border-b pb-2">{t('installments.customerInfo')}</h4>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  اسم العميل *
+                  {t('installments.customerName')}
                 </label>
                 <input
                   type="text"
                   value={formData.customerName}
                   onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                   className="w-full border p-3 rounded-lg"
-                  placeholder="أدخل اسم العميل..."
+                  placeholder={isRTL ? 'أدخل اسم العميل...' : 'Enter customer name...'}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  رقم الهاتف *
+                  {t('installments.phone')}
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full border p-3 rounded-lg"
-                  placeholder="أدخل رقم الهاتف..."
+                  placeholder={isRTL ? 'أدخل رقم الهاتف...' : 'Enter phone number...'}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  الدفعة الأولى (₪)
+                  {t('installments.downPayment')}
                 </label>
                 <input
                   type="number"
@@ -422,7 +438,7 @@ const Installments = ({ data, saveData }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    عدد الأقساط
+                    {t('installments.installmentCount')}
                   </label>
                   <select
                     value={formData.numberOfInstallments}
@@ -430,13 +446,13 @@ const Installments = ({ data, saveData }) => {
                     className="w-full border p-3 rounded-lg"
                   >
                     {[2, 3, 4, 6, 9, 12, 18, 24].map(n => (
-                      <option key={n} value={n}>{n} أقساط</option>
+                      <option key={n} value={n}>{n} {isRTL ? 'أقساط' : 'Installments'}</option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    تاريخ البدء
+                    {t('installments.startDate')}
                   </label>
                   <input
                     type="date"
@@ -449,21 +465,21 @@ const Installments = ({ data, saveData }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ملاحظات
+                  {t('installments.notes')}
                 </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full border p-3 rounded-lg"
                   rows="2"
-                  placeholder="ملاحظات إضافية..."
+                  placeholder={isRTL ? 'ملاحظات إضافية...' : 'Additional notes...'}
                 />
               </div>
             </div>
 
             {/* المنتجات */}
             <div className="space-y-4">
-              <h4 className="font-bold text-gray-700 border-b pb-2">المنتجات</h4>
+              <h4 className="font-bold text-gray-700 border-b pb-2">{t('installments.products')}</h4>
 
               {/* بحث عن منتج */}
               <div className="relative">
@@ -471,16 +487,16 @@ const Installments = ({ data, saveData }) => {
                   type="text"
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
-                  className="w-full border p-3 rounded-lg pl-10"
-                  placeholder="ابحث عن منتج لإضافته..."
+                  className={`w-full border p-3 rounded-lg ${isRTL ? 'pr-3 pl-10' : 'pl-3 pr-10'}`}
+                  placeholder={t('installments.searchProduct')}
                 />
-                <SearchIcon className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
+                <SearchIcon className={`w-5 h-5 text-gray-400 absolute top-3.5 ${isRTL ? 'left-3' : 'right-3'}`} />
 
                 {productSearch && (
                   <div className="absolute z-10 w-full bg-white border rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
                     {searchProducts(productSearch).map(product => (
                       <div
-                        key={`${product.type}-${product.id}`}
+                        key={`${product.type}-${product.id || product._id}`}
                         onClick={() => addProduct(product)}
                         className="p-3 hover:bg-purple-50 cursor-pointer border-b last:border-b-0"
                       >
@@ -489,16 +505,17 @@ const Installments = ({ data, saveData }) => {
                           <span className="text-purple-600 font-bold">{product.price?.toFixed(2)} ₪</span>
                         </div>
                         <div className="text-sm text-gray-500">
-                          {product.type === 'screen' ? 'شاشة' :
-                           product.type === 'phone' ? 'جوال' :
-                           product.type === 'sticker' ? 'ملصق' : 'إكسسوار'} -
-                          متوفر: {product.quantity}
+                          {product.type === 'screen' ? t('inventory.screen') :
+                           product.type === 'phone' ? t('inventory.phone') :
+                           product.type === 'sticker' ? t('inventory.sticker') :
+                           product.type === 'accessory' ? t('inventory.accessory') : t('inventory.product')} -
+                          {isRTL ? 'متوفر' : 'Available'}: {product.quantity}
                         </div>
                       </div>
                     ))}
                     {searchProducts(productSearch).length === 0 && (
                       <div className="p-4 text-center text-gray-500">
-                        لم يتم العثور على منتجات
+                        {t('installments.noProducts')}
                       </div>
                     )}
                   </div>
@@ -511,20 +528,20 @@ const Installments = ({ data, saveData }) => {
                   <div key={index} className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
                     <div className="flex-1">
                       <span className="font-medium">{item.name}</span>
-                      <span className="text-sm text-gray-500 mr-2">
+                      <span className={`text-sm text-gray-500 ${isRTL ? 'mr-2' : 'ml-2'}`}>
                         ({item.price?.toFixed(2)} ₪)
                       </span>
                     </div>
                     <input
                       type="number"
                       min="1"
-                      max={item.maxQty || 99}
+                      max={item.quantity || 99}
                       value={item.quantity}
-                      onChange={(e) => updateProductQty(item.id, item.type, parseInt(e.target.value) || 1)}
+                      onChange={(e) => updateProductQty(item._id || item.id, item.type, parseInt(e.target.value) || 1)}
                       className="w-20 border p-2 rounded text-center"
                     />
                     <button
-                      onClick={() => removeProduct(item.id, item.type)}
+                      onClick={() => removeProduct(item._id || item.id, item.type)}
                       className="text-red-500 hover:text-red-700"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -533,7 +550,7 @@ const Installments = ({ data, saveData }) => {
                 ))}
                 {selectedItems.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    لم تتم إضافة منتجات بعد
+                    {t('installments.noProductsAdded')}
                   </div>
                 )}
               </div>
@@ -541,24 +558,24 @@ const Installments = ({ data, saveData }) => {
               {/* ملخص */}
               {selectedItems.length > 0 && (
                 <div className="bg-purple-600 text-white p-4 rounded-xl">
-                  <h4 className="font-bold mb-3">ملخص التقسيط</h4>
+                  <h4 className="font-bold mb-3">{t('installments.summary')}</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-purple-100">إجمالي المبلغ:</span>
+                      <span className="text-purple-100">{t('installments.totalAmount')}:</span>
                       <span className="font-bold text-white">{calculateTotal().toFixed(2)} ₪</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-purple-100">الدفعة الأولى:</span>
+                      <span className="text-purple-100">{t('installments.downPayment')}:</span>
                       <span className="font-medium text-white">{(parseFloat(formData.downPayment) || 0).toFixed(2)} ₪</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-purple-100">المبلغ المتبقي:</span>
+                      <span className="text-purple-100">{t('installments.remaining')}:</span>
                       <span className="font-medium text-white">
                         {(calculateTotal() - (parseFloat(formData.downPayment) || 0)).toFixed(2)} ₪
                       </span>
                     </div>
                     <div className="flex justify-between border-t border-purple-400 pt-2 mt-2">
-                      <span className="text-purple-100">قيمة القسط الشهري:</span>
+                      <span className="text-purple-100">{t('installments.monthlyInstallment')}:</span>
                       <span className="font-bold text-yellow-300 text-lg">
                         {((calculateTotal() - (parseFloat(formData.downPayment) || 0)) /
                           (parseInt(formData.numberOfInstallments) || 3)).toFixed(2)} ₪
@@ -582,7 +599,7 @@ const Installments = ({ data, saveData }) => {
               onClick={addInstallment}
               className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 rounded-lg font-bold hover:from-purple-600 hover:to-indigo-600"
             >
-              تأكيد البيع بالتقسيط
+              {t('installments.confirmSale')}
             </button>
             <button
               onClick={() => {
@@ -592,7 +609,7 @@ const Installments = ({ data, saveData }) => {
               }}
               className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300"
             >
-              إلغاء
+              {isRTL ? 'إلغاء' : 'Cancel'}
             </button>
           </div>
         </div>
@@ -603,12 +620,12 @@ const Installments = ({ data, saveData }) => {
         <div className="relative">
           <input
             type="text"
-            placeholder="بحث بالاسم أو رقم الهاتف..."
+            placeholder={t('installments.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full border p-3 rounded-lg pl-10"
+            className={`w-full border p-3 rounded-lg ${isRTL ? 'pr-3 pl-10' : 'pl-3 pr-10'}`}
           />
-          <SearchIcon className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
+          <SearchIcon className={`w-5 h-5 text-gray-400 absolute top-3.5 ${isRTL ? 'left-3' : 'right-3'}`} />
         </div>
       </div>
 
@@ -617,15 +634,15 @@ const Installments = ({ data, saveData }) => {
         <table className="w-full min-w-[900px]">
           <thead className="bg-gray-100">
             <tr>
-              <th className="p-4 text-right">التاريخ</th>
-              <th className="p-4 text-right">العميل</th>
-              <th className="p-4 text-right">الهاتف</th>
-              <th className="p-4 text-right">المبلغ الكلي</th>
-              <th className="p-4 text-right">الدفعة الأولى</th>
-              <th className="p-4 text-right">المتبقي</th>
-              <th className="p-4 text-right">الأقساط</th>
-              <th className="p-4 text-right">الحالة</th>
-              <th className="p-4 text-right">الإجراءات</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'التاريخ' : 'Date'}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'العميل' : 'Customer'}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الهاتف' : 'Phone'}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('installments.totalAmount')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('installments.downPayment')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('installments.remaining')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('installments.totalPaid')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t('installments.status')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'الإجراءات' : 'Actions'}</th>
             </tr>
           </thead>
           <tbody>
@@ -640,7 +657,7 @@ const Installments = ({ data, saveData }) => {
                 return (
                   <tr key={inst._id || inst.id} className="border-b hover:bg-gray-50">
                     <td className="p-4 text-sm">
-                      {new Date(inst.createdAt).toLocaleDateString('ar')}
+                      {new Date(inst.createdAt).toLocaleDateString(isRTL ? 'ar' : 'en')}
                     </td>
                     <td className="p-4 font-medium">{inst.customerName}</td>
                     <td className="p-4">{inst.phone}</td>
@@ -664,17 +681,17 @@ const Installments = ({ data, saveData }) => {
                       {inst.status === 'completed' ? (
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm flex items-center gap-1 w-fit">
                           <CheckCircle className="w-4 h-4" />
-                          مكتمل
+                          {t('installments.statusCompleted')}
                         </span>
                       ) : hasOverdue ? (
                         <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm flex items-center gap-1 w-fit">
                           <AlertTriangle className="w-4 h-4" />
-                          متأخر
+                          {t('installments.statusOverdue')}
                         </span>
                       ) : (
                         <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-1 w-fit">
                           <Clock className="w-4 h-4" />
-                          نشط
+                          {t('installments.statusActive')}
                         </span>
                       )}
                     </td>
@@ -683,14 +700,14 @@ const Installments = ({ data, saveData }) => {
                         <button
                           onClick={() => setViewDetails(inst)}
                           className="text-purple-500 hover:text-purple-700 p-2 hover:bg-purple-50 rounded-full"
-                          title="عرض التفاصيل"
+                          title={isRTL ? 'عرض التفاصيل' : 'View Details'}
                         >
                           <Calendar className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteInstallment(inst)}
                           className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-full"
-                          title="حذف"
+                          title={isRTL ? 'حذف' : 'Delete'}
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
@@ -704,8 +721,8 @@ const Installments = ({ data, saveData }) => {
                 <td colSpan="9" className="p-12 text-center text-gray-500">
                   <div className="flex flex-col items-center">
                     <CreditCard className="w-16 h-16 text-gray-300 mb-4" />
-                    <p className="text-xl font-medium">لا توجد عمليات تقسيط</p>
-                    <p className="text-sm">سجل أول عملية بيع بالتقسيط</p>
+                    <p className="text-xl font-medium">{isRTL ? 'لا توجد عمليات تقسيط' : 'No installments found'}</p>
+                    <p className="text-sm">{isRTL ? 'سجل أول عملية بيع بالتقسيط' : 'Record your first installment sale'}</p>
                   </div>
                 </td>
               </tr>
@@ -719,28 +736,28 @@ const Installments = ({ data, saveData }) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 flex justify-between items-center rounded-t-2xl">
-              <h3 className="text-xl font-bold">تفاصيل التقسيط</h3>
+              <h3 className="text-xl font-bold">{t('installments.details')}</h3>
               <button onClick={() => setViewDetails(null)} className="p-2 hover:bg-white/20 rounded-full">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className={`p-6 space-y-6 ${isRTL ? 'text-right' : 'text-left'}`}>
               {/* معلومات العميل */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-gray-500 text-sm">العميل</span>
+                  <span className="text-gray-500 text-sm">{isRTL ? 'العميل' : 'Customer'}</span>
                   <p className="font-bold text-lg">{viewDetails.customerName}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500 text-sm">الهاتف</span>
+                  <span className="text-gray-500 text-sm">{isRTL ? 'الهاتف' : 'Phone'}</span>
                   <p className="font-bold text-lg">{viewDetails.phone}</p>
                 </div>
               </div>
 
               {/* المنتجات */}
               <div>
-                <h4 className="font-bold text-gray-700 mb-2">المنتجات</h4>
+                <h4 className="font-bold text-gray-700 mb-2">{t('installments.products')}</h4>
                 <div className="space-y-2">
                   {viewDetails.items?.map((item, i) => (
                     <div key={i} className="flex justify-between p-2 bg-gray-50 rounded">
@@ -755,15 +772,15 @@ const Installments = ({ data, saveData }) => {
               <div className="bg-purple-50 p-4 rounded-xl">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <span className="text-gray-500 text-sm">المبلغ الكلي</span>
+                    <span className="text-gray-500 text-sm">{t('installments.totalAmount')}</span>
                     <p className="font-bold text-lg">{viewDetails.totalAmount?.toFixed(2)} ₪</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 text-sm">الدفعة الأولى</span>
+                    <span className="text-gray-500 text-sm">{t('installments.downPayment')}</span>
                     <p className="font-bold text-lg">{viewDetails.downPayment?.toFixed(2)} ₪</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 text-sm">المتبقي</span>
+                    <span className="text-gray-500 text-sm">{t('installments.remaining')}</span>
                     <p className="font-bold text-lg text-purple-600">{viewDetails.remainingAmount?.toFixed(2)} ₪</p>
                   </div>
                 </div>
@@ -771,7 +788,7 @@ const Installments = ({ data, saveData }) => {
 
               {/* جدول الأقساط */}
               <div>
-                <h4 className="font-bold text-gray-700 mb-3">جدول السداد</h4>
+                <h4 className="font-bold text-gray-700 mb-3">{t('installments.paymentSchedule')}</h4>
                 <div className="space-y-2">
                   {viewDetails.paymentSchedule?.map((payment, index) => {
                     const isOverdue = !payment.paid && new Date(payment.dueDate) < new Date();
@@ -794,30 +811,23 @@ const Installments = ({ data, saveData }) => {
                             <Clock className="w-5 h-5 text-gray-400" />
                           )}
                           <div>
-                            <span className="font-medium">القسط {payment.number}</span>
+                            <span className="font-medium">{t('installments.paymentNumber')} {payment.number}</span>
                             <p className="text-sm text-gray-500">
-                              {new Date(payment.dueDate).toLocaleDateString('ar')}
+                              {new Date(payment.dueDate).toLocaleDateString(isRTL ? 'ar' : 'en')}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="font-bold">{payment.amount?.toFixed(2)} ₪</span>
-                          {!payment.paid && (
+                          {payment.paid ? (
+                            <span className="text-green-600 text-sm font-medium">{t('installments.paid')}</span>
+                          ) : (
                             <button
-                              onClick={() => setPaymentModal({
-                                isOpen: true,
-                                installmentId: viewDetails._id || viewDetails.id,
-                                paymentIndex: index
-                              })}
-                              className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-600"
+                              onClick={() => handlePayment(viewDetails._id || viewDetails.id, index)}
+                              className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-purple-700 transition"
                             >
-                              تسديد
+                              {t('installments.payNow')}
                             </button>
-                          )}
-                          {payment.paid && payment.paidDate && (
-                            <span className="text-sm text-green-600">
-                              تم بتاريخ {new Date(payment.paidDate).toLocaleDateString('ar')}
-                            </span>
                           )}
                         </div>
                       </div>
@@ -831,25 +841,39 @@ const Installments = ({ data, saveData }) => {
       )}
 
       {/* مودال تأكيد الدفع */}
-      <ConfirmationModal
-        isOpen={paymentModal.isOpen}
-        onClose={() => setPaymentModal({ isOpen: false, installmentId: null, paymentIndex: null })}
-        onConfirm={payInstallment}
-        title="تأكيد تسديد القسط"
-        message="هل تم استلام مبلغ القسط من العميل؟"
-        confirmText="تأكيد الدفع"
-        cancelText="إلغاء"
-      />
+      {paymentModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">{isRTL ? 'تأكيد عملية الدفع' : 'Confirm Payment'}</h3>
+            <p className="text-gray-600 mb-6">
+              {isRTL ? 'هل أنت متأكد من تسجيل استلام مبلغ القسط؟' : 'Are you sure you want to record the installment payment?'}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={confirmPayment}
+                className="flex-1 bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700"
+              >
+                {isRTL ? 'تأكيد' : 'Confirm'}
+              </button>
+              <button
+                onClick={() => setPaymentModal({ isOpen: false, installmentId: null, paymentIndex: null })}
+                className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300"
+              >
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* مودال تأكيد الحذف */}
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
         onClose={() => setDeleteConfirmation({ isOpen: false, installmentId: null })}
         onConfirm={confirmDelete}
-        title="تأكيد حذف التقسيط"
-        message="هل أنت متأكد من حذف هذا التقسيط؟ سيتم إعادة الكميات للمخزون."
-        confirmText="حذف"
-        cancelText="إلغاء"
+        title={t('installments.deleteTitle')}
+        message={t('installments.deleteMsg')}
+        confirmText={isRTL ? 'حذف' : 'Delete'}
+        cancelText={isRTL ? 'إلغاء' : 'Cancel'}
       />
     </div>
   );

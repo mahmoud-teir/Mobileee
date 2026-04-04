@@ -25,9 +25,15 @@ const customerSchema = new mongoose.Schema({
   },
   lastPurchase: {
     type: Date
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Customer', customerSchema);
+module.exports = mongoose.models.Customer || mongoose.model('Customer', customerSchema);

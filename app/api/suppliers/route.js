@@ -10,7 +10,7 @@ export async function GET(request) {
   if (err) return err;
   try {
     await connectDB();
-    const suppliers = await Supplier.find().sort({ createdAt: -1 });
+    const suppliers = await Supplier.find({ storeId: user.currentStoreId }).sort({ createdAt: -1 });
     return NextResponse.json(suppliers);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -23,7 +23,9 @@ export async function POST(request) {
   if (err) return err;
   try {
     await connectDB();
-    const supplier = new Supplier(await request.json());
+    const body = await request.json();
+    body.storeId = user.currentStoreId;
+    const supplier = new Supplier(body);
     return NextResponse.json(await supplier.save(), { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 400 });

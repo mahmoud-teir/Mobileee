@@ -11,7 +11,7 @@ export async function GET(request) {
 
   try {
     await connectDB();
-    const categories = await Category.find().sort({ name: 1 });
+    const categories = await Category.find({ storeId: user.currentStoreId }).sort({ name: 1 });
     return NextResponse.json(categories);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -26,6 +26,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
+    body.storeId = user.currentStoreId;
     const category = new Category(body);
     const newCategory = await category.save();
     return NextResponse.json(newCategory, { status: 201 });

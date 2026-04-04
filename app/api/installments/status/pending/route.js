@@ -9,7 +9,7 @@ export async function GET(request) {
   if (err) return err;
   try {
     await connectDB();
-    const installments = await Installment.find();
+    const installments = await Installment.find({ storeId: user.currentStoreId });
     const pending = installments.filter(inst =>
       inst.payments.some(p => !p.paid && new Date(p.date) <= new Date())
     );

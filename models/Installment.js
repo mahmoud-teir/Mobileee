@@ -75,9 +75,15 @@ const installmentSchema = new mongoose.Schema({
   notes: {
     type: String,
     trim: true
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Installment', installmentSchema);
+module.exports = mongoose.models.Installment || mongoose.model('Installment', installmentSchema);

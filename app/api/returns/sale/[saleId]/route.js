@@ -9,7 +9,10 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const returns = await Return.find({ saleId: params.saleId });
+    const returns = await Return.find({ 
+      storeId: user.currentStoreId, 
+      saleId: params.saleId 
+    });
     return NextResponse.json(returns);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

@@ -4,8 +4,7 @@ const phoneSchema = new mongoose.Schema({
   model: {
     type: String,
     required: true,
-    trim: true,
-    unique: true
+    trim: true
   },
   name: {
     type: String,
@@ -30,9 +29,17 @@ const phoneSchema = new mongoose.Schema({
   description: {
     type: String,
     trim: true
+  },
+  storeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: true,
+    index: true
   }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Phone', phoneSchema);
+phoneSchema.index({ storeId: 1, model: 1 }, { unique: true });
+
+module.exports = mongoose.models.Phone || mongoose.model('Phone', phoneSchema);

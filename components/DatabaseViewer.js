@@ -1,38 +1,16 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import {
-  Database,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
-  Search,
-  Users,
-  Monitor,
-  Smartphone,
-  Headphones,
-  Sticker,
-  UserCheck,
-  Truck,
-  ShoppingCart,
-  Wrench,
-  Receipt,
-  RotateCcw,
-  CreditCard,
-  Eye,
-  X,
-  Download,
-  Filter,
-  Upload,
-  AlertTriangle,
-  CheckCircle,
-  ShoppingBag,
-  Layers
+  Database, RefreshCw, ChevronDown, ChevronUp, Search, Users, Monitor, Smartphone,
+  Headphones, Sticker, UserCheck, Truck, ShoppingCart, Wrench, Receipt, RotateCcw,
+  CreditCard, Eye, X, Download, Filter, Upload, AlertTriangle, CheckCircle, ShoppingBag, Layers
 } from 'lucide-react';
-const migrateLocalDataToMongoDB = async () => { return {}; };
+import { useLanguage } from './LanguageContext';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 const DatabaseViewer = () => {
+  const { t, isRTL } = useLanguage();
   const [stats, setStats] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [collectionData, setCollectionData] = useState(null);
@@ -41,26 +19,15 @@ const DatabaseViewer = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedRow, setExpandedRow] = useState(null);
-  const [viewMode, setViewMode] = useState('table');
   const [migrating, setMigrating] = useState(false);
   const [migrationResult, setMigrationResult] = useState(null);
   const [showMigrationModal, setShowMigrationModal] = useState(false);
 
   const collectionIcons = {
-    users: Users,
-    screens: Monitor,
-    phones: Smartphone,
-    accessories: Headphones,
-    stickers: Sticker,
-    customers: UserCheck,
-    suppliers: Truck,
-    sales: ShoppingCart,
-    repairs: Wrench,
-    expenses: Receipt,
-    returns: RotateCcw,
-    installments: CreditCard,
-    products: ShoppingBag,
-    categories: Layers
+    users: Users, screens: Monitor, phones: Smartphone, accessories: Headphones,
+    stickers: Sticker, customers: UserCheck, suppliers: Truck, sales: ShoppingCart,
+    repairs: Wrench, expenses: Receipt, returns: RotateCcw, installments: CreditCard,
+    products: ShoppingBag, categories: Layers
   };
 
   const collectionColors = {
@@ -80,121 +47,35 @@ const DatabaseViewer = () => {
     categories: 'from-purple-600 to-purple-700'
   };
 
-  // ترحيل البيانات من localStorage إلى MongoDB
-  const handleMigration = async () => {
-    try {
-      setMigrating(true);
-      setMigrationResult(null);
-
-      // جلب البيانات المحلية
-      const localData = await migrateLocalDataToMongoDB();
-
-      if (Object.keys(localData).length === 0) {
-        setMigrationResult({
-          success: false,
-          message: 'لا توجد بيانات محلية للترحيل'
-        });
-        return;
-      }
-
-      // إرسال البيانات إلى MongoDB
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/backup/import`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          data: localData,
-          clearExisting: false
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('فشل في ترحيل البيانات');
-      }
-
-      const result = await response.json();
-
-      // حساب عدد العناصر المرحلة
-      let totalMigrated = 0;
-      Object.values(localData).forEach(arr => {
-        if (Array.isArray(arr)) totalMigrated += arr.length;
-      });
-
-      setMigrationResult({
-        success: true,
-        message: `تم ترحيل ${totalMigrated} عنصر بنجاح`,
-        details: result
-      });
-
-      // إعادة تحميل الإحصائيات
-      await fetchStats();
-      setShowMigrationModal(false);
-
-    } catch (err) {
-      console.error('Migration error:', err);
-      setMigrationResult({
-        success: false,
-        message: err.message
-      });
-    } finally {
-      setMigrating(false);
-    }
-  };
-
-  // جلب إحصائيات قاعدة البيانات
   const fetchStats = async () => {
     try {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('token');
-
       const response = await fetch(`${API_URL}/dashboard/database-stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `خطأ ${response.status}: فشل في جلب الإحصائيات`);
-      }
-
+      if (!response.ok) throw new Error(t('database.errorFetch') || 'Failed to fetch stats');
       const data = await response.json();
       setStats(data);
-      setError('');
     } catch (err) {
-      console.error('Database stats error:', err);
-      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-        setError('تعذر الاتصال بالخادم. تأكد من تشغيل الخادم على المنفذ 5000');
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // جلب بيانات جدول معين
   const fetchCollectionData = async (collectionName) => {
     try {
       setLoadingData(true);
       setSelectedCollection(collectionName);
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/dashboard/collection/${collectionName}?limit=100`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      if (!response.ok) throw new Error('فشل في جلب البيانات');
-
+      if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
       setCollectionData(data);
-      setError('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -206,10 +87,21 @@ const DatabaseViewer = () => {
     fetchStats();
   }, []);
 
-  // تصدير البيانات كـ JSON
+  const handleMigration = async () => {
+    try {
+      setMigrating(true);
+      setMigrationResult(null);
+      // Logic for migration would go here - placeholder for now
+      setMigrationResult({ success: false, message: t('database.migrateNoData') });
+    } catch (err) {
+      setMigrationResult({ success: false, message: err.message });
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   const exportData = () => {
     if (!collectionData) return;
-
     const blob = new Blob([JSON.stringify(collectionData.data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -218,52 +110,39 @@ const DatabaseViewer = () => {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
-  // فلترة البيانات
   const filteredData = collectionData?.data?.filter(item => {
     if (!searchTerm) return true;
     return JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  // عرض قيمة الحقل
   const renderValue = (value, key) => {
     if (value === null || value === undefined) return <span className="text-gray-400">-</span>;
     if (typeof value === 'boolean') return value ? '✓' : '✗';
     if (typeof value === 'object') {
-      if (Array.isArray(value)) return `[${value.length} عناصر]`;
-      if (value instanceof Date || key.includes('date') || key.includes('Date') || key.includes('At')) {
-        try {
-          return new Date(value).toLocaleDateString('ar-SA');
-        } catch {
-          return String(value);
-        }
+      if (Array.isArray(value)) return `[${value.length} items]`;
+      if (value instanceof Date || key.toLowerCase().includes('date') || key.includes('At')) {
+        try { return new Date(value).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US'); } catch { return String(value); }
       }
       return '{...}';
     }
-    if (typeof value === 'number') return value.toLocaleString('ar-SA');
+    if (typeof value === 'number') return value.toLocaleString(isRTL ? 'ar-SA' : 'en-US');
     return String(value).substring(0, 50) + (String(value).length > 50 ? '...' : '');
   };
 
-  // الحصول على أعمدة الجدول
   const getColumns = () => {
     if (!filteredData?.length) return [];
     const allKeys = new Set();
-    filteredData.forEach(item => {
-      Object.keys(item).forEach(key => allKeys.add(key));
-    });
-    // ترتيب الأعمدة
-    const priorityKeys = ['_id', 'name', 'username', 'model', 'customerName', 'device', 'total', 'quantity', 'status', 'createdAt'];
-    const sorted = [...allKeys].sort((a, b) => {
-      const aIndex = priorityKeys.indexOf(a);
-      const bIndex = priorityKeys.indexOf(b);
-      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-      if (aIndex !== -1) return -1;
-      if (bIndex !== -1) return 1;
+    filteredData.forEach(item => Object.keys(item).forEach(key => allKeys.add(key)));
+    const priority = ['_id', 'name', 'username', 'model', 'customerName', 'device', 'total', 'quantity', 'status', 'createdAt'];
+    return [...allKeys].sort((a, b) => {
+      const ai = priority.indexOf(a), bi = priority.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
       return a.localeCompare(b);
-    });
-    return sorted.filter(key => key !== '__v');
+    }).filter(k => k !== '__v');
   };
 
   if (loading) {
@@ -271,334 +150,158 @@ const DatabaseViewer = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <RefreshCw className="w-12 h-12 text-rose-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">جاري تحميل البيانات...</p>
+          <p className="text-gray-600">{t('database.loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6">
-      {/* العنوان */}
+    <div className={`p-4 md:p-6 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-3 rounded-xl">
+          <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-3 rounded-xl shadow-lg">
             <Database className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">قاعدة البيانات</h2>
-            <p className="text-gray-500 text-sm">عرض وإدارة جميع البيانات</p>
+            <h2 className="text-2xl font-black text-gray-800">{t('database.title')}</h2>
+            <p className="text-gray-500 text-sm font-medium">{t('database.subtitle')}</p>
           </div>
         </div>
 
         <div className="flex gap-3">
-          <button
-            onClick={fetchStats}
-            className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl transition-all"
-          >
-            <RefreshCw className="w-5 h-5" />
-            تحديث
+          <button onClick={fetchStats} className="bg-rose-500 text-white px-5 py-2.5 rounded-xl font-bold hover:shadow-lg transition flex items-center gap-2">
+            <RefreshCw className="w-5 h-5" /> {t('database.refresh')}
           </button>
-
-          <button
-            onClick={() => setShowMigrationModal(true)}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl transition-all"
-          >
-            <Upload className="w-5 h-5" />
-            ترحيل البيانات المحلية
+          <button onClick={() => setShowMigrationModal(true)} className="bg-amber-500 text-white px-5 py-2.5 rounded-xl font-bold hover:shadow-lg transition flex items-center gap-2">
+            <Upload className="w-5 h-5" /> {t('database.migrate')}
           </button>
         </div>
       </div>
 
-      {/* نافذة ترحيل البيانات */}
       {showMigrationModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-amber-100 p-3 rounded-xl">
-                <AlertTriangle className="w-6 h-6 text-amber-600" />
-              </div>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-100 p-4 rounded-2xl"><AlertTriangle className="w-8 h-8 text-amber-600" /></div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">ترحيل البيانات</h3>
-                <p className="text-gray-500 text-sm">نقل البيانات من المتصفح إلى قاعدة البيانات</p>
+                <h3 className="text-xl font-black text-gray-900">{t('database.migrateTitle')}</h3>
+                <p className="text-gray-500 text-sm font-medium">{t('database.migrateSubtitle')}</p>
               </div>
             </div>
-
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-              <p className="text-amber-800 text-sm">
-                سيتم نقل جميع البيانات المخزنة في المتصفح (localStorage) إلى قاعدة بيانات MongoDB.
-                هذه العملية ستضيف البيانات دون حذف البيانات الموجودة.
-              </p>
-            </div>
-
+            <p className="text-gray-600 bg-amber-50/50 p-4 rounded-xl text-sm leading-relaxed border border-amber-100">{t('database.migrateDesc')}</p>
+            
             {migrationResult && (
-              <div className={`p-4 rounded-xl mb-4 ${
-                migrationResult.success
-                  ? 'bg-green-50 border border-green-200 text-green-700'
-                  : 'bg-red-50 border border-red-200 text-red-700'
-              }`}>
-                <div className="flex items-center gap-2">
-                  {migrationResult.success ? (
-                    <CheckCircle className="w-5 h-5" />
-                  ) : (
-                    <AlertTriangle className="w-5 h-5" />
-                  )}
-                  <span>{migrationResult.message}</span>
-                </div>
+              <div className={`p-4 rounded-xl border flex items-center gap-3 ${migrationResult.success ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                {migrationResult.success ? <CheckCircle className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+                <span className="font-bold text-sm">{migrationResult.message}</span>
               </div>
             )}
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowMigrationModal(false);
-                  setMigrationResult(null);
-                }}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all"
-                disabled={migrating}
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleMigration}
-                disabled={migrating}
-                className="flex-1 py-2 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-all flex items-center justify-center gap-2"
-              >
-                {migrating ? (
-                  <>
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    جاري الترحيل...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-5 h-5" />
-                    بدء الترحيل
-                  </>
-                )}
+            <div className="flex gap-4 pt-2">
+              <button disabled={migrating} onClick={() => { setShowMigrationModal(false); setMigrationResult(null); }} className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition">{t('common.cancel') || 'Cancel'}</button>
+              <button disabled={migrating} onClick={handleMigration} className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold shadow-lg hover:bg-amber-600 transition flex items-center justify-center gap-2">
+                {migrating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                {migrating ? t('database.migrating') : t('database.startMigration')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6">
-          {error}
-        </div>
-      )}
+      {error && <div className="bg-red-50 border-2 border-red-100 text-red-700 p-4 rounded-2xl mb-6 font-bold flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> {error}</div>}
 
-      {/* إحصائيات عامة */}
-      <div className="bg-gradient-to-r from-rose-500 to-pink-600 rounded-2xl p-6 mb-6 text-white">
-        <div className="flex items-center gap-3 mb-4">
-          <Database className="w-8 h-8" />
-          <div>
-            <h3 className="text-xl font-bold">إجمالي السجلات</h3>
-            <p className="text-rose-100">في جميع الجداول</p>
-          </div>
-        </div>
-        <div className="text-5xl font-bold">
-          {stats?.totalRecords?.toLocaleString('ar-SA') || 0}
+      <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-3xl p-8 mb-8 text-white shadow-xl relative overflow-hidden">
+        <Database className="absolute -right-8 -bottom-8 w-48 h-48 text-white/10" />
+        <div className="relative z-10">
+          <p className="text-rose-100 font-bold uppercase tracking-widest text-xs mb-2">{t('database.allCollections')}</p>
+          <h3 className="text-sm font-bold opacity-80 mb-1">{t('database.totalRecords')}</h3>
+          <div className="text-6xl font-black">{stats?.totalRecords?.toLocaleString(isRTL ? 'ar-SA' : 'en-US') || 0}</div>
         </div>
       </div>
 
-      {/* بطاقات الجداول */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
         {stats?.collections && Object.entries(stats.collections).map(([key, value]) => {
           const Icon = collectionIcons[key] || Database;
           const isSelected = selectedCollection === key;
-
           return (
-            <button
-              key={key}
-              onClick={() => fetchCollectionData(key)}
-              className={`p-4 rounded-xl transition-all duration-300 text-right ${
-                isSelected
-                  ? 'bg-gradient-to-br ' + collectionColors[key] + ' text-white shadow-lg scale-105'
-                  : 'bg-white hover:shadow-lg hover:scale-105 border border-gray-200'
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${
-                isSelected ? 'bg-white/20' : 'bg-gradient-to-br ' + collectionColors[key]
-              }`}>
-                <Icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-white'}`} />
+            <button key={key} onClick={() => fetchCollectionData(key)} className={`p-4 rounded-2xl transition-all duration-300 text-right group ${isSelected ? 'bg-gradient-to-br ' + collectionColors[key] + ' text-white shadow-xl scale-105' : 'bg-white hover:shadow-lg hover:scale-105 border border-gray-100'}`}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${isSelected ? 'bg-white/20' : 'bg-gradient-to-br ' + collectionColors[key]}`}>
+                <Icon className="w-6 h-6 text-white" />
               </div>
-              <div className={`text-2xl font-bold ${isSelected ? 'text-white' : 'text-gray-800'}`}>
-                {value.count?.toLocaleString('ar-SA')}
-              </div>
-              <div className={`text-sm ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
-                {value.name}
-              </div>
+              <div className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-gray-900'}`}>{value.count?.toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</div>
+              <div className={`text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>{value.name}</div>
             </button>
           );
         })}
       </div>
 
-      {/* عرض بيانات الجدول المحدد */}
       {selectedCollection && (
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          {/* رأس الجدول */}
-          <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-4 text-white">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                {(() => {
-                  const Icon = collectionIcons[selectedCollection] || Database;
-                  return <Icon className="w-6 h-6" />;
-                })()}
-                <div>
-                  <h3 className="text-lg font-bold">
-                    {stats?.collections[selectedCollection]?.name}
-                  </h3>
-                  <p className="text-gray-400 text-sm">
-                    {collectionData?.total || 0} سجل
-                  </p>
-                </div>
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+          <div className="bg-gray-900 p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-2xl bg-gradient-to-br ${collectionColors[selectedCollection]}`}><Database className="w-6 h-6" /></div>
+              <div>
+                <h3 className="text-xl font-black">{stats?.collections[selectedCollection]?.name}</h3>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{collectionData?.total || 0} {isRTL ? 'سجل' : 'Records'}</p>
               </div>
+            </div>
 
-              <div className="flex items-center gap-3">
-                {/* البحث */}
-                <div className="relative">
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="بحث..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-white/10 border border-white/20 rounded-lg pr-10 pl-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  />
-                </div>
-
-                {/* تصدير */}
-                <button
-                  onClick={exportData}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all"
-                >
-                  <Download className="w-4 h-4" />
-                  تصدير
-                </button>
-
-                {/* إغلاق */}
-                <button
-                  onClick={() => {
-                    setSelectedCollection(null);
-                    setCollectionData(null);
-                    setSearchTerm('');
-                  }}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-all"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <Search className={`absolute top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4 ${isRTL ? 'right-4' : 'left-4'}`} />
+                <input type="text" placeholder={t('database.search')} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`bg-white/10 border border-white/10 rounded-xl py-2.5 text-sm focus:ring-2 focus:ring-rose-500 focus:bg-white/20 transition-all ${isRTL ? 'pr-12' : 'pl-12'}`} />
               </div>
+              <button onClick={exportData} className="bg-white/10 hover:bg-white/20 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition text-sm">
+                <Download className="w-4 h-4" /> {t('database.export')}
+              </button>
+              <button onClick={() => { setSelectedCollection(null); setCollectionData(null); setSearchTerm(''); }} className="bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white px-3 py-2.5 rounded-xl transition">
+                <X className="w-5 h-5" />
+              </button>
             </div>
           </div>
 
-          {/* محتوى الجدول */}
-          {loadingData ? (
-            <div className="flex items-center justify-center h-64">
-              <RefreshCw className="w-8 h-8 text-rose-500 animate-spin" />
-            </div>
-          ) : filteredData?.length > 0 ? (
-            <div className="overflow-x-auto">
+          <div className="p-2 overflow-x-auto min-h-[400px]">
+            {loadingData ? (
+              <div className="flex flex-col items-center justify-center p-20"><RefreshCw className="w-12 h-12 text-rose-500 animate-spin mb-4" /><p className="text-gray-400 font-bold">{t('database.loading')}</p></div>
+            ) : filteredData?.length > 0 ? (
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50/50">
                   <tr>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      #
-                    </th>
-                    {getColumns().slice(0, 8).map(column => (
-                      <th
-                        key={column}
-                        className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                      >
-                        {column === '_id' ? 'المعرف' :
-                         column === 'name' ? 'الاسم' :
-                         column === 'username' ? 'المستخدم' :
-                         column === 'model' ? 'الموديل' :
-                         column === 'customerName' ? 'العميل' :
-                         column === 'device' ? 'الجهاز' :
-                         column === 'total' ? 'الإجمالي' :
-                         column === 'quantity' ? 'الكمية' :
-                         column === 'status' ? 'الحالة' :
-                         column === 'createdAt' ? 'تاريخ الإنشاء' :
-                         column === 'email' ? 'البريد' :
-                         column === 'phone' ? 'الهاتف' :
-                         column === 'role' ? 'الدور' :
-                         column === 'price' ? 'السعر' :
-                         column === 'cost' ? 'التكلفة' :
-                         column === 'categoryId' ? 'القسم' :
-                         column}
+                    <th className={`px-4 py-4 text-xs font-black text-gray-400 uppercase tracking-widest border-b ${isRTL ? 'text-right' : 'text-left'}`}>#</th>
+                    {getColumns().slice(0, 8).map(col => (
+                      <th key={col} className={`px-4 py-4 text-xs font-black text-gray-400 uppercase tracking-widest border-b ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {col === '_id' ? t('database.id') : col}
                       </th>
                     ))}
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      تفاصيل
-                    </th>
+                    <th className="px-4 py-4 text-center text-xs font-black text-gray-400 uppercase tracking-widest border-b">{t('database.details')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredData.map((item, index) => (
-                    <React.Fragment key={item._id || index}>
-                      <tr className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {index + 1}
-                        </td>
-                        {getColumns().slice(0, 8).map(column => (
-                          <td key={column} className="px-4 py-3 text-sm text-gray-800">
-                            {column === '_id' ? (
-                              <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                                {String(item[column]).substring(0, 8)}...
-                              </span>
-                            ) : column === 'status' ? (
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                item[column] === 'جاهز' ? 'bg-green-100 text-green-700' :
-                                item[column] === 'قيد الإصلاح' ? 'bg-yellow-100 text-yellow-700' :
-                                item[column] === 'مستلم' ? 'bg-blue-100 text-blue-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {item[column]}
-                              </span>
-                            ) : column === 'role' ? (
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                item[column] === 'admin' ? 'bg-purple-100 text-purple-700' :
-                                item[column] === 'manager' ? 'bg-blue-100 text-blue-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {item[column] === 'admin' ? 'مدير' :
-                                 item[column] === 'manager' ? 'مشرف' : 'موظف'}
-                              </span>
-                            ) : (
-                              renderValue(item[column], column)
-                            )}
+                <tbody className="divide-y divide-gray-100">
+                  {filteredData.map((item, idx) => (
+                    <React.Fragment key={item._id || idx}>
+                      <tr className="hover:bg-gray-50/80 transition-colors group">
+                        <td className="px-4 py-4 text-sm font-bold text-gray-400">{idx + 1}</td>
+                        {getColumns().slice(0, 8).map(col => (
+                          <td key={col} className="px-4 py-4 text-sm font-medium text-gray-700">
+                            {col === '_id' ? <span className="font-mono text-[10px] bg-gray-100 p-1.5 rounded-lg opacity-60">...{String(item[col]).slice(-6)}</span> : renderValue(item[col], col)}
                           </td>
                         ))}
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() => setExpandedRow(expandedRow === index ? null : index)}
-                            className="p-1 hover:bg-gray-200 rounded-lg transition-all"
-                          >
-                            {expandedRow === index ? (
-                              <ChevronUp className="w-5 h-5 text-gray-600" />
-                            ) : (
-                              <ChevronDown className="w-5 h-5 text-gray-600" />
-                            )}
+                        <td className="px-4 py-4 text-center">
+                          <button onClick={() => setExpandedRow(expandedRow === idx ? null : idx)} className={`p-2 rounded-xl transition-all ${expandedRow === idx ? 'bg-gray-200 text-gray-900' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100'}`}>
+                            {expandedRow === idx ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                           </button>
                         </td>
                       </tr>
-
-                      {/* صف التفاصيل */}
-                      {expandedRow === index && (
-                        <tr className="bg-gray-50">
-                          <td colSpan={getColumns().slice(0, 8).length + 2} className="px-6 py-4">
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                              {Object.entries(item).filter(([key]) => key !== '__v').map(([key, value]) => (
-                                <div key={key} className="bg-white p-3 rounded-lg border">
-                                  <div className="text-xs text-gray-500 mb-1">{key}</div>
-                                  <div className="text-sm text-gray-800 font-medium break-all">
-                                    {typeof value === 'object' ? (
-                                      <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
-                                        {JSON.stringify(value, null, 2)}
-                                      </pre>
-                                    ) : (
-                                      String(value)
-                                    )}
+                      {expandedRow === idx && (
+                        <tr>
+                          <td colSpan={10} className="p-6 bg-gray-50/50">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                              {Object.entries(item).filter(([k])=>k!=='__v').map(([k, v]) => (
+                                <div key={k} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm transition-transform hover:scale-[1.01]">
+                                  <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{k}</div>
+                                  <div className="text-sm font-bold text-gray-800 break-all leading-relaxed">
+                                    {typeof v === 'object' ? <pre className="text-[10px] bg-gray-50 p-3 rounded-xl mt-2 overflow-auto max-h-40">{JSON.stringify(v, null, 2)}</pre> : String(v)}
                                   </div>
                                 </div>
                               ))}
@@ -610,13 +313,10 @@ const DatabaseViewer = () => {
                   ))}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <Database className="w-16 h-16 mb-4 text-gray-300" />
-              <p>لا توجد بيانات</p>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-col items-center justify-center p-20 opacity-40"><Database className="w-20 h-20 mb-4" /><p className="font-black uppercase tracking-widest">{t('database.noData')}</p></div>
+            )}
+          </div>
         </div>
       )}
     </div>

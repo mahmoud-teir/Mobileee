@@ -25,7 +25,7 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const sale = await Sale.findById(params.id);
+    const sale = await Sale.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!sale) return NextResponse.json({ message: 'Sale not found' }, { status: 404 });
     return NextResponse.json(sale);
   } catch (error) {
@@ -39,7 +39,11 @@ export async function PUT(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const sale = await Sale.findByIdAndUpdate(params.id, await request.json(), { new: true, runValidators: true });
+    const sale = await Sale.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      await request.json(), 
+      { new: true, runValidators: true }
+    );
     if (!sale) return NextResponse.json({ message: 'Sale not found' }, { status: 404 });
     return NextResponse.json(sale);
   } catch (error) {
@@ -53,18 +57,22 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const sale = await Sale.findById(params.id);
+    const sale = await Sale.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!sale) return NextResponse.json({ message: 'Sale not found' }, { status: 404 });
 
     // Restore inventory
     for (const item of sale.items) {
       const Model = getModelByType(item.type);
       if (Model && item.productId) {
-        await Model.findByIdAndUpdate(item.productId, { $inc: { quantity: item.quantity } });
+        // Scoped to storeId for security
+        await Model.findOneAndUpdate(
+          { _id: item.productId, storeId: user.currentStoreId },
+          { $inc: { quantity: item.quantity } }
+        );
       }
     }
 
-    await Sale.findByIdAndDelete(params.id);
+    await Sale.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     return NextResponse.json({ message: 'Sale deleted successfully' });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

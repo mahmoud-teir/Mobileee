@@ -13,13 +13,19 @@ export async function DELETE(request, { params }) {
   try {
     await connectDB();
     
-    // Check if category has products
-    const productCount = await Product.countDocuments({ categoryId: params.id });
+    // Check if category has products (Scoped to storeId)
+    const productCount = await Product.countDocuments({ 
+      categoryId: params.id, 
+      storeId: user.currentStoreId 
+    });
     if (productCount > 0) {
       return NextResponse.json({ message: 'لا يمكن حذف القسم لأنه يحتوي على منتجات' }, { status: 400 });
     }
 
-    const category = await Category.findByIdAndDelete(params.id);
+    const category = await Category.findOneAndDelete({ 
+      _id: params.id, 
+      storeId: user.currentStoreId 
+    });
     if (!category) return NextResponse.json({ message: 'القسم غير موجود' }, { status: 404 });
     
     return NextResponse.json({ message: 'تم حذف القسم بنجاح' });

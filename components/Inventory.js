@@ -5,8 +5,10 @@ import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 import BarcodeGenerator from './BarcodeGenerator';
 import CategoryManager from './CategoryManager';
+import { useLanguage } from './LanguageContext';
 
 const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateItemInDb, deleteItem: deleteItemFromDb, view: propView, setView: propSetView }) => {
+  const { t, isRTL } = useLanguage();
   const [localView, setLocalView] = useState('screens');
   const view = propView || localView;
   const setView = propSetView || setLocalView;
@@ -27,13 +29,11 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
   const [showBarcode, setShowBarcode] = useState(null);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
 
-  // تحديث العناصر المفلترة عند تغير البحث أو البيانات
   useEffect(() => {
     const isDynamic = !['screens', 'phones', 'stickers', 'accessories'].includes(view);
     
     let items = [];
     if (isDynamic) {
-        // Find products belonging to this category
         items = (data.products || []).filter(p => (p.categoryId?._id || p.categoryId) === view);
     } else {
         items = view === 'screens' ? (data.screens || [])
@@ -43,15 +43,20 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
     }
     
     const filtered = items.filter(item => {
-      const name = item.model || item.name || '';
-      const description = item.description || '';
-      return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             (item.cost || 0).toString().includes(searchTerm) ||
-             (item.quantity || 0).toString().includes(searchTerm);
+      const searchLower = searchTerm.toLowerCase();
+      const keywords = searchLower.split(/\s+/).filter(k => k.length > 0);
+      
+      const name = (item.model || item.name || '').toLowerCase();
+      const description = (item.description || '').toLowerCase();
+      const barcode = (item.barcode || '').toLowerCase();
+      const price = (item.cost || 0).toString();
+      const quantity = (item.quantity || 0).toString();
+      
+      const textToSearch = `${name} ${description} ${barcode} ${price} ${quantity}`;
+      
+      return keywords.every(kw => textToSearch.includes(kw));
     });
     
-    // الفرز
     const sorted = [...filtered].sort((a, b) => {
       const valA = (a[sortField] || '').toString().toLowerCase();
       const valB = (b[sortField] || '').toString().toLowerCase();
@@ -67,17 +72,17 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
   const addItem = async () => {
     try {
       if (!formData.name && !formData.model) {
-        toast.error('يرجى إدخال اسم الصنف');
+        toast.error(t('inventory.errorName'));
         return;
       }
 
       if (!formData.quantity || parseInt(formData.quantity) <= 0) {
-        toast.error('يرجى إدخال كمية صالحة');
+        toast.error(t('inventory.errorQuantity'));
         return;
       }
 
       if (!formData.cost || parseFloat(formData.cost) <= 0) {
-        toast.error('يرجى إدخال سعر التكلفة');
+        toast.error(t('inventory.errorCost'));
         return;
       }
 
@@ -94,36 +99,32 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
         ...(isDynamic ? { categoryId: view } : {})
       };
 
-      // if editing, update existing item in MongoDB
       if (editingItemId) {
         if (updateItemInDb) {
           await updateItemInDb(collectionKey, editingItemId, newItem);
         } else {
-          // Fallback
           const items = data[collectionKey] || [];
           const updatedItems = items.map(i => (i.id === editingItemId || i._id === editingItemId) ? { ...i, ...newItem } : i);
           await saveData(collectionKey, updatedItems);
         }
         setEditingItemId(null);
-        toast.success('تم تحديث الصنف بنجاح!');
+        toast.success(t('inventory.updateSuccess'));
       } else {
-        // Add new item to MongoDB
         if (addItemToDb) {
           await addItemToDb(collectionKey, newItem);
         } else {
-          // Fallback
           const items = data[collectionKey] || [];
           const updatedItems = [...items, { id: Date.now(), created_at: new Date().toISOString(), ...newItem }];
           await saveData(collectionKey, updatedItems);
         }
-        toast.success('تمت إضافة الصنف بنجاح!');
+        toast.success(t('inventory.addSuccess'));
       }
 
       setShowAdd(false);
       setFormData({});
     } catch (error) {
-      console.error('خطأ في إضافة الصنف:', error);
-      toast.error('حدث خطأ أثناء إضافة الصنف: ' + error.message);
+      console.error('Error adding item:', error);
+      toast.error(t('login.errorGeneric') + ': ' + error.message);
     }
   };
 
@@ -166,44 +167,44 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
           const updatedItems = items.filter(i => i.id !== deleteConfirmation.itemId && i._id !== deleteConfirmation.itemId);
           await saveData(collectionKey, updatedItems);
         }
-        toast.success(`تم حذف "${deleteConfirmation.itemName}" بنجاح`);
+        toast.success(t('inventory.deleteSuccess').replace('{name}', deleteConfirmation.itemName));
         setDeleteConfirmation({ isOpen: false, itemId: null, itemName: '', itemType: '' });
       }
     } catch (error) {
-      console.error('خطأ في حذف الصنف:', error);
-      toast.error('حدث خطأ أثناء حذف الصنف: ' + error.message);
+      console.error('Error deleting item:', error);
+      toast.error(t('login.errorGeneric') + ': ' + error.message);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <h2 className="text-3xl font-bold">إدارة المخزون</h2>
+      <div className={`flex justify-between items-center flex-wrap gap-4 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+        <h2 className="text-3xl font-bold">{t('inventory.title')}</h2>
         <div className="flex gap-2">
             <button
               onClick={() => setShowCategoryManager(true)}
               className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors"
-              title="إدارة الأقسام"
+              title={t('inventory.categories')}
             >
               <Settings className="w-5 h-5" />
-              الأقسام
+              {t('inventory.categories')}
             </button>
             <button
               onClick={() => setShowAdd(true)}
               className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors shadow-sm"
             >
               <Plus className="w-5 h-5" />
-              إضافة صنف
+              {t('inventory.addItem')}
             </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className={`flex flex-wrap gap-3 mb-4 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
         {[
-          { id: 'screens', name: 'الشاشات', count: (data.screens || []).length },
-          { id: 'phones', name: 'الجوالات', count: (data.phones || []).length },
-          { id: 'stickers', name: 'الملصقات', count: (data.stickers || []).length },
-          { id: 'accessories', name: 'الإكسسوارات', count: (data.accessories || []).length }
+          { id: 'screens', name: t('inventory.screens'), count: (data.screens || []).length },
+          { id: 'phones', name: t('inventory.phones'), count: (data.phones || []).length },
+          { id: 'stickers', name: t('inventory.stickers'), count: (data.stickers || []).length },
+          { id: 'accessories', name: t('inventory.accessories'), count: (data.accessories || []).length }
         ].map(cat => (
           <button
             key={cat.id}
@@ -214,7 +215,6 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
           </button>
         ))}
         
-        {/* Dynamic Category Tabs */}
         {(data.categories || []).map(cat => (
           <button
             key={cat._id}
@@ -227,21 +227,20 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
         ))}
       </div>
 
-      {/* شريط البحث والفلترة */}
       <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className={`flex flex-col md:flex-row gap-4 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder={`ابحث في هذا القسم...`}
+              placeholder={t('inventory.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border p-3 rounded-xl pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all border-gray-200"
+              className={`w-full border p-3 rounded-xl ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
             />
-            <SearchIcon className="w-6 h-6 text-gray-400 absolute left-4 top-3.5" />
+            <SearchIcon className={`w-6 h-6 text-gray-400 absolute ${isRTL ? 'right-4' : 'left-4'} top-3.5`} />
           </div>
           
-          <div className="flex gap-2">
+          <div className={`flex gap-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
             <button
               onClick={() => {
                 setSortField('name');
@@ -249,7 +248,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
               }}
               className="px-4 py-2 bg-gray-50 rounded-xl hover:bg-gray-100 border border-gray-200 flex items-center gap-2 transition-colors"
             >
-              <span>الاسم</span>
+              <span>{t('inventory.name')}</span>
               {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
             </button>
             <button
@@ -259,7 +258,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
               }}
               className="px-4 py-2 bg-gray-50 rounded-xl hover:bg-gray-100 border border-gray-200 flex items-center gap-2 transition-colors"
             >
-              <span>الكمية</span>
+              <span>{t('inventory.quantity')}</span>
               {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}
             </button>
             <button
@@ -269,7 +268,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
               }}
               className="px-4 py-2 bg-gray-50 rounded-xl hover:bg-gray-100 border border-gray-200 flex items-center gap-2 transition-colors"
             >
-              <span>التكلفة</span>
+              <span>{t('inventory.cost')}</span>
               {sortField === 'cost' && (sortOrder === 'asc' ? '↑' : '↓')}
             </button>
           </div>
@@ -278,59 +277,59 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
 
       {showAdd && (
         <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-blue-50 ring-4 ring-blue-50/50">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? '' : 'flex-row-reverse'}`}>
             <Plus className="text-blue-500" />
-            {editingItemId ? 'تعديل' : 'إضافة'} {
+            {editingItemId ? t('inventory.editItem') : t('inventory.addItem')} {
               ['screens', 'phones', 'stickers', 'accessories'].includes(view) 
-                ? (view === 'screens' ? 'شاشة' : view === 'phones' ? 'جوال' : view === 'stickers' ? 'ملصق' : 'إكسسوار')
-                : (data.categories?.find(c => c._id === view)?.name || 'صنف')
+                ? (view === 'screens' ? t('inventory.screen') : view === 'phones' ? t('inventory.phone') : view === 'stickers' ? t('inventory.sticker') : t('inventory.accessory'))
+                : (data.categories?.find(c => c._id === view)?.name || t('inventory.product'))
             }
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
-              placeholder={view === 'screens' ? 'نوع الجهاز' : 'اسم المنتج'}
+              placeholder={view === 'screens' ? t('inventory.model') : t('inventory.name')}
               value={formData.model || formData.name || ''}
               onChange={e => setFormData({
                 ...formData, 
                 [view === 'screens' ? 'model' : 'name']: e.target.value
               })}
-              className="border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200"
+              className={`border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
               required
             />
             <input
               type="number"
-              placeholder="الكمية"
+              placeholder={t('inventory.quantity')}
               value={formData.quantity || ''}
               onChange={e => setFormData({...formData, quantity: e.target.value})}
-              className="border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200"
+              className={`border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
               required
               min="1"
             />
             <input
               type="number"
-              placeholder="سعر التكلفة (الشراء)"
+              placeholder={t('inventory.cost')}
               value={formData.cost || ''}
               onChange={e => setFormData({...formData, cost: e.target.value})}
-              className="border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200"
+              className={`border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
               required
               min="0.01"
               step="0.01"
             />
             <textarea
-              placeholder="وصف المنتج"
+              placeholder={t('inventory.description')}
               value={formData.description || ''}
               onChange={e => setFormData({...formData, description: e.target.value})}
-              className="border p-2 rounded-xl md:col-span-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200"
+              className={`border p-2 rounded-xl md:col-span-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
               rows="2"
             />
           </div>
           <div className="flex gap-3 mt-6">
             <button onClick={addItem} className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 flex-1 font-bold shadow-sm transition-colors">
-              حفظ
+              {t('common.save')}
             </button>
             <button onClick={() => { setShowAdd(false); setEditingItemId(null); setFormData({}); }} className="bg-gray-100 text-gray-600 px-6 py-2 rounded-xl hover:bg-gray-200 flex-1 font-bold transition-colors">
-              إلغاء
+              {t('common.cancel')}
             </button>
           </div>
         </div>
@@ -340,28 +339,28 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
         <table className="w-full min-w-[600px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="p-4 text-right text-gray-500 font-semibold">الاسم</th>
-              <th className="p-4 text-right text-gray-500 font-semibold cursor-pointer" onClick={() => {
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'} text-gray-500 font-semibold`}>{t('inventory.name')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'} text-gray-500 font-semibold cursor-pointer`} onClick={() => {
                 setSortField('quantity');
                 setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
               }}>
-                الكمية {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}
+                {t('inventory.quantity')} {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th className="p-4 text-right text-gray-500 font-semibold cursor-pointer" onClick={() => {
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'} text-gray-500 font-semibold cursor-pointer`} onClick={() => {
                 setSortField('cost');
                 setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
               }}>
-                سعر التكلفة {sortField === 'cost' && (sortOrder === 'asc' ? '↑' : '↓')}
+                {t('inventory.cost')} {sortField === 'cost' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th className="p-4 text-right text-gray-500 font-semibold">الحالة</th>
-              <th className="p-4 text-right text-gray-500 font-semibold">الإجراءات</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'} text-gray-500 font-semibold`}>{t('inventory.status')}</th>
+              <th className={`p-4 ${isRTL ? 'text-right' : 'text-left'} text-gray-500 font-semibold`}>{t('inventory.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {filteredItems.length > 0 ? (
               filteredItems.map(item => (
                 <tr key={item._id || item.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="p-4 font-medium">
+                  <td className={`p-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
                     <div>
                       <p className="text-gray-900">{item.model || item.name}</p>
                       {item.description && (
@@ -369,16 +368,16 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
                       )}
                     </div>
                   </td>
-                  <td className="p-4 font-bold text-gray-800">{item.quantity}</td>
-                  <td className="p-4">{(item.cost || 0).toFixed(2)} ₪</td>
-                  <td className="p-4">
+                  <td className={`p-4 font-bold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>{item.quantity}</td>
+                  <td className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>{(item.cost || 0).toFixed(2)} {t('dashboard.currency')}</td>
+                  <td className={`p-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {item.quantity === 0 ? (
-                      <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-100">غير متوفر</span>
+                      <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-100">{t('inventory.outOfStock')}</span>
                     ) : (
-                      <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-bold border border-green-100">متوفر</span>
+                      <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-bold border border-green-100">{t('inventory.available')}</span>
                     )}
                   </td>
-                  <td className="p-4 flex items-center gap-3">
+                  <td className={`p-4 flex items-center gap-3 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
                     <button
                       onClick={() => setShowBarcode({
                         ...item,
@@ -386,16 +385,16 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
                         type: ['screens', 'phones', 'stickers', 'accessories'].includes(view) ? (view === 'screens' ? 'screen' : view === 'phones' ? 'phone' : view === 'stickers' ? 'sticker' : 'accessory') : view
                       })}
                       className="text-purple-500 hover:text-purple-700 bg-purple-50 p-2 rounded-lg"
-                      title="توليد باركود"
+                      title={t('inventory.generateBarcode')}
                     >
                       <Barcode className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleEditItem(item)}
-                      className="text-blue-500 hover:text-blue-700 p-2"
-                      title="تعديل الصنف"
+                      className="text-blue-500 hover:text-blue-700 p-2 font-medium"
+                      title={t('inventory.edit')}
                     >
-                      تحرير
+                      {t('inventory.edit')}
                     </button>
                     <button
                       onClick={() => {
@@ -403,7 +402,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
                         handleDeleteItem(item, item.model || item.name, type);
                       }}
                       className="text-red-500 hover:text-red-700 p-2"
-                      title="حذف الصنف"
+                      title={t('inventory.delete')}
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -414,8 +413,8 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
                 <tr>
                   <td colSpan="5" className="p-12 text-center text-gray-400">
                     {searchTerm ? 
-                       `لا توجد نتائج بحث تطابق "${searchTerm}"` :
-                       `لا توجد أصناف في هذا القسم حالياً.`
+                       t('inventory.noResults').replace('{term}', searchTerm) :
+                       t('inventory.noItems')
                     }
                   </td>
                 </tr>
@@ -428,13 +427,12 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
         isOpen={deleteConfirmation.isOpen}
         onClose={() => setDeleteConfirmation({ isOpen: false, itemId: null, itemName: '', itemType: '' })}
         onConfirm={confirmDelete}
-        title="تأكيد الحذف"
-        message={`هل أنت متأكد من حذف "${deleteConfirmation.itemName}"؟ سيتم حذف هذا الصنف نهائياً من المخزون.`}
-        confirmText="حذف"
-        cancelText="إلغاء"
+        title={t('inventory.deleteConfirmTitle')}
+        message={t('inventory.deleteConfirmMsg').replace('{name}', deleteConfirmation.itemName)}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
       />
 
-      {/* مودال الباركود */}
       {showBarcode && (
         <BarcodeGenerator
           item={showBarcode}

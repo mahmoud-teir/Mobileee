@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
 
   try {
     await connectDB();
-    const product = await Product.findById(params.id);
+    const product = await Product.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!product) return NextResponse.json({ message: 'المنتج غير موجود' }, { status: 404 });
     return NextResponse.json(product);
   } catch (error) {
@@ -27,7 +27,11 @@ export async function PUT(request, { params }) {
   try {
     await connectDB();
     const body = await request.json();
-    const product = await Product.findByIdAndUpdate(params.id, body, { new: true, runValidators: true });
+    const product = await Product.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      body, 
+      { new: true, runValidators: true }
+    );
     if (!product) return NextResponse.json({ message: 'المنتج غير موجود' }, { status: 404 });
     return NextResponse.json(product);
   } catch (error) {
@@ -42,7 +46,7 @@ export async function DELETE(request, { params }) {
 
   try {
     await connectDB();
-    const product = await Product.findByIdAndDelete(params.id);
+    const product = await Product.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     if (!product) return NextResponse.json({ message: 'المنتج غير موجود' }, { status: 404 });
     return NextResponse.json({ message: 'تم حذف المنتج بنجاح' });
   } catch (error) {

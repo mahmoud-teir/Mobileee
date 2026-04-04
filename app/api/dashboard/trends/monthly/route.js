@@ -19,9 +19,9 @@ export async function GET(request) {
       const end = new Date(today.getFullYear(), today.getMonth() - i + 1, 0);
 
       const [sales, repairs, expenses] = await Promise.all([
-        Sale.find({ date: { $gte: start, $lte: end } }),
-        Repair.find({ date: { $gte: start, $lte: end } }),
-        Expense.find({ date: { $gte: start, $lte: end } })
+        Sale.find({ storeId: user.currentStoreId, date: { $gte: start, $lte: end } }),
+        Repair.find({ storeId: user.currentStoreId, date: { $gte: start, $lte: end } }),
+        Expense.find({ storeId: user.currentStoreId, date: { $gte: start, $lte: end } })
       ]);
 
       const salesRevenue = sales.reduce((sum, s) => sum + s.total, 0);

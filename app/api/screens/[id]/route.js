@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
 
   try {
     await connectDB();
-    const screen = await Screen.findById(params.id);
+    const screen = await Screen.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!screen) return NextResponse.json({ message: 'Screen not found' }, { status: 404 });
     return NextResponse.json(screen);
   } catch (error) {
@@ -27,7 +27,11 @@ export async function PUT(request, { params }) {
   try {
     await connectDB();
     const body = await request.json();
-    const screen = await Screen.findByIdAndUpdate(params.id, body, { new: true, runValidators: true });
+    const screen = await Screen.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      body, 
+      { new: true, runValidators: true }
+    );
     if (!screen) return NextResponse.json({ message: 'Screen not found' }, { status: 404 });
     return NextResponse.json(screen);
   } catch (error) {
@@ -42,7 +46,7 @@ export async function DELETE(request, { params }) {
 
   try {
     await connectDB();
-    const screen = await Screen.findByIdAndDelete(params.id);
+    const screen = await Screen.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     if (!screen) return NextResponse.json({ message: 'Screen not found' }, { status: 404 });
     return NextResponse.json({ message: 'Screen deleted successfully' });
   } catch (error) {

@@ -12,7 +12,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    const query = {};
+    const query = { storeId: user.currentStoreId };
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }

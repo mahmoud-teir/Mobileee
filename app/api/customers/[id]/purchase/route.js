@@ -10,8 +10,8 @@ export async function PATCH(request, { params }) {
   try {
     await connectDB();
     const { amount } = await request.json();
-    const customer = await Customer.findByIdAndUpdate(
-      params.id,
+    const customer = await Customer.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId },
       { $inc: { totalPurchases: amount }, lastPurchase: new Date() },
       { new: true }
     );

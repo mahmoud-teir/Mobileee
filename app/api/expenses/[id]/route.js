@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const expense = await Expense.findById(params.id);
+    const expense = await Expense.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!expense) return NextResponse.json({ message: 'Expense not found' }, { status: 404 });
     return NextResponse.json(expense);
   } catch (error) {
@@ -24,7 +24,11 @@ export async function PUT(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const expense = await Expense.findByIdAndUpdate(params.id, await request.json(), { new: true, runValidators: true });
+    const expense = await Expense.findOneAndUpdate(
+      { _id: params.id, storeId: user.currentStoreId }, 
+      await request.json(), 
+      { new: true, runValidators: true }
+    );
     if (!expense) return NextResponse.json({ message: 'Expense not found' }, { status: 404 });
     return NextResponse.json(expense);
   } catch (error) {
@@ -38,7 +42,7 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const expense = await Expense.findByIdAndDelete(params.id);
+    const expense = await Expense.findOneAndDelete({ _id: params.id, storeId: user.currentStoreId });
     if (!expense) return NextResponse.json({ message: 'Expense not found' }, { status: 404 });
     return NextResponse.json({ message: 'Expense deleted successfully' });
   } catch (error) {

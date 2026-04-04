@@ -9,7 +9,7 @@ export async function PATCH(request, { params }) {
   if (err) return err;
   try {
     await connectDB();
-    const installment = await Installment.findById(params.id);
+    const installment = await Installment.findOne({ _id: params.id, storeId: user.currentStoreId });
     if (!installment) return NextResponse.json({ message: 'Installment not found' }, { status: 404 });
 
     const payment = installment.payments.id(params.paymentId);

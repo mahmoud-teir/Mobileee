@@ -32,8 +32,9 @@ export const AuthProvider = ({ children }) => {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
+      setLoading(false); // Set loading to false immediately to show UI
 
-      // Verify token is still valid
+      // Verify token is still valid in the background
       verifyToken(storedToken);
     } else {
       setLoading(false);
@@ -69,6 +70,7 @@ export const AuthProvider = ({ children }) => {
     setToken(authToken);
     localStorage.setItem('token', authToken);
     localStorage.setItem('user', JSON.stringify(userData));
+    // The userData now includes storeSlug from our API update
   };
 
   const logout = useCallback(() => {
@@ -78,6 +80,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('lastActivity');
+    localStorage.removeItem('currentStoreSlug');
+    localStorage.removeItem('activeTab');
 
     // مسح المؤقتات
     if (timeoutRef.current) {
@@ -85,6 +89,10 @@ export const AuthProvider = ({ children }) => {
     }
     if (warningTimeoutRef.current) {
       clearTimeout(warningTimeoutRef.current);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
     }
   }, []);
 
@@ -176,15 +184,31 @@ export const AuthProvider = ({ children }) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Inject store slug for multi-tenancy
+    // Priority: 1. Explicit header, 2. localStorage (current session), 3. user object
+    const currentSlug = headers['x-store-slug'] || 
+                        localStorage.getItem('currentStoreSlug') || 
+                        user?.storeSlug;
+
+    if (currentSlug) {
+      headers['x-store-slug'] = currentSlug;
+    }
+
     const response = await fetch(url, {
       ...options,
       headers,
     });
 
-    // If unauthorized, logout
+    // If unauthorized (invalid token), logout
     if (response.status === 401) {
       logout();
       throw new Error('Session expired. Please login again.');
+    }
+
+    // If forbidden (role issue or store issue)
+    if (response.status === 403) {
+      // If it's a store-related 403, we might want to clear the slug
+      console.error('Access Forbidden (403). Possible store mismatch or role issue.');
     }
 
     return response;

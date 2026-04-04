@@ -11,6 +11,7 @@ export async function GET(request, { params }) {
     await connectDB();
     const query = params.query;
     const suppliers = await Supplier.find({
+      storeId: user.currentStoreId,
       $or: [
         { name: { $regex: query, $options: 'i' } },
         { phone: { $regex: query, $options: 'i' } },
