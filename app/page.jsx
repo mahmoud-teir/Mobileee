@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../components/AuthContext';
 import Login from '../components/Login';
+import MobileShopManagement from '../components/MobileShopManagement';
 
 export default function RootPage() {
   const { user, loading, login } = useAuth();
