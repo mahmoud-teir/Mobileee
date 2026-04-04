@@ -1,5 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
+import { useLanguage } from './LanguageContext';
 
 const AuthContext = createContext(null);
 
@@ -21,6 +23,7 @@ export const AuthProvider = ({ children }) => {
   const [sessionWarning, setSessionWarning] = useState(false);
   const timeoutRef = useRef(null);
   const warningTimeoutRef = useRef(null);
+  const { t } = useLanguage();
 
   const API_URL = process.env.REACT_APP_API_URL || '/api';
 
@@ -119,10 +122,11 @@ export const AuthProvider = ({ children }) => {
 
     // إنهاء الجلسة بعد 10 دقائق
     timeoutRef.current = setTimeout(() => {
-      alert('تم إنهاء الجلسة بسبب عدم النشاط');
+      // alert('تم إنهاء الجلسة بسبب عدم النشاط');
+      toast.error(t('login.sessionExpired') || 'تم إنهاء الجلسة بسبب عدم النشاط');
       logout();
     }, SESSION_TIMEOUT);
-  }, [user, logout]);
+  }, [user, logout, t]);
 
   // مراقبة نشاط المستخدم
   useEffect(() => {
@@ -162,11 +166,12 @@ export const AuthProvider = ({ children }) => {
     if (lastActivity && user) {
       const elapsed = Date.now() - parseInt(lastActivity);
       if (elapsed > SESSION_TIMEOUT) {
-        alert('تم إنهاء الجلسة بسبب عدم النشاط');
+        // alert('تم إنهاء الجلسة بسبب عدم النشاط');
+        toast.error(t('login.sessionExpired') || 'تم إنهاء الجلسة بسبب عدم النشاط');
         logout();
       }
     }
-  }, [user, logout]);
+  }, [user, logout, t]);
 
   const updateUser = (userData) => {
     setUser(userData);

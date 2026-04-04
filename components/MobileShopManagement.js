@@ -223,9 +223,15 @@ const MobileShopManagement = () => {
 
   // دالة تسجيل الخروج
   const handleLogout = () => {
-    if (window.confirm(t('header.logoutConfirm'))) {
-      logout();
-    }
+    toast(t('header.logoutConfirm'), {
+      action: {
+        label: t('nav.logout') || 'خروج',
+        onClick: () => logout()
+      },
+      cancel: {
+        label: t('admin.cancel') || 'إلغاء'
+      }
+    });
   };
 
   // قائمة التبويبات
