@@ -230,7 +230,9 @@ const DatabaseViewer = () => {
                 <Icon className="w-6 h-6 text-white" />
               </div>
               <div className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-gray-900'}`}>{value.count?.toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</div>
-              <div className={`text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>{value.name}</div>
+              <div className={`text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
+                {t(`db.${key}`) || value.name}
+              </div>
             </button>
           );
         })}
@@ -242,8 +244,8 @@ const DatabaseViewer = () => {
             <div className="flex items-center gap-4">
               <div className={`p-3 rounded-2xl bg-gradient-to-br ${collectionColors[selectedCollection]}`}><Database className="w-6 h-6" /></div>
               <div>
-                <h3 className="text-xl font-black">{stats?.collections[selectedCollection]?.name}</h3>
-                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{collectionData?.total || 0} {isRTL ? 'سجل' : 'Records'}</p>
+                <h3 className="text-xl font-black">{t(`db.${selectedCollection}`) || stats?.collections[selectedCollection]?.name}</h3>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">{collectionData?.total || 0} {t('db.records')}</p>
               </div>
             </div>
 

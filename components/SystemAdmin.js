@@ -26,7 +26,7 @@ const SystemAdmin = ({ onImpersonate }) => {
       const res = await fetch('/api/admin/stores', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('فشل تحميل المتاجر');
+      if (!res.ok) throw new Error(t('admin.errorFetch') || 'فشل تحميل المتاجر');
       const data = await res.json();
       setStores(data);
       
@@ -69,7 +69,7 @@ const SystemAdmin = ({ onImpersonate }) => {
         throw new Error(err.message || 'فشل الحفظ');
       }
 
-      toast.success(editingStoreId ? 'تم تحديث المتجر' : 'تم إنشاء المتجر بنجاح');
+      toast.success(editingStoreId ? t('admin.successUpdate') || 'تم تحديث المتجر' : t('admin.successCreate') || 'تم إنشاء المتجر بنجاح');
       setShowAddForm(false);
       setEditingStoreId(null);
       setFormData({ name: '', slug: '', ownerEmail: '', ownerUsername: '', ownerPassword: '' });
@@ -91,11 +91,11 @@ const SystemAdmin = ({ onImpersonate }) => {
         body: JSON.stringify({ id, updates: { isActive: !currentStatus } })
       });
       if (res.ok) {
-        toast.success(currentStatus ? 'تم تعطيل المتجر' : 'تم تفعيل المتجر');
+        toast.success(currentStatus ? t('admin.successDisable') : t('admin.successEnable'));
         fetchStores();
       }
     } catch (error) {
-      toast.error('حدث خطأ في تحديث الحالة');
+      toast.error(t('admin.errorStatusUpdate') || 'حدث خطأ في تحديث الحالة');
     }
   };
 
@@ -110,10 +110,10 @@ const SystemAdmin = ({ onImpersonate }) => {
         },
         body: JSON.stringify({ id, updates: { 'subscription.plan': plan } })
       });
-      toast.success('تم تحديث الباقة');
+      toast.success(t('admin.successPlanUpdate') || 'تم تحديث الباقة');
       fetchStores();
     } catch (error) {
-      toast.error('فشل تحديث الباقة');
+      toast.error(t('admin.errorUpdatePlan') || 'فشل تحديث الباقة');
     }
   };
 
@@ -163,12 +163,12 @@ const SystemAdmin = ({ onImpersonate }) => {
         <div className="bg-white p-6 rounded-2xl shadow-xl border border-indigo-100 animate-in fade-in slide-in-from-top-4">
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-800">
             {editingStoreId ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-            {editingStoreId ? 'تعديل بيانات المتجر' : 'إنشاء متجر جديد للعميل'}
+            {editingStoreId ? t('admin.editStore') : t('admin.newStoreDesc')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.storeName')}</label>
-              <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="مثلاً: محل سمارت فون" />
+              <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder={t('admin.storeNamePlaceholder') || "مثلاً: محل سمارت فون"} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.storeSlug')}</label>
@@ -194,11 +194,11 @@ const SystemAdmin = ({ onImpersonate }) => {
           <div className="flex gap-2 mt-6">
             <button onClick={handleSaveStore} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2">
               <Save className="w-5 h-5" />
-              {editingStoreId ? 'تحديث البيانات' : 'إنشاء المتجر الآن'}
+              {editingStoreId ? t('admin.updateStoreBtn') : t('admin.createStoreBtn')}
             </button>
             <button onClick={() => { setShowAddForm(false); setEditingStoreId(null); }} className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition flex items-center justify-center gap-2">
               <X className="w-5 h-5" />
-              إلغاء
+              {t('admin.cancel')}
             </button>
           </div>
         </div>
@@ -285,7 +285,7 @@ const SystemAdmin = ({ onImpersonate }) => {
                       </button>
                       <button 
                         onClick={() => onImpersonate(store.slug)}
-                        title="دخول كمدير لهذا المتجر"
+                        title={t('admin.impersonate')}
                         className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                       >
                         <ExternalLink className="w-5 h-5" />

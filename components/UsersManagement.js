@@ -214,7 +214,7 @@ const UsersManagement = () => {
         <div className="flex items-center gap-4">
           {/* عرض حالة الخطة */}
           <div className="hidden md:flex flex-col items-end">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('systemAdmin.plan') || 'الخطة'}</span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('common.plan')}</span>
             <span className="text-sm font-black text-rose-600 uppercase tracking-tighter">
               {PLAN_LIMITS[currentUser?.currentStore?.subscription?.plan || 'free']?.label}
             </span>
@@ -240,14 +240,14 @@ const UsersManagement = () => {
           <div className="flex items-center gap-2">
             <AlertCircle className="w-5 h-5" />
             <span>
-              {t('users.limitReached') || `لقد وصلت إلى الحد الأقصى للمستخدمين لهذه الباقة (${PLAN_LIMITS[currentUser?.currentStore?.subscription?.plan || 'free']?.maxUsers}).`}
+              {t('users.limitReached', { limit: PLAN_LIMITS[currentUser?.currentStore?.subscription?.plan || 'free']?.maxUsers })}
             </span>
           </div>
           <button 
              onClick={() => window.location.href = '#admin'} // or just inform them
              className="text-amber-800 font-bold underline px-2 py-1 hover:bg-amber-100 rounded-lg transition"
           >
-            {t('common.upgrade') || 'ترقية الآن'}
+            {t('common.upgrade')}
           </button>
         </div>
       )}

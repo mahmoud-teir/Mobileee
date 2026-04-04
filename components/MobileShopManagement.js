@@ -255,7 +255,7 @@ const MobileShopManagement = () => {
     ] : []),
     // تبويب مدير النظام الشامل
     ...(isSuperAdmin ? [
-      { id: 'admin', label: 'إدارة النظام', shortLabel: 'النظام', icon: Shield }
+      { id: 'admin', label: t('nav.admin'), shortLabel: t('nav.adminShort'), icon: Shield }
     ] : [])
   ].filter(tab => {
     // Super Admin sees everything ONLY when impersonating

@@ -18,7 +18,9 @@
     "reports": "Reports",
     "users": "Users",
     "backup": "Backup",
-    "database": "Database"
+    "database": "Database",
+    "admin": "System Admin",
+    "adminShort": "Admin"
   },
   "login": {
     "title": "SmartStore POS",
@@ -332,6 +334,8 @@
     "error": "An error occurred",
     "errorGeneric": "An unexpected error occurred, please try again",
     "print": "Print",
+    "upgrade": "Upgrade Now",
+    "plan": "Plan",
     "savePDF": "Save PDF",
     "dateTime": "Date and Time",
     "name": "Name",
@@ -475,7 +479,8 @@
     "errorDeleteSelf": "You cannot delete your own account",
     "errorToggleSelf": "You cannot disable your own account",
     "errorToggle": "Failed to update user status",
-    "loading": "Loading users..."
+    "loading": "Loading users...",
+    "limitReached": "You have reached the maximum number of users for this plan ({limit})."
   },
   "database": {
     "title": "Database",
@@ -604,8 +609,36 @@
       "proDesc": "Advanced management for growing businesses",
       "enterpriseDesc": "Complete system for large enterprises"
     },
+    "editStore": "Edit Store Details",
+    "newStoreDesc": "Create a New Store for a Client",
+    "updateStoreBtn": "Update Data",
+    "createStoreBtn": "Create Store Now",
+    "impersonate": "Login as this store manager",
+    "cancel": "Cancel",
     "active": "Active",
     "inactive": "Disabled",
+    "successDisable": "Store disabled successfully",
+    "successEnable": "Store enabled successfully",
+    "errorStatusUpdate": "Error updating store status",
+    "successPlanUpdate": "Plan updated successfully",
+    "errorPlanUpdate": "Failed to update plan",
     "actions": "Actions"
+  },
+  "db": {
+    "users": "Users",
+    "screens": "Screens",
+    "phones": "Phones",
+    "accessories": "Accessories",
+    "stickers": "Stickers",
+    "customers": "Customers",
+    "suppliers": "Suppliers",
+    "sales": "Sales",
+    "repairs": "Repairs",
+    "expenses": "Expenses",
+    "returns": "Returns",
+    "installments": "Installments",
+    "products": "Products",
+    "categories": "Categories",
+    "records": "Records"
   }
 }

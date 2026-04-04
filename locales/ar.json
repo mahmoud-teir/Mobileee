@@ -18,7 +18,9 @@
     "reports": "التقارير",
     "users": "المستخدمين",
     "backup": "النسخ الاحتياطي",
-    "database": "قاعدة البيانات"
+    "database": "قاعدة البيانات",
+    "admin": "إدارة النظام",
+    "adminShort": "النظام"
   },
   "login": {
     "title": "SmartStore POS",
@@ -72,8 +74,18 @@
     "plan": "الباقة",
     "status": "الحالة",
     "actions": "إجراءات",
+    "newStoreDesc": "إنشاء متجر جديد للعميل",
+    "updateStoreBtn": "تحديث البيانات",
+    "createStoreBtn": "إنشاء المتجر الآن",
+    "impersonate": "دخول كمدير لهذا المتجر",
+    "cancel": "إلغاء",
     "active": "نشط",
     "inactive": "معطل",
+    "successDisable": "تم تعطيل المتجر بنجاح",
+    "successEnable": "تم تفعيل المتجر بنجاح",
+    "errorStatusUpdate": "حدث خطأ في تحديث الحالة",
+    "successPlanUpdate": "تم تحديث الباقة بنجاح",
+    "errorPlanUpdate": "فشل تحديث الباقة",
     "plans": {
       "free": "الباقة المجانية",
       "pro": "الباقة الاحترافية",
@@ -361,6 +373,8 @@
     "error": "حدث خطأ ما",
     "errorGeneric": "حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى",
     "print": "طباعة",
+    "upgrade": "ترقية الآن",
+    "plan": "الباقة",
     "savePDF": "حفظ PDF",
     "dateTime": "التاريخ والوقت",
     "name": "الاسم",
@@ -504,7 +518,8 @@
     "errorDeleteSelf": "لا يمكنك حذف حسابك الشخصي",
     "errorToggleSelf": "لا يمكنك تعطيل حسابك الشخصي",
     "errorToggle": "فشل في تحديث حالة المستخدم",
-    "loading": "جاري تحميل المستخدمين..."
+    "loading": "جاري تحميل المستخدمين...",
+    "limitReached": "لقد وصلت إلى الحد الأقصى للمستخدمين لهذه الباقة ({limit})."
   },
   "database": {
     "title": "قاعدة البيانات",
@@ -612,5 +627,22 @@
     "success": "تم تسجيل القسط بنجاح!",
     "successPayment": "تم تسجيل الدفعة بنجاح!",
     "deleteMsg": "تم حذف عملية التقسيط بنجاح!"
+  },
+  "db": {
+    "users": "المستخدمين",
+    "screens": "الشاشات",
+    "phones": "الهواتف",
+    "accessories": "الإكسسوارات",
+    "stickers": "الاستيكرات",
+    "customers": "العملاء",
+    "suppliers": "الموردين",
+    "sales": "المبيعات",
+    "repairs": "الصيانات",
+    "expenses": "المصروفات",
+    "returns": "المرتجعات",
+    "installments": "الأقساط",
+    "products": "المنتجات",
+    "categories": "الأقسام",
+    "records": "سجل"
   }
 }
