@@ -209,7 +209,10 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="group bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
+        <div 
+          onClick={() => setActiveTab('reports')}
+          className="group cursor-pointer bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1"
+        >
           <div className="relative z-10">
             <div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm shadow-lg">
               <DollarSign className="w-7 h-7" />
@@ -219,7 +222,10 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
           </div>
         </div>
 
-        <div className="group bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
+        <div 
+          onClick={() => setActiveTab('reports')}
+          className="group cursor-pointer bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1"
+        >
           <div className="relative z-10">
             <div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm shadow-lg">
               <TrendingUp className="w-7 h-7" />
@@ -229,7 +235,10 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
           </div>
         </div>
 
-        <div className="group bg-gradient-to-br from-violet-500 via-purple-600 to-fuchsia-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
+        <div 
+          onClick={() => setActiveTab('repairs')}
+          className="group cursor-pointer bg-gradient-to-br from-violet-500 via-purple-600 to-fuchsia-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1"
+        >
           <div className="relative z-10">
             <div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm shadow-lg">
               <Wrench className="w-7 h-7" />

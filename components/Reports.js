@@ -270,7 +270,7 @@ const Reports = ({ data, saveData }) => {
           <table className="w-full text-right">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="p-4 font-bold">المنتج</th>
+                <th className="p-4 font-bold">المنتج / الصنف</th>
                 <th className="p-4 font-bold">الكمية المباعة</th>
                 <th className="p-4 font-bold">إجمالي المبيعات</th>
                 <th className="p-4 font-bold">إجمالي التكلفة</th>
@@ -282,10 +282,10 @@ const Reports = ({ data, saveData }) => {
               {(() => {
                 const profitByItem = {};
                 (data.sales || []).forEach(sale => {
-                  const items = sale.items || (sale.item ? [{ item: sale.item, quantity: sale.quantity, price: sale.price, cost: sale.cost || 0 }] : []);
+                  const items = sale.items || (sale.item ? [{ item: sale.item, quantity: sale.quantity, price: sale.price, cost: sale.cost || 0, type: sale.itemType }] : []);
                   items.forEach(it => {
                     if (!profitByItem[it.item]) {
-                      profitByItem[it.item] = { quantity: 0, sales: 0, cost: 0, profit: 0 };
+                      profitByItem[it.item] = { quantity: 0, sales: 0, cost: 0, profit: 0, type: it.type || it.itemType };
                     }
                     const q = it.quantity || 0;
                     const s = q * (it.price || 0);
@@ -301,7 +301,10 @@ const Reports = ({ data, saveData }) => {
                   .sort((a, b) => b[1].profit - a[1].profit)
                   .map(([name, stats], idx) => (
                     <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="p-4 font-medium text-gray-800">{name}</td>
+                      <td className="p-4 font-medium text-gray-800">
+                        {name}
+                        <span className="block text-xs text-gray-400">{(stats.type === 'screen' ? 'شاشة' : stats.type === 'phone' ? 'جوال' : stats.type === 'sticker' ? 'ملصق' : stats.type === 'accessory' ? 'إكسسوار' : stats.type === 'product' ? 'منتج عام' : stats.type) || 'غير محدد'}</span>
+                      </td>
                       <td className="p-4 text-gray-600">{stats.quantity}</td>
                       <td className="p-4 font-medium text-green-600">{stats.sales.toFixed(2)} ₪</td>
                       <td className="p-4 text-gray-500">{stats.cost.toFixed(2)} ₪</td>
@@ -314,6 +317,57 @@ const Reports = ({ data, saveData }) => {
                     </tr>
                   ));
               })()}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* سجل المبيعات التفصيلي */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b bg-blue-50 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-blue-800">سجل المبيعات التفصيلي</h3>
+          <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">أحدث المبيعات</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-sm">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="p-3 font-bold">التاريخ</th>
+                <th className="p-3 font-bold">المنتجات</th>
+                <th className="p-3 font-bold">العميل</th>
+                <th className="p-3 font-bold">الإجمالي</th>
+                <th className="p-3 font-bold">الربح</th>
+                <th className="p-3 font-bold">الدفع</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data.sales || []).slice().reverse().slice(0, 50).map((sale, idx) => {
+                const totalItemProfit = (sale.items || []).reduce((sum, it) => sum + ((it.price - (it.cost || 0)) * it.quantity), 0) || sale.profit || 0;
+                return (
+                  <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
+                    <td className="p-3 text-gray-500">{new Date(sale.date).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="p-3">
+                      <div className="flex flex-col gap-1">
+                        {(sale.items || []).map((it, i) => (
+                          <div key={i} className="flex items-center justify-between gap-4 text-xs">
+                            <span className="text-gray-800 font-medium">{it.item} x{it.quantity}</span>
+                            <span className="text-blue-600 font-bold">{((it.price - (it.cost||0)) * it.quantity).toFixed(2)} ₪ ربح</span>
+                          </div>
+                        ))}
+                        {!sale.items && <span className="text-gray-800">{sale.item} x{sale.quantity}</span>}
+                      </div>
+                    </td>
+                    <td className="p-3 text-gray-700">{sale.customerName || sale.customer || '---'}</td>
+                    <td className="p-3 font-bold text-green-600">{sale.total.toFixed(2)} ₪</td>
+                    <td className="p-3 font-bold text-blue-600 bg-blue-50/50">{totalItemProfit.toFixed(2)} ₪</td>
+                    <td className="p-3">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                        {sale.paymentMethod === 'cash' ? 'نقدي' : sale.paymentMethod === 'bank' ? 'تحويل' : sale.paymentMethod === 'card' ? 'بطاقة' : sale.paymentMethod === 'mobile' ? 'محفظة' : sale.paymentMethod}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
