@@ -190,7 +190,7 @@ const DatabaseViewer = () => {
               </div>
             </div>
             <p className="text-gray-600 bg-amber-50/50 p-4 rounded-xl text-sm leading-relaxed border border-amber-100">{t('database.migrateDesc')}</p>
-            
+
             {migrationResult && (
               <div className={`p-4 rounded-xl border flex items-center gap-3 ${migrationResult.success ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
                 {migrationResult.success ? <CheckCircle className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
@@ -299,7 +299,7 @@ const DatabaseViewer = () => {
                         <tr>
                           <td colSpan={10} className="p-6 bg-gray-50/50">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                              {Object.entries(item).filter(([k])=>k!=='__v').map(([k, v]) => (
+                              {Object.entries(item).filter(([k]) => k !== '__v').map(([k, v]) => (
                                 <div key={k} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm transition-transform hover:scale-[1.01]">
                                   <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{k}</div>
                                   <div className="text-sm font-bold text-gray-800 break-all leading-relaxed">

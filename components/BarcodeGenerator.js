@@ -11,8 +11,8 @@ const BarcodeGenerator = ({ item, onClose }) => {
   // توليد رقم باركود فريد من ID المنتج
   const generateBarcodeValue = (item) => {
     const prefix = item.type === 'screen' ? '1' :
-                   item.type === 'phone' ? '2' :
-                   item.type === 'sticker' ? '3' : '4';
+      item.type === 'phone' ? '2' :
+        item.type === 'sticker' ? '3' : '4';
     return `${prefix}${String(item.id).padStart(11, '0')}`;
   };
 
@@ -145,8 +145,8 @@ const BarcodeGenerator = ({ item, onClose }) => {
             <p className="text-sm text-blue-800 mt-1">
               <strong>{t('barcode.type')}:</strong> {
                 item.type === 'screen' ? t('inventory.screen') :
-                item.type === 'phone' ? t('inventory.phone') :
-                item.type === 'sticker' ? t('inventory.sticker') : t('inventory.accessory')
+                  item.type === 'phone' ? t('inventory.phone') :
+                    item.type === 'sticker' ? t('inventory.sticker') : t('inventory.accessory')
               }
             </p>
           </div>

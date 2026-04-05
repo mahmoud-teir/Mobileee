@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ShoppingBag, Wrench, DollarSign, FileText, Users, Truck, AlertCircle, BarChart as BarChartIcon, Cloud, RotateCcw, CreditCard, Moon, Sun, ScanLine, LogOut, User, Shield, Database, Trash2, Languages, Eye, Settings as SettingsIcon } from 'lucide-react';
+import { TrendingUp, ShoppingBag, Wrench, DollarSign, FileText, Users, Truck, AlertCircle, BarChart as BarChartIcon, Cloud, RotateCcw, CreditCard, Moon, Sun, ScanLine, LogOut, User, Shield, Database, Trash2, Languages, Eye, Settings as SettingsIcon, Code } from 'lucide-react';
 import { useStorage, initializeStorage, clearLocalCache } from '@/lib/storage';
 import { hasFeature } from '@/lib/planLimits';
 import { useAuth } from './AuthContext';
@@ -11,6 +11,7 @@ import { Toaster, toast } from 'sonner';
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
 import Repairs from './Repairs';
+import Programming from './Programming';
 import Sales from './Sales';
 import Expenses from './Expenses';
 import Customers from './Customers';
@@ -240,6 +241,7 @@ const MobileShopManagement = () => {
     { id: 'dashboard', label: t('nav.dashboard'), shortLabel: t('nav.dashboardShort'), icon: TrendingUp },
     { id: 'inventory', label: t('nav.inventory'), shortLabel: t('nav.inventoryShort'), icon: ShoppingBag },
     { id: 'repairs', label: t('nav.repairs'), shortLabel: t('nav.repairsShort'), icon: Wrench },
+    { id: 'programming', label: t('nav.programming'), shortLabel: t('nav.programmingShort'), icon: Code },
     { id: 'sales', label: t('nav.sales'), shortLabel: t('nav.salesShort'), icon: DollarSign },
     { id: 'expenses', label: t('nav.expenses'), shortLabel: t('nav.expensesShort'), icon: FileText },
     { id: 'customers', label: t('nav.customers'), shortLabel: t('nav.customersShort'), icon: Users },
@@ -456,8 +458,8 @@ const MobileShopManagement = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`group flex-shrink-0 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 font-semibold whitespace-nowrap transition-all duration-300 relative text-xs sm:text-sm md:text-base ${activeTab === tab.id
-                  ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-rose-600'
+                ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-rose-600'
                 }`}
             >
               <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 transition-transform duration-300 ${activeTab === tab.id ? '' : 'group-hover:scale-110'
@@ -479,6 +481,7 @@ const MobileShopManagement = () => {
         {activeTab === 'dashboard' && isTabVisible('dashboard') && <Dashboard data={data} setActiveTab={setActiveTab} setView={setInventoryView} saveData={saveData} />}
         {activeTab === 'inventory' && isTabVisible('inventory') && <Inventory data={data} saveData={saveData} addItem={addItem} updateItem={updateItem} deleteItem={deleteItem} view={inventoryView} setView={setInventoryView} />}
         {activeTab === 'repairs' && isTabVisible('repairs') && <Repairs data={data} saveData={saveData} showInvoice={setPrintInvoice} />}
+        {activeTab === 'programming' && isTabVisible('programming') && <Programming data={data} saveData={saveData} showInvoice={setPrintInvoice} />}
         {activeTab === 'sales' && isTabVisible('sales') && <Sales data={data} saveData={saveData} showInvoice={setPrintInvoice} />}
         {activeTab === 'expenses' && isTabVisible('expenses') && <Expenses data={data} saveData={saveData} />}
         {activeTab === 'customers' && isTabVisible('customers') && <Customers data={data} saveData={saveData} />}
@@ -594,7 +597,7 @@ const MobileShopManagement = () => {
           </div>
         </div>
       </footer>
-      
+
       {/* Mobile Bottom Navigation - Only visible on small screens */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 flex justify-around items-center h-16 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
         {tabs.filter(t => ['dashboard', 'inventory', 'repairs', 'sales'].includes(t.id)).map(tab => (
@@ -604,11 +607,10 @@ const MobileShopManagement = () => {
               setActiveTab(tab.id);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${
-              activeTab === tab.id 
-                ? 'text-rose-600 dark:text-rose-400' 
-                : 'text-gray-500 dark:text-gray-400 hover:text-rose-500'
-            }`}
+            className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${activeTab === tab.id
+              ? 'text-rose-600 dark:text-rose-400'
+              : 'text-gray-500 dark:text-gray-400 hover:text-rose-500'
+              }`}
           >
             <tab.icon className={`w-5 h-5 mb-1 ${activeTab === tab.id ? 'scale-110' : ''}`} />
             <span className="text-[10px] font-bold">{tab.shortLabel || tab.label}</span>

@@ -379,12 +379,11 @@ const Returns = ({ data, saveData }) => {
                         <button
                           key={type}
                           onClick={() => setFormData({ ...formData, refundType: type })}
-                          className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${
-                            formData.refundType === type ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'
-                          }`}
+                          className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${formData.refundType === type ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                            }`}
                         >
                           {type === 'full' ? t('returns.refundFull') :
-                           type === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
+                            type === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
                         </button>
                       ))}
                     </div>
@@ -543,13 +542,12 @@ const Returns = ({ data, saveData }) => {
                   </span>
                 </td>
                 <td className="p-4">
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm ${
-                    ret.refundType === 'full' ? 'bg-green-50 text-green-700 border border-green-100' :
+                  <span className={`px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm ${ret.refundType === 'full' ? 'bg-green-50 text-green-700 border border-green-100' :
                     ret.refundType === 'partial' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                    'bg-blue-50 text-blue-700 border border-blue-100'
-                  }`}>
+                      'bg-blue-50 text-blue-700 border border-blue-100'
+                    }`}>
                     {ret.refundType === 'full' ? t('returns.refundFull') :
-                     ret.refundType === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
+                      ret.refundType === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
                   </span>
                 </td>
                 <td className="p-4">
@@ -605,13 +603,12 @@ const Returns = ({ data, saveData }) => {
                   <p className="text-orange-600 font-black text-lg">
                     {ret.refundAmount?.toFixed(2)} {t('dashboard.currency')}
                   </p>
-                  <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                    ret.refundType === 'full' ? 'bg-green-100 text-green-700' :
+                  <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold ${ret.refundType === 'full' ? 'bg-green-100 text-green-700' :
                     ret.refundType === 'partial' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-blue-100 text-blue-700'
-                  }`}>
+                      'bg-blue-100 text-blue-700'
+                    }`}>
                     {ret.refundType === 'full' ? t('returns.refundFull') :
-                     ret.refundType === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
+                      ret.refundType === 'partial' ? t('returns.refundPartial') : t('returns.exchange')}
                   </span>
                 </div>
               </div>

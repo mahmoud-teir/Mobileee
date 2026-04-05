@@ -9,7 +9,10 @@ export async function GET(request) {
   if (err) return err;
   try {
     await connectDB();
-    const items = await Accessory.find({ $expr: { $lte: ['$quantity', '$minQuantity'] } });
+    const items = await Accessory.find({
+      storeId: user.currentStoreId,
+      $expr: { $lte: ['$quantity', '$minQuantity'] }
+    });
     return NextResponse.json(items);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

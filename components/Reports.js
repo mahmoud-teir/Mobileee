@@ -35,16 +35,16 @@ const Reports = ({ data, saveData }) => {
     const sales = monthSales.reduce((sum, s) => sum + s.total, 0);
     const repairs = monthRepairs.reduce((sum, r) => sum + (r.cost || 0), 0);
     const expenses = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
-    
+
     // حساب الربح الصافي من المبيعات (سعر البيع - سعر التكلفة)
     const salesProfit = monthSales.reduce((sum, s) => {
       const profit = s.profit || (s.items || []).reduce((pSum, it) => pSum + ((it.price - (it.cost || 0)) * it.quantity), 0) || 0;
       return sum + profit;
     }, 0);
-    
+
     // حساب الربح الصافي من الصيانة
     const repairsProfit = monthRepairs.reduce((sum, r) => sum + (r.profit || r.cost || 0), 0);
-    
+
     // الربح الإجمالي = ربح المبيعات + ربح الصيانة - المصاريف
     const totalProfit = salesProfit + repairsProfit - expenses;
 
@@ -63,8 +63,8 @@ const Reports = ({ data, saveData }) => {
   const handleDeleteReports = (type, dateRange) => {
     let message = '';
     let title = '';
-    
-    switch(type) {
+
+    switch (type) {
       case 'sales':
         title = t('reports.deleteSales');
         message = `${t('reports.deleteConfirmMsg')} (${dateRange})`;
@@ -80,7 +80,7 @@ const Reports = ({ data, saveData }) => {
       default:
         return;
     }
-    
+
     setDeleteConfirmation({
       isOpen: true,
       type: type,
@@ -96,15 +96,15 @@ const Reports = ({ data, saveData }) => {
         const currentDate = new Date();
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(currentDate.getMonth() - 3);
-        
+
         // Helper function to restore stock from old sales
         const restoreStock = async (salesToRestore) => {
           let collections = {
-              screens: [...(data.screens || [])],
-              phones: [...(data.phones || [])],
-              stickers: [...(data.stickers || [])],
-              accessories: [...(data.accessories || [])],
-              products: [...(data.products || [])]
+            screens: [...(data.screens || [])],
+            phones: [...(data.phones || [])],
+            stickers: [...(data.stickers || [])],
+            accessories: [...(data.accessories || [])],
+            products: [...(data.products || [])]
           };
           let updatedKeys = new Set();
           salesToRestore.forEach(sale => {
@@ -113,9 +113,9 @@ const Reports = ({ data, saveData }) => {
               const type = it.type || it.itemType;
               const id = it.productId || it.id;
               const qty = it.quantity || 0;
-              let collectionKey = ['screen', 'phone', 'sticker', 'accessory'].includes(type) ? 
-                                (type === 'screen' ? 'screens' : type === 'phone' ? 'phones' : type === 'sticker' ? 'stickers' : 'accessories') :
-                                'products';
+              let collectionKey = ['screen', 'phone', 'sticker', 'accessory'].includes(type) ?
+                (type === 'screen' ? 'screens' : type === 'phone' ? 'phones' : type === 'sticker' ? 'stickers' : 'accessories') :
+                'products';
               const idx = collections[collectionKey].findIndex(s => (s._id || s.id) === id);
               if (idx !== -1) {
                 collections[collectionKey][idx].quantity += qty;
@@ -125,20 +125,20 @@ const Reports = ({ data, saveData }) => {
           });
           for (const key of updatedKeys) { await saveData(key, collections[key]); }
         };
-        
-        switch(deleteConfirmation.type) {
+
+        switch (deleteConfirmation.type) {
           case 'sales':
             const oldSales = (data.sales || []).filter(sale => new Date(sale.date) < threeMonthsAgo);
             await restoreStock(oldSales);
             const filteredSales = (data.sales || []).filter(sale => new Date(sale.date) >= threeMonthsAgo);
             await saveData('sales', filteredSales);
             break;
-            
+
           case 'expenses':
             const filteredExpenses = (data.expenses || []).filter(expense => new Date(expense.date) >= threeMonthsAgo);
             await saveData('expenses', filteredExpenses);
             break;
-            
+
           case 'all':
             const oldAllSales = (data.sales || []).filter(sale => new Date(sale.date) < threeMonthsAgo);
             await restoreStock(oldAllSales);
@@ -150,7 +150,7 @@ const Reports = ({ data, saveData }) => {
           default:
             break;
         }
-        
+
         setDeleteConfirmation({ isOpen: false, type: '', dateRange: '', message: '', title: '' });
         toast.success(t('reports.deleteSuccess'));
       }
@@ -164,7 +164,7 @@ const Reports = ({ data, saveData }) => {
   const exportToExcel = () => {
     try {
       const wb = XLSX.utils.book_new();
-      
+
       // ورقة المبيعات الشهرية
       const salesDataExcel = monthlyData.map(item => ({
         [t('reports.month')]: item.month,
@@ -173,7 +173,7 @@ const Reports = ({ data, saveData }) => {
         [t('reports.netProfit')]: item.profit.toFixed(2)
       }));
       const salesSheet = XLSX.utils.json_to_sheet(salesDataExcel);
-      
+
       // ورقة أفضل المنتجات
       const itemSales = {};
       (data.sales || []).forEach(sale => {
@@ -182,17 +182,17 @@ const Reports = ({ data, saveData }) => {
           itemSales[it.item] = (itemSales[it.item] || 0) + it.quantity;
         });
       });
-      
+
       const topItems = Object.entries(itemSales)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 20)
-        .map(([name, quantity]) => ({ 
-          [isRTL ? 'المنتج' : 'Product']: name, 
-          [isRTL ? 'الكمية المباعة' : 'Sold Quantity']: quantity 
+        .map(([name, quantity]) => ({
+          [isRTL ? 'المنتج' : 'Product']: name,
+          [isRTL ? 'الكمية المباعة' : 'Sold Quantity']: quantity
         }));
-      
+
       const itemsSheet = XLSX.utils.json_to_sheet(topItems);
-      
+
       // ورقة تفصيل الأرباح
       const profitByItemMap = {};
       (data.sales || []).forEach(sale => {
@@ -221,16 +221,16 @@ const Reports = ({ data, saveData }) => {
           [t('reports.netProfit')]: stats.profit.toFixed(2),
           [t('reports.profitMargin')]: (stats.sales > 0 ? ((stats.profit / stats.sales) * 100).toFixed(1) : 0) + '%'
         }));
-      
+
       const profitSheet = XLSX.utils.json_to_sheet(profitDetailRows);
-      
+
       XLSX.utils.book_append_sheet(wb, salesSheet, isRTL ? 'التقرير الشهري' : 'Monthly Report');
       XLSX.utils.book_append_sheet(wb, itemsSheet, isRTL ? 'أفضل المنتجات' : 'Top Products');
       XLSX.utils.book_append_sheet(wb, profitSheet, isRTL ? 'تفصيل الأرباح' : 'Profit Details');
-      
+
       const fileName = `reports_smartstore_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
-      
+
       toast.success(t('reports.exportSuccess'));
     } catch (error) {
       console.error('Error exporting data:', error);
@@ -239,7 +239,7 @@ const Reports = ({ data, saveData }) => {
   };
 
   const getProductTypeName = (type) => {
-    switch(type) {
+    switch (type) {
       case 'screen': return t('inventory.screen');
       case 'phone': return t('inventory.phone');
       case 'sticker': return t('inventory.sticker');
@@ -264,7 +264,7 @@ const Reports = ({ data, saveData }) => {
           {t('reports.exportExcel')}
         </button>
       </div>
-      
+
       {/* خيارات إدارة التقارير */}
       <div className="bg-white p-6 rounded-xl shadow-lg">
         <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -283,7 +283,7 @@ const Reports = ({ data, saveData }) => {
               {t('reports.deleteSalesBtn')}
             </button>
           </div>
-          
+
           <div className={`p-4 rounded-lg border-l-4 border-orange-500 bg-orange-50 ${isRTL ? 'text-right' : 'text-left'}`}>
             <h4 className="font-bold text-orange-800 mb-2">{t('reports.deleteExpenses')}</h4>
             <p className="text-sm text-orange-700 mb-3">{t('reports.deleteExpensesMsg')}</p>
@@ -295,7 +295,7 @@ const Reports = ({ data, saveData }) => {
               {t('reports.deleteExpensesBtn')}
             </button>
           </div>
-          
+
           <div className={`p-4 rounded-lg border-l-4 border-purple-500 bg-purple-50 ${isRTL ? 'text-right' : 'text-left'}`}>
             <h4 className="font-bold text-purple-800 mb-2">{t('reports.deleteAll')}</h4>
             <p className="text-sm text-purple-700 mb-3">{t('reports.deleteAllMsg')}</p>
@@ -446,8 +446,8 @@ const Reports = ({ data, saveData }) => {
                 return (
                   <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
                     <td className="p-3 text-gray-500 text-xs">
-                      {new Date(sale.date).toLocaleString(isRTL ? 'ar-EG' : 'en-US', { 
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                      {new Date(sale.date).toLocaleString(isRTL ? 'ar-EG' : 'en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                     </td>
                     <td className="p-3">
@@ -465,11 +465,11 @@ const Reports = ({ data, saveData }) => {
                     <td className="p-3 font-bold text-blue-600 bg-blue-50/50 text-xs">{totalItemProfit.toFixed(2)} ₪</td>
                     <td className="p-3 hidden md:table-cell">
                       <span className="text-[10px] px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                        {sale.paymentMethod === 'cash' ? (isRTL ? 'نقدي' : 'Cash') : 
-                         sale.paymentMethod === 'bank' ? (isRTL ? 'تحويل' : 'Transfer') : 
-                         sale.paymentMethod === 'card' ? (isRTL ? 'بطاقة' : 'Card') : 
-                         sale.paymentMethod === 'installments' ? (isRTL ? 'تقسيط' : 'Installments') :
-                         sale.paymentMethod}
+                        {sale.paymentMethod === 'cash' ? (isRTL ? 'نقدي' : 'Cash') :
+                          sale.paymentMethod === 'bank' ? (isRTL ? 'تحويل' : 'Transfer') :
+                            sale.paymentMethod === 'card' ? (isRTL ? 'بطاقة' : 'Card') :
+                              sale.paymentMethod === 'installments' ? (isRTL ? 'تقسيط' : 'Installments') :
+                                sale.paymentMethod}
                       </span>
                     </td>
                   </tr>
@@ -488,7 +488,7 @@ const Reports = ({ data, saveData }) => {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [`${value.toFixed(2)} ₪`, '']}
               labelFormatter={(label) => `${t('reports.month')}: ${label}`}
               contentStyle={{ textAlign: isRTL ? 'right' : 'left', direction: isRTL ? 'rtl' : 'ltr' }}
@@ -526,18 +526,16 @@ const Reports = ({ data, saveData }) => {
                 <td className="p-4 font-bold">{row.month}</td>
                 <td className="p-4 text-green-600">{row.sales.toFixed(2)} ₪</td>
                 <td className="p-4 text-red-600">{row.expenses.toFixed(2)} ₪</td>
-                <td className={`p-4 font-bold ${
-                  row.profit >= 0 ? 'text-blue-600' : 'text-red-600'
-                }`}>
+                <td className={`p-4 font-bold ${row.profit >= 0 ? 'text-blue-600' : 'text-red-600'
+                  }`}>
                   {row.profit.toFixed(2)} ₪
                 </td>
-                <td className={`p-4 font-medium ${
-                  i > 0 && monthlyData[i-1].profit !== 0 
-                  ? (row.profit > monthlyData[i-1].profit ? 'text-green-600' : 'text-red-600')
+                <td className={`p-4 font-medium ${i > 0 && monthlyData[i - 1].profit !== 0
+                  ? (row.profit > monthlyData[i - 1].profit ? 'text-green-600' : 'text-red-600')
                   : 'text-gray-500'
-                }`}>
-                  {i > 0 && monthlyData[i-1].profit !== 0
-                    ? `${(((row.profit - monthlyData[i-1].profit) / Math.abs(monthlyData[i-1].profit)) * 100).toFixed(1)}%`
+                  }`}>
+                  {i > 0 && monthlyData[i - 1].profit !== 0
+                    ? `${(((row.profit - monthlyData[i - 1].profit) / Math.abs(monthlyData[i - 1].profit)) * 100).toFixed(1)}%`
                     : '-'
                   }
                 </td>
@@ -554,11 +552,10 @@ const Reports = ({ data, saveData }) => {
           <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-3">
               <span className="font-black text-lg text-gray-800">{row.month}</span>
-              {i > 0 && monthlyData[i-1].profit !== 0 && (
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                  row.profit > monthlyData[i-1].profit ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                }`}>
-                  {(((row.profit - monthlyData[i-1].profit) / Math.abs(monthlyData[i-1].profit)) * 100).toFixed(1)}%
+              {i > 0 && monthlyData[i - 1].profit !== 0 && (
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${row.profit > monthlyData[i - 1].profit ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                  {(((row.profit - monthlyData[i - 1].profit) / Math.abs(monthlyData[i - 1].profit)) * 100).toFixed(1)}%
                 </span>
               )}
             </div>

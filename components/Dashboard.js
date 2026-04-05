@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Package, Wrench, DollarSign, TrendingUp, AlertCircle, CheckCircle, 
+import {
+  Package, Wrench, DollarSign, TrendingUp, AlertCircle, CheckCircle,
   FileText, Trash2, Calendar, Database, ArrowUpRight, ArrowDownLeft, Printer
 } from 'lucide-react';
-import { 
+import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
@@ -30,35 +30,35 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
   const handleDeleteReports = (type, dateRange, count) => {
     let title = '';
     let message = '';
-    
-    switch(type) {
+
+    switch (type) {
       case 'sales':
         title = t('dashboard.deleteSales');
         message = t('dashboard.deleteConfirmMsg')
-                   .replace('{count}', count)
-                   .replace('{type}', t('nav.sales'))
-                   .replace('{range}', dateRange);
+          .replace('{count}', count)
+          .replace('{type}', t('nav.sales'))
+          .replace('{range}', dateRange);
         break;
       case 'repairs':
         title = t('dashboard.deleteRepairs');
         message = t('dashboard.deleteConfirmMsg')
-                   .replace('{count}', count)
-                   .replace('{type}', t('nav.repairs'))
-                   .replace('{range}', dateRange);
+          .replace('{count}', count)
+          .replace('{type}', t('nav.repairs'))
+          .replace('{range}', dateRange);
         break;
       case 'all':
         title = t('dashboard.deleteAll');
         message = t('dashboard.deleteConfirmMsg')
-                   .replace('{count}', count)
-                   .replace('{type}', t('common.all'))
-                   .replace('{range}', dateRange);
+          .replace('{count}', count)
+          .replace('{type}', t('common.all'))
+          .replace('{range}', dateRange);
         break;
       default:
         title = t('login.errorGeneric');
         message = t('login.errorGeneric');
         return;
     }
-    
+
     setDeleteConfirmation({
       isOpen: true,
       type: type,
@@ -72,60 +72,60 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
   const confirmDeleteReports = async () => {
     try {
       if (!deleteConfirmation.type) return;
-      
+
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(currentMonth - 3);
-      
+
       // Helper function to restore stock from old sales
       const restoreStock = async (sales) => {
         let collections = {
-            screens: [...(data.screens || [])],
-            phones: [...(data.phones || [])],
-            stickers: [...(data.stickers || [])],
-            accessories: [...(data.accessories || [])],
-            products: [...(data.products || [])]
+          screens: [...(data.screens || [])],
+          phones: [...(data.phones || [])],
+          stickers: [...(data.stickers || [])],
+          accessories: [...(data.accessories || [])],
+          products: [...(data.products || [])]
         };
 
         let updatedKeys = new Set();
 
         sales.forEach(sale => {
-            const items = sale.items && Array.isArray(sale.items) ? sale.items : [{ id: sale.itemId, itemType: sale.itemType, quantity: sale.quantity }];
-            
-            items.forEach(it => {
-                const type = it.type || it.itemType;
-                const id = it.productId || it.id;
-                const qty = it.quantity || 0;
+          const items = sale.items && Array.isArray(sale.items) ? sale.items : [{ id: sale.itemId, itemType: sale.itemType, quantity: sale.quantity }];
 
-                let collectionKey = ['screen', 'phone', 'sticker', 'accessory'].includes(type) ? 
-                                    (type === 'screen' ? 'screens' : type === 'phone' ? 'phones' : type === 'sticker' ? 'stickers' : 'accessories') :
-                                    'products';
-                
-                const idx = collections[collectionKey].findIndex(s => (s._id || s.id) === id);
-                if (idx !== -1) {
-                    collections[collectionKey][idx].quantity += qty;
-                    updatedKeys.add(collectionKey);
-                }
-            });
+          items.forEach(it => {
+            const type = it.type || it.itemType;
+            const id = it.productId || it.id;
+            const qty = it.quantity || 0;
+
+            let collectionKey = ['screen', 'phone', 'sticker', 'accessory'].includes(type) ?
+              (type === 'screen' ? 'screens' : type === 'phone' ? 'phones' : type === 'sticker' ? 'stickers' : 'accessories') :
+              'products';
+
+            const idx = collections[collectionKey].findIndex(s => (s._id || s.id) === id);
+            if (idx !== -1) {
+              collections[collectionKey][idx].quantity += qty;
+              updatedKeys.add(collectionKey);
+            }
+          });
         });
 
         for (const key of updatedKeys) {
-            await saveData(key, collections[key]);
+          await saveData(key, collections[key]);
         }
       };
-      
+
       if (deleteConfirmation.type === 'sales' || deleteConfirmation.type === 'all') {
-          const oldSales = data.sales.filter(sale => new Date(sale.date) < threeMonthsAgo);
-          await restoreStock(oldSales);
-          
-          const filteredSales = data.sales.filter(sale => new Date(sale.date) >= threeMonthsAgo);
-          await saveData('sales', filteredSales);
+        const oldSales = data.sales.filter(sale => new Date(sale.date) < threeMonthsAgo);
+        await restoreStock(oldSales);
+
+        const filteredSales = data.sales.filter(sale => new Date(sale.date) >= threeMonthsAgo);
+        await saveData('sales', filteredSales);
       }
-      
+
       if (deleteConfirmation.type === 'repairs' || deleteConfirmation.type === 'all') {
-          const filteredRepairs = data.repairs.filter(repair => new Date(repair.date) >= threeMonthsAgo);
-          await saveData('repairs', filteredRepairs);
+        const filteredRepairs = data.repairs.filter(repair => new Date(repair.date) >= threeMonthsAgo);
+        await saveData('repairs', filteredRepairs);
       }
-      
+
       setDeleteConfirmation({ isOpen: false, type: '', dateRange: '', count: 0, title: '', message: '' });
       alert(t('dashboard.deleteSuccess'));
     } catch (error) {
@@ -158,11 +158,11 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
   const itemSales = {};
   data.sales.forEach(sale => {
     if (sale.items && Array.isArray(sale.items)) {
-        sale.items.forEach(it => {
-            itemSales[it.item] = (itemSales[it.item] || 0) + it.quantity;
-        });
+      sale.items.forEach(it => {
+        itemSales[it.item] = (itemSales[it.item] || 0) + it.quantity;
+      });
     } else {
-        itemSales[sale.item] = (itemSales[sale.item] || 0) + sale.quantity;
+      itemSales[sale.item] = (itemSales[sale.item] || 0) + sale.quantity;
     }
   });
   const topItem = Object.entries(itemSales).sort((a, b) => b[1] - a[1])[0] || ['', 0];
@@ -193,10 +193,10 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
     ...(data.phones || []).filter(p => p.quantity < p.minQuantity).map(p => ({ ...p, name: p.model || p.name, category: t('inventory.phone'), tab: 'phones' })),
     ...(data.stickers || []).filter(st => st.quantity < st.minQuantity).map(st => ({ ...st, category: t('inventory.sticker'), tab: 'stickers' })),
     ...(data.accessories || []).filter(a => a.quantity < a.minQuantity).map(a => ({ ...a, category: t('inventory.accessory'), tab: 'accessories' })),
-    ...(data.products || []).filter(p => p.quantity < p.minQuantity).map(p => ({ 
-        ...p, 
-        category: (data.categories?.find(c => c._id === (p.categoryId?._id || p.categoryId))?.name || t('inventory.product')), 
-        tab: p.categoryId?._id || p.categoryId 
+    ...(data.products || []).filter(p => p.quantity < p.minQuantity).map(p => ({
+      ...p,
+      category: (data.categories?.find(c => c._id === (p.categoryId?._id || p.categoryId))?.name || t('inventory.product')),
+      tab: p.categoryId?._id || p.categoryId
     }))
   ];
 
@@ -217,9 +217,9 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
           {t('dashboard.printReports')}
         </button>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div 
+        <div
           onClick={() => setActiveTab('reports')}
           className="group cursor-pointer bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1"
         >
@@ -232,7 +232,7 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
           </div>
         </div>
 
-        <div 
+        <div
           onClick={() => setActiveTab('reports')}
           className="group cursor-pointer bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1"
         >
@@ -245,7 +245,7 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
           </div>
         </div>
 
-        <div 
+        <div
           onClick={() => setActiveTab('repairs')}
           className="group cursor-pointer bg-gradient-to-br from-violet-500 via-purple-600 to-fuchsia-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1"
         >
@@ -315,7 +315,7 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
                   <p className="font-bold text-red-800">{item.category}: {item.model || item.name}</p>
                   <p className="text-sm text-red-600">{t('inventory.quantity') || 'Qty'}: {item.quantity} ({t('inventory.min') || 'Min'}: {item.minQuantity})</p>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     setView(item.tab);
                     setActiveTab('inventory');
@@ -334,7 +334,7 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
             )}
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-lg">
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <FileText className="text-blue-500" />
@@ -342,22 +342,22 @@ const Dashboard = ({ data, setActiveTab, setView, saveData }) => {
           </h3>
           <div className={`space-y-3 ${isRTL ? 'text-right' : 'text-left'}`}>
             <div className="p-4 rounded-lg border border-red-200 bg-red-50 flex justify-between items-center">
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <h4 className="font-bold text-gray-800">{t('dashboard.oldRecords')}</h4>
-                    <p className="text-sm text-gray-600">{t('dashboard.recordsToDelete').replace('{count}', oldSalesCount + oldRepairsCount)}</p>
-                </div>
-                <button
-                  onClick={() => handleDeleteReports('all', t('dashboard.olderThan3Months'), oldSalesCount + oldRepairsCount)}
-                  disabled={oldSalesCount + oldRepairsCount === 0}
-                  className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 disabled:opacity-50"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <h4 className="font-bold text-gray-800">{t('dashboard.oldRecords')}</h4>
+                <p className="text-sm text-gray-600">{t('dashboard.recordsToDelete').replace('{count}', oldSalesCount + oldRepairsCount)}</p>
+              </div>
+              <button
+                onClick={() => handleDeleteReports('all', t('dashboard.olderThan3Months'), oldSalesCount + oldRepairsCount)}
+                disabled={oldSalesCount + oldRepairsCount === 0}
+                className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 disabled:opacity-50"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
             </div>
-            
+
             <div className={`p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <h4 className="font-bold text-gray-800">{t('dashboard.performanceTip')}</h4>
-                <p className="text-sm text-blue-700">{t('dashboard.performanceTipMsg')}</p>
+              <h4 className="font-bold text-gray-800">{t('dashboard.performanceTip')}</h4>
+              <p className="text-sm text-blue-700">{t('dashboard.performanceTipMsg')}</p>
             </div>
           </div>
         </div>

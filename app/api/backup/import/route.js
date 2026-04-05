@@ -22,18 +22,25 @@ export async function POST(request) {
     const { data, clearExisting } = await request.json();
 
     if (clearExisting) {
+      // CRITICAL: Only clear data for current store
+      const storeFilter = { storeId: user.currentStoreId };
       await Promise.all([
-        Screen.deleteMany({}), Phone.deleteMany({}), Accessory.deleteMany({}),
-        Sticker.deleteMany({}), Customer.deleteMany({}), Supplier.deleteMany({}),
-        Sale.deleteMany({}), Repair.deleteMany({}), Expense.deleteMany({}),
-        Return.deleteMany({}), Installment.deleteMany({})
+        Screen.deleteMany(storeFilter), Phone.deleteMany(storeFilter), Accessory.deleteMany(storeFilter),
+        Sticker.deleteMany(storeFilter), Customer.deleteMany(storeFilter), Supplier.deleteMany(storeFilter),
+        Sale.deleteMany(storeFilter), Repair.deleteMany(storeFilter), Expense.deleteMany(storeFilter),
+        Return.deleteMany(storeFilter), Installment.deleteMany(storeFilter)
       ]);
     }
 
     const results = {};
     const insert = async (Model, key) => {
       if (data[key]?.length > 0) {
-        results[key] = await Model.insertMany(data[key], { ordered: false }).catch(e => ({ error: e.message }));
+        // CRITICAL: Inject storeId into every imported item
+        const itemsWithStore = data[key].map(item => ({
+          ...item,
+          storeId: user.currentStoreId
+        }));
+        results[key] = await Model.insertMany(itemsWithStore, { ordered: false }).catch(e => ({ error: e.message }));
       }
     };
 
@@ -44,7 +51,7 @@ export async function POST(request) {
       insert(Return, 'returns'), insert(Installment, 'installments')
     ]);
 
-    return NextResponse.json({ message: 'Data imported successfully', results });
+    return NextResponse.json({ message: 'تم استيراد البيانات بنجاح', results });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }

@@ -9,7 +9,11 @@ export async function GET(request) {
   if (err) return err;
   try {
     await connectDB();
-    const repairs = await Repair.find({ status: 'جاهز', notified: false });
+    const repairs = await Repair.find({
+      storeId: user.currentStoreId,
+      status: 'جاهز',
+      notified: false
+    });
     return NextResponse.json(repairs);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

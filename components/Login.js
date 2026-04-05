@@ -51,6 +51,11 @@ const Login = ({ onLogin }) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
+      // CRITICAL: Save store slug immediately for API calls
+      if (data.storeSlug) {
+        localStorage.setItem('currentStoreSlug', data.storeSlug);
+      }
+
       // Call onLogin callback
       onLogin(data.user, data.token);
 
@@ -72,7 +77,7 @@ const Login = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-600 via-rose-700 to-pink-800 flex items-center justify-center p-4">
       {/* Language Toggle */}
-      <button 
+      <button
         onClick={toggleLanguage}
         className="absolute top-6 right-6 lg:top-8 lg:right-8 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full border border-white/20 flex items-center gap-2 transition-all active:scale-95"
       >
@@ -162,11 +167,10 @@ const Login = ({ onLogin }) => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-4 px-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-3 ${
-                loading
+              className={`w-full py-4 px-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-3 ${loading
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 active:scale-[0.98] shadow-lg hover:shadow-xl'
-              }`}
+                }`}
             >
               {loading ? (
                 <>
@@ -187,10 +191,10 @@ const Login = ({ onLogin }) => {
         <div className="text-center text-rose-200 text-sm mt-6">
           <p>{t('login.footer').replace('{year}', new Date().getFullYear())}</p>
           <p className="mt-1">
-            {t('footer.developedBy')} 
-            <a 
-              href="https://github.com/mahmoud-teir" 
-              target="_blank" 
+            {t('footer.developedBy')}
+            <a
+              href="https://github.com/mahmoud-teir"
+              target="_blank"
               rel="noopener noreferrer"
               className="font-bold hover:text-white hover:underline transition-all ml-1"
             >

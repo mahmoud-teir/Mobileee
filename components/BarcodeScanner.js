@@ -100,18 +100,16 @@ const BarcodeScanner = ({ onClose, data }) => {
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setMode('manual')}
-              className={`flex-1 py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition ${
-                mode === 'manual' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`flex-1 py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition ${mode === 'manual' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               <Keyboard className="w-5 h-5" />
               {t('barcode.manual')}
             </button>
             <button
               onClick={() => setMode('camera')}
-              className={`flex-1 py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition ${
-                mode === 'camera' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`flex-1 py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition ${mode === 'camera' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               <Camera className="w-5 h-5" />
               {t('barcode.camera')}

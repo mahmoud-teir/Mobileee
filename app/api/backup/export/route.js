@@ -19,17 +19,24 @@ export async function GET(request) {
   if (err) return err;
   try {
     await connectDB();
+
+    // CRITICAL: Scope all exports to current store only
+    const storeFilter = { storeId: user.currentStoreId };
+
     const [screens, phones, accessories, stickers, customers, suppliers,
-           sales, repairs, expenses, returns, installments] = await Promise.all([
-      Screen.find(), Phone.find(), Accessory.find(), Sticker.find(),
-      Customer.find(), Supplier.find(), Sale.find(), Repair.find(),
-      Expense.find(), Return.find(), Installment.find()
-    ]);
+      sales, repairs, expenses, returns, installments] = await Promise.all([
+        Screen.find(storeFilter), Phone.find(storeFilter), Accessory.find(storeFilter), Sticker.find(storeFilter),
+        Customer.find(storeFilter), Supplier.find(storeFilter), Sale.find(storeFilter), Repair.find(storeFilter),
+        Expense.find(storeFilter), Return.find(storeFilter), Installment.find(storeFilter)
+      ]);
     return NextResponse.json({
       version: '2.0.0',
       exportDate: new Date().toISOString(),
-      data: { screens, phones, accessories, stickers, customers, suppliers,
-              sales, repairs, expenses, returns, installments }
+      storeSlug: user.currentStore?.slug,
+      data: {
+        screens, phones, accessories, stickers, customers, suppliers,
+        sales, repairs, expenses, returns, installments
+      }
     });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

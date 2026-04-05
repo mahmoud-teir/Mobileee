@@ -36,8 +36,10 @@ export async function GET(request, { params }) {
     const Model = models[params.name];
     if (!Model) return NextResponse.json({ message: 'Collection not found' }, { status: 404 });
 
-    const total = await Model.countDocuments();
-    let query = Model.find();
+    // CRITICAL: Scope to current store (except users which are already scoped)
+    const storeFilter = { storeId: user.currentStoreId };
+    const total = await Model.countDocuments(storeFilter);
+    let query = Model.find(storeFilter);
     if (params.name === 'users') query = query.select('-password');
 
     const data = await query.sort({ createdAt: -1 }).skip(skip).limit(limit);

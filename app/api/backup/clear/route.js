@@ -19,13 +19,17 @@ export async function DELETE(request) {
   if (err) return err;
   try {
     await connectDB();
+
+    // CRITICAL: Scope all deletions to current store only
+    const storeFilter = { storeId: user.currentStoreId };
+
     await Promise.all([
-      Screen.deleteMany({}), Phone.deleteMany({}), Accessory.deleteMany({}),
-      Sticker.deleteMany({}), Customer.deleteMany({}), Supplier.deleteMany({}),
-      Sale.deleteMany({}), Repair.deleteMany({}), Expense.deleteMany({}),
-      Return.deleteMany({}), Installment.deleteMany({})
+      Screen.deleteMany(storeFilter), Phone.deleteMany(storeFilter), Accessory.deleteMany(storeFilter),
+      Sticker.deleteMany(storeFilter), Customer.deleteMany(storeFilter), Supplier.deleteMany(storeFilter),
+      Sale.deleteMany(storeFilter), Repair.deleteMany(storeFilter), Expense.deleteMany(storeFilter),
+      Return.deleteMany(storeFilter), Installment.deleteMany(storeFilter)
     ]);
-    return NextResponse.json({ message: 'All data cleared successfully' });
+    return NextResponse.json({ message: 'تم مسح بيانات المتجر بنجاح' });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }

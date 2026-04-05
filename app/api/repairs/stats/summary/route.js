@@ -12,7 +12,10 @@ export async function GET(request) {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    const monthRepairs = await Repair.find({ date: { $gte: startOfMonth, $lte: endOfMonth } });
+    const monthRepairs = await Repair.find({
+      storeId: user.currentStoreId,
+      date: { $gte: startOfMonth, $lte: endOfMonth }
+    });
     const totalRevenue = monthRepairs.reduce((sum, r) => sum + r.cost, 0);
     const totalProfit = monthRepairs.reduce((sum, r) => sum + r.profit, 0);
     const pendingCount = monthRepairs.filter(r => r.status === 'قيد الصيانة').length;

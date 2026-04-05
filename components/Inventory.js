@@ -12,7 +12,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
   const [localView, setLocalView] = useState('screens');
   const view = propView || localView;
   const setView = propSetView || setLocalView;
-  
+
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,17 +31,17 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
 
   useEffect(() => {
     const isDynamic = !['screens', 'phones', 'stickers', 'accessories'].includes(view);
-    
+
     let items = [];
     if (isDynamic) {
-        items = (data.products || []).filter(p => (p.categoryId?._id || p.categoryId) === view);
+      items = (data.products || []).filter(p => (p.categoryId?._id || p.categoryId) === view);
     } else {
-        items = view === 'screens' ? (data.screens || [])
-              : view === 'phones' ? (data.phones || [])
-              : view === 'stickers' ? (data.stickers || [])
-              : (data.accessories || []);
+      items = view === 'screens' ? (data.screens || [])
+        : view === 'phones' ? (data.phones || [])
+          : view === 'stickers' ? (data.stickers || [])
+            : (data.accessories || []);
     }
-    
+
     // Helper to normalize Arabic text for better searching
     const normalizeArabic = (text) => {
       if (!text) return '';
@@ -55,27 +55,27 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
     const filtered = items.filter(item => {
       const normalizedSearch = normalizeArabic(searchTerm);
       const keywords = normalizedSearch.split(/\s+/).filter(k => k.length > 0);
-      
+
       const name = (item.model || item.name || '');
       const description = (item.description || '');
       const barcode = (item.barcode || '');
       const price = (item.cost || 0).toString();
       const quantity = (item.quantity || 0).toString();
-      
+
       const textToSearch = normalizeArabic(`${name} ${description} ${barcode} ${price} ${quantity}`);
-      
+
       return keywords.every(kw => textToSearch.includes(kw));
     });
-    
+
     const sorted = [...filtered].sort((a, b) => {
       const valA = (a[sortField] || '').toString().toLowerCase();
       const valB = (b[sortField] || '').toString().toLowerCase();
-      
+
       if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
       if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-    
+
     setFilteredItems(sorted);
   }, [searchTerm, data, view, sortField, sortOrder]);
 
@@ -164,11 +164,12 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
     try {
       if (deleteConfirmation.itemId) {
         const isDynamic = !['screen', 'phone', 'sticker', 'accessory'].includes(deleteConfirmation.itemType);
-        const collectionKey = isDynamic ? 'products' : 
-                            deleteConfirmation.itemType === 'screen' ? 'screens'
-                            : deleteConfirmation.itemType === 'phone' ? 'phones'
-                            : deleteConfirmation.itemType === 'sticker' ? 'stickers'
-                            : 'accessories';
+        const collectionKey = isDynamic ? 'products' :
+          deleteConfirmation.itemType === 'screen' ? 'screens'
+            : deleteConfirmation.itemType === 'phone' ? 'phones'
+              : deleteConfirmation.itemType === 'sticker' ? 'stickers'
+                : deleteConfirmation.itemType === 'accessory' ? 'accessories'
+                  : 'products';
 
         if (deleteItemFromDb) {
           await deleteItemFromDb(collectionKey, deleteConfirmation.itemId);
@@ -191,21 +192,21 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
       <div className="flex justify-between items-center flex-wrap gap-4">
         <h2 className="text-3xl font-bold">{t('inventory.title')}</h2>
         <div className="flex gap-2">
-            <button
-              onClick={() => setShowCategoryManager(true)}
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors"
-              title={t('inventory.categories')}
-            >
-              <Settings className="w-5 h-5" />
-              {t('inventory.categories')}
-            </button>
-            <button
-              onClick={() => setShowAdd(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors shadow-sm"
-            >
-              <Plus className="w-5 h-5" />
-              {t('inventory.addItem')}
-            </button>
+          <button
+            onClick={() => setShowCategoryManager(true)}
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors"
+            title={t('inventory.categories')}
+          >
+            <Settings className="w-5 h-5" />
+            {t('inventory.categories')}
+          </button>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            {t('inventory.addItem')}
+          </button>
         </div>
       </div>
 
@@ -224,7 +225,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
             {cat.name} ({cat.count})
           </button>
         ))}
-        
+
         {(data.categories || []).map(cat => (
           <button
             key={cat._id}
@@ -249,7 +250,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
             />
             <SearchIcon className={`w-6 h-6 text-gray-400 absolute ${isRTL ? 'right-4' : 'left-4'} top-3.5`} />
           </div>
-          
+
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -290,7 +291,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Plus className="text-blue-500" />
             {editingItemId ? t('inventory.editItem') : t('inventory.addItem')} {
-              ['screens', 'phones', 'stickers', 'accessories'].includes(view) 
+              ['screens', 'phones', 'stickers', 'accessories'].includes(view)
                 ? (view === 'screens' ? t('inventory.screen') : view === 'phones' ? t('inventory.phone') : view === 'stickers' ? t('inventory.sticker') : t('inventory.accessory'))
                 : (data.categories?.find(c => c._id === view)?.name || t('inventory.product'))
             }
@@ -301,7 +302,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
               placeholder={view === 'screens' ? t('inventory.model') : t('inventory.name')}
               value={formData.model || formData.name || ''}
               onChange={e => setFormData({
-                ...formData, 
+                ...formData,
                 [view === 'screens' ? 'model' : 'name']: e.target.value
               })}
               className={`border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
@@ -311,7 +312,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
               type="number"
               placeholder={t('inventory.quantity')}
               value={formData.quantity || ''}
-              onChange={e => setFormData({...formData, quantity: e.target.value})}
+              onChange={e => setFormData({ ...formData, quantity: e.target.value })}
               className={`border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
               required
               min="1"
@@ -320,7 +321,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
               type="number"
               placeholder={t('inventory.cost')}
               value={formData.cost || ''}
-              onChange={e => setFormData({...formData, cost: e.target.value})}
+              onChange={e => setFormData({ ...formData, cost: e.target.value })}
               className={`border p-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
               required
               min="0.01"
@@ -329,7 +330,7 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
             <textarea
               placeholder={t('inventory.description')}
               value={formData.description || ''}
-              onChange={e => setFormData({...formData, description: e.target.value})}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
               className={`border p-2 rounded-xl md:col-span-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-200 ${isRTL ? 'text-right' : 'text-left'}`}
               rows="2"
             />
@@ -421,14 +422,14 @@ const Inventory = ({ data, saveData, addItem: addItemToDb, updateItem: updateIte
                 </tr>
               ))
             ) : (
-                <tr>
-                  <td colSpan="5" className="p-12 text-center text-gray-400">
-                    {searchTerm ? 
-                       t('inventory.noResults').replace('{term}', searchTerm) :
-                       t('inventory.noItems')
-                    }
-                  </td>
-                </tr>
+              <tr>
+                <td colSpan="5" className="p-12 text-center text-gray-400">
+                  {searchTerm ?
+                    t('inventory.noResults').replace('{term}', searchTerm) :
+                    t('inventory.noItems')
+                  }
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

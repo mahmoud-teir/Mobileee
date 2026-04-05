@@ -94,8 +94,8 @@ const PrintTemplates = ({ data, onClose }) => {
           <p className="text-lg font-bold text-gray-900">{sale.customer || t('sales.cashCustomer')}</p>
           <p className="text-gray-600">{t('sales.paymentMethod')}: {
             sale.paymentMethod === 'cash' ? t('sales.cash') :
-            sale.paymentMethod === 'card' ? t('sales.card') :
-            sale.paymentMethod === 'bank' ? t('sales.bankTransfer') : t('sales.wallet')
+              sale.paymentMethod === 'card' ? t('sales.card') :
+                sale.paymentMethod === 'bank' ? t('sales.bankTransfer') : t('sales.wallet')
           }</p>
         </div>
         <div className="billing-box">
@@ -359,7 +359,7 @@ const PrintTemplates = ({ data, onClose }) => {
   const ProductCardTemplate = ({ product, type }) => (
     <div ref={componentRef} className="p-6 bg-white border-2 border-gray-100 rounded-3xl shadow-xl overflow-hidden relative" style={{ width: '80mm', height: '110mm' }}>
       <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full -z-0 opacity-50"></div>
-      
+
       <div className="relative z-10">
         <div className="text-center mb-6">
           <div className="text-5xl mb-4 bg-gray-100 w-20 h-20 flex items-center justify-center rounded-2xl mx-auto">
@@ -367,9 +367,9 @@ const PrintTemplates = ({ data, onClose }) => {
           </div>
           <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{product.name || product.model}</h1>
           <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-            {type === 'screen' ? t('inventory.screen') : 
-             type === 'phone' ? t('inventory.phone') : 
-             type === 'sticker' ? t('inventory.sticker') : t('inventory.accessory')}
+            {type === 'screen' ? t('inventory.screen') :
+              type === 'phone' ? t('inventory.phone') :
+                type === 'sticker' ? t('inventory.sticker') : t('inventory.accessory')}
           </p>
         </div>
 
@@ -392,7 +392,7 @@ const PrintTemplates = ({ data, onClose }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="absolute bottom-4 left-0 right-0 text-center">
         <p className="text-[8px] text-gray-300 font-bold tracking-widest uppercase">SmartStore Premium Label</p>
       </div>
@@ -405,8 +405,8 @@ const PrintTemplates = ({ data, onClose }) => {
     <div ref={componentRef} className="bg-white p-2 border-2 border-black" style={{ width: '50mm', height: '30mm' }}>
       <div className="h-full flex flex-col justify-between items-center text-center">
         <div className="w-full">
-           <p className="text-[8px] font-black uppercase text-gray-400 border-b border-gray-100 pb-1 mb-1">{storeName}</p>
-           <h3 className="text-xs font-bold text-gray-900 truncate px-2">{product.name || product.model}</h3>
+          <p className="text-[8px] font-black uppercase text-gray-400 border-b border-gray-100 pb-1 mb-1">{storeName}</p>
+          <h3 className="text-xs font-bold text-gray-900 truncate px-2">{product.name || product.model}</h3>
         </div>
 
         <div className="flex items-center gap-1">
@@ -418,8 +418,8 @@ const PrintTemplates = ({ data, onClose }) => {
         </div>
 
         <div className="w-full flex justify-between items-end border-t border-gray-100 pt-1">
-           <div className="text-[8px] font-mono opacity-40">#{product.id}</div>
-           <div className="text-[8px] font-bold text-rose-600 uppercase tracking-tighter">SmartStore</div>
+          <div className="text-[8px] font-mono opacity-40">#{product.id}</div>
+          <div className="text-[8px] font-bold text-rose-600 uppercase tracking-tighter">SmartStore</div>
         </div>
       </div>
     </div>
@@ -474,7 +474,7 @@ const PrintTemplates = ({ data, onClose }) => {
 
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-6 border-l-4 border-blue-800 pl-3">
-             <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">{t('reports.detailedSalesLog')}</h3>
+            <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">{t('reports.detailedSalesLog')}</h3>
           </div>
           {todaySales.length > 0 ? (
             <table className="items-table w-full">

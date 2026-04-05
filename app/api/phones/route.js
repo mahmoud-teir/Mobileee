@@ -26,11 +26,21 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
-    body.storeId = user.currentStoreId; // Inject storeId
+
+    // CRITICAL: Always use authenticated user's current store, never trust client
+    body.storeId = user.currentStoreId;
+
     const phone = new Phone(body);
     const newPhone = await phone.save();
     return NextResponse.json(newPhone, { status: 201 });
   } catch (error) {
+    // Provide clearer error messages for duplicate key violations
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || {}).filter(k => k !== 'storeId').join(' و ');
+      return NextResponse.json({
+        message: `هذا العنصر موجود بالفعل في متجرك (${field}: ${Object.values(error.keyValue || {}).filter((_, i) => i > 0).join('، ')})`
+      }, { status: 400 });
+    }
     return NextResponse.json({ message: error.message }, { status: 400 });
   }
 }

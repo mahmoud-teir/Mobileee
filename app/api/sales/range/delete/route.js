@@ -12,12 +12,14 @@ export async function DELETE(request) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    const query = {};
+
+    // CRITICAL: Scope to current store
+    const query = { storeId: user.currentStoreId };
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
     const result = await Sale.deleteMany(query);
-    return NextResponse.json({ message: `${result.deletedCount} sales deleted successfully` });
+    return NextResponse.json({ message: `تم حذف ${result.deletedCount} عملية بيع بنجاح` });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }

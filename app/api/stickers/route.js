@@ -28,6 +28,12 @@ export async function POST(request) {
     const item = new Sticker(body);
     return NextResponse.json(await item.save(), { status: 201 });
   } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || {}).filter(k => k !== 'storeId').join(' و ');
+      return NextResponse.json({
+        message: `هذا العنصر موجود بالفعل في متجرك (${field}: ${Object.values(error.keyValue || {}).filter((_, i) => i > 0).join('، ')})`
+      }, { status: 400 });
+    }
     return NextResponse.json({ message: error.message }, { status: 400 });
   }
 }

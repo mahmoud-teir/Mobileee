@@ -276,7 +276,7 @@ const Installments = ({ data, saveData }) => {
       updatedInstallments[installmentIndex] = updatedInstallment;
 
       await saveData('installments', updatedInstallments);
-      
+
       // تحديث التفاصيل المعروضة إذا كانت مفتوحة
       if (viewDetails && (viewDetails._id || viewDetails.id) === installmentId) {
         setViewDetails(updatedInstallment);
@@ -506,9 +506,9 @@ const Installments = ({ data, saveData }) => {
                         </div>
                         <div className="text-sm text-gray-500">
                           {product.type === 'screen' ? t('inventory.screen') :
-                           product.type === 'phone' ? t('inventory.phone') :
-                           product.type === 'sticker' ? t('inventory.sticker') :
-                           product.type === 'accessory' ? t('inventory.accessory') : t('inventory.product')} -
+                            product.type === 'phone' ? t('inventory.phone') :
+                              product.type === 'sticker' ? t('inventory.sticker') :
+                                product.type === 'accessory' ? t('inventory.accessory') : t('inventory.product')} -
                           {isRTL ? 'متوفر' : 'Available'}: {product.quantity}
                         </div>
                       </div>
@@ -796,11 +796,10 @@ const Installments = ({ data, saveData }) => {
                     return (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${
-                          payment.paid ? 'bg-green-50 border-green-200' :
+                        className={`flex items-center justify-between p-3 rounded-lg border ${payment.paid ? 'bg-green-50 border-green-200' :
                           isOverdue ? 'bg-red-50 border-red-200' :
-                          'bg-gray-50 border-gray-200'
-                        }`}
+                            'bg-gray-50 border-gray-200'
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           {payment.paid ? (

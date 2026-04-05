@@ -10,7 +10,10 @@ export async function GET(request) {
 
   try {
     await connectDB();
-    const screens = await Screen.find({ $expr: { $lte: ['$quantity', '$minQuantity'] } });
+    const screens = await Screen.find({
+      storeId: user.currentStoreId,
+      $expr: { $lte: ['$quantity', '$minQuantity'] }
+    });
     return NextResponse.json(screens);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

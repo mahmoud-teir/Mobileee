@@ -2,16 +2,17 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { getAuthUser, requireAuth } from '@/lib/auth';
-import Accessory from '@/models/Accessory';
+import Programming from '@/models/Programming';
 
 export async function GET(request) {
   const user = await getAuthUser(request);
   const err = requireAuth(user);
   if (err) return err;
+
   try {
     await connectDB();
-    const items = await Accessory.find({ storeId: user.currentStoreId }).sort({ createdAt: -1 });
-    return NextResponse.json(items);
+    const programmingItems = await Programming.find({ storeId: user.currentStoreId }).sort({ createdAt: -1 });
+    return NextResponse.json(programmingItems);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
@@ -21,19 +22,15 @@ export async function POST(request) {
   const user = await getAuthUser(request);
   const err = requireAuth(user);
   if (err) return err;
+
   try {
     await connectDB();
     const body = await request.json();
     body.storeId = user.currentStoreId;
-    const item = new Accessory(body);
-    return NextResponse.json(await item.save(), { status: 201 });
+    const programmingItem = new Programming(body);
+    const newProgrammingItem = await programmingItem.save();
+    return NextResponse.json(newProgrammingItem, { status: 201 });
   } catch (error) {
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern || {}).filter(k => k !== 'storeId').join(' و ');
-      return NextResponse.json({
-        message: `هذا العنصر موجود بالفعل في متجرك (${field}: ${Object.values(error.keyValue || {}).filter((_, i) => i > 0).join('، ')})`
-      }, { status: 400 });
-    }
     return NextResponse.json({ message: error.message }, { status: 400 });
   }
 }

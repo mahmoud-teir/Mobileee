@@ -10,7 +10,10 @@ export async function GET(request) {
 
   try {
     await connectDB();
-    const phones = await Phone.find({ $expr: { $lte: ['$quantity', '$minQuantity'] } });
+    const phones = await Phone.find({
+      storeId: user.currentStoreId,
+      $expr: { $lte: ['$quantity', '$minQuantity'] }
+    });
     return NextResponse.json(phones);
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });

@@ -12,7 +12,10 @@ export async function GET(request) {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    const monthSales = await Sale.find({ date: { $gte: startOfMonth, $lte: endOfMonth } });
+    const monthSales = await Sale.find({
+      storeId: user.currentStoreId,
+      date: { $gte: startOfMonth, $lte: endOfMonth }
+    });
     const totalRevenue = monthSales.reduce((sum, s) => sum + s.total, 0);
     const totalProfit = monthSales.reduce((sum, s) => sum + s.profit, 0);
     const totalSales = monthSales.length;

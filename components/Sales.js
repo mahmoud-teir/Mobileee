@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  DollarSign, Plus, AlertCircle, Search as SearchIcon, 
+import {
+  DollarSign, Plus, AlertCircle, Search as SearchIcon,
   Trash2, FileText, X, CheckCircle, Database, Edit, Printer,
   Monitor, Smartphone, Headphones, Sticker, Package, User
 } from 'lucide-react';
@@ -124,11 +124,11 @@ const Sales = ({ data, saveData, showInvoice }) => {
     if (!showAdd) return;
 
     const allItems = getAllItems();
-    
+
     if (searchTerm) {
       const normalizedSearch = normalizeArabic(searchTerm);
       const keywords = normalizedSearch.split(/\s+/).filter(k => k.length > 0);
-      
+
       const results = allItems.filter(item => {
         const textToSearch = normalizeArabic(`${item.name} ${item.barcode} ${item.description}`);
         // All keywords must match
@@ -234,7 +234,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
     const existingIndex = cart.findIndex(c => c.id === itemId && c.itemType === itemType);
     let newCart = [...cart];
     if (existingIndex >= 0) {
-      newCart[existingIndex] = { ...newCart[existingIndex], quantity: (parseInt(newCart[existingIndex].quantity)||0) + qty };
+      newCart[existingIndex] = { ...newCart[existingIndex], quantity: (parseInt(newCart[existingIndex].quantity) || 0) + qty };
     } else {
       newCart.push({ id: itemId, item: formData.item, itemType: itemType, quantity: qty, price: price, cost: cost });
     }
@@ -313,10 +313,10 @@ const Sales = ({ data, saveData, showInvoice }) => {
         customerName: formData.customer || t('sales.cashCustomer')
       };
 
-      
+
       if (editingSaleId) {
         const updatedSalesList = (data.sales || []).map(s => (s._id || s.id) === editingSaleId ? newSale : s);
-        
+
         // reconcile stock
         const oldSale = (data.sales || []).find(s => (s._id || s.id) === editingSaleId);
         const oldMap = {};
@@ -371,7 +371,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
           await saveData(collection, updatedItems);
         }
       }
-      
+
       if (showInvoice) {
         setLoadingInvoice(true);
         setTimeout(() => {
@@ -379,7 +379,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
           setLoadingInvoice(false);
         }, 300);
       }
-      
+
       setShowAdd(false);
       setFormData({
         item: '', quantity: '1', price: '', customer: '', discount: '0', discountType: 'percentage', paymentMethod: 'bank'
@@ -458,7 +458,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
 
         const updatedSales = data.sales.filter(s => (s._id || s.id) !== deleteConfirmation.saleId);
         await saveData('sales', updatedSales);
-        
+
         setDeleteConfirmation({ isOpen: false, saleId: null, saleItem: '', saleTotal: 0, saleQuantity: 0 });
         toast.success(t('sales.successDelete'));
       }
@@ -543,7 +543,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
             <DollarSign className="text-rose-500" />
             {editingSaleId ? t('sales.editSale') : t('sales.registerSale')}
           </h3>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -564,7 +564,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
                 />
                 <SearchIcon className={`w-5 h-5 text-gray-400 absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'}`} />
               </div>
-              
+
               {searchResultsVisible && searchTerm && filteredItems.length > 0 && (
                 <div className="absolute z-50 w-full md:w-1/2 lg:w-1/3 bg-white border border-gray-200 rounded-lg mt-1 max-h-80 overflow-y-auto shadow-xl animate-fade-in">
                   <div className="p-2 bg-rose-50 border-b border-rose-100 sticky top-0 z-10">
@@ -574,7 +574,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
                   </div>
                   {filteredItems.map(item => {
                     const getItemIcon = () => {
-                      switch(item.type) {
+                      switch (item.type) {
                         case 'screen': return <Monitor className="w-4 h-4 text-orange-500" />;
                         case 'phone': return <Smartphone className="w-4 h-4 text-blue-500" />;
                         case 'accessory': return <Headphones className="w-4 h-4 text-purple-500" />;
@@ -584,29 +584,27 @@ const Sales = ({ data, saveData, showInvoice }) => {
                     };
 
                     return (
-                      <div 
+                      <div
                         key={`${item.type}-${item.id}`}
                         onClick={() => selectItem(item)}
                         className="p-3 hover:bg-rose-50 cursor-pointer border-b border-gray-100 last:border-0 transition flex justify-between items-center group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            item.type === 'screen' ? 'bg-orange-50' : 
-                            item.type === 'phone' ? 'bg-blue-50' : 
-                            item.type === 'accessory' ? 'bg-purple-50' : 
-                            item.type === 'sticker' ? 'bg-pink-50' : 'bg-rose-50'
-                          } group-hover:bg-white transition shadow-sm`}>
+                          <div className={`p-2 rounded-lg ${item.type === 'screen' ? 'bg-orange-50' :
+                            item.type === 'phone' ? 'bg-blue-50' :
+                              item.type === 'accessory' ? 'bg-purple-50' :
+                                item.type === 'sticker' ? 'bg-pink-50' : 'bg-rose-50'
+                            } group-hover:bg-white transition shadow-sm`}>
                             {getItemIcon()}
                           </div>
                           <div>
                             <div className="font-bold text-gray-800">{item.name}</div>
                             <div className="text-xs text-gray-500 flex gap-2">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                                item.type === 'screen' ? 'bg-orange-100 text-orange-700' : 
-                                item.type === 'phone' ? 'bg-blue-100 text-blue-700' : 
-                                item.type === 'accessory' ? 'bg-purple-100 text-purple-700' : 
-                                item.type === 'sticker' ? 'bg-pink-100 text-pink-700' : 'bg-rose-100 text-rose-700'
-                              }`}>{getTypeName(item.type)}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${item.type === 'screen' ? 'bg-orange-100 text-orange-700' :
+                                item.type === 'phone' ? 'bg-blue-100 text-blue-700' :
+                                  item.type === 'accessory' ? 'bg-purple-100 text-purple-700' :
+                                    item.type === 'sticker' ? 'bg-pink-100 text-pink-700' : 'bg-rose-100 text-rose-700'
+                                }`}>{getTypeName(item.type)}</span>
                               {item.barcode && <span>• {item.barcode}</span>}
                             </div>
                           </div>
@@ -622,7 +620,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
                   })}
                 </div>
               )}
-              
+
               {formData.item && (
                 <div className="mt-4 p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl border border-rose-100">
                   <div className="flex justify-between items-center">
@@ -637,13 +635,13 @@ const Sales = ({ data, saveData, showInvoice }) => {
                         <span className="font-bold">{itemId ? (findStockById(itemId)?.quantity ?? '---') : '---'}</span>
                       </div>
                     </div>
-                    <button onClick={() => { setFormData({...formData, item: ''}); setItemId(null); setItemType(''); }} className="text-red-500 p-1.5 rounded-full hover:bg-red-50">
+                    <button onClick={() => { setFormData({ ...formData, item: '' }); setItemId(null); setItemType(''); }} className="text-red-500 p-1.5 rounded-full hover:bg-red-50">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               )}
-              
+
               {stockError && (
                 <div className="mt-3 p-3 bg-red-50 text-red-600 rounded-lg flex items-center gap-2 border border-red-200">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -651,12 +649,12 @@ const Sales = ({ data, saveData, showInvoice }) => {
                 </div>
               )}
             </div>
-            
+
             {formData.item && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('inventory.quantity')}</label>
-                  <input type="number" value={formData.quantity} onChange={e => { setFormData({...formData, quantity: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg" min="1" />
+                  <input type="number" value={formData.quantity} onChange={e => { setFormData({ ...formData, quantity: e.target.value }); setStockError(''); }} className="w-full border p-2 rounded-lg" min="1" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.cost')}</label>
@@ -664,45 +662,45 @@ const Sales = ({ data, saveData, showInvoice }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.price')}</label>
-                  <input type="number" value={formData.price} onChange={e => { setFormData({...formData, price: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg border-rose-300 focus:ring-rose-500" step="0.01" min="0.01" />
+                  <input type="number" value={formData.price} onChange={e => { setFormData({ ...formData, price: e.target.value }); setStockError(''); }} className="w-full border p-2 rounded-lg border-rose-300 focus:ring-rose-500" step="0.01" min="0.01" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.expectedProfit')}</label>
-                  <div className={`w-full border p-2 rounded-lg font-bold ${ (parseFloat(formData.price) - itemCost) >= 0 ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50' }`}>
+                  <div className={`w-full border p-2 rounded-lg font-bold ${(parseFloat(formData.price) - itemCost) >= 0 ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
                     {((parseFloat(formData.price) || 0) - itemCost).toFixed(2)} {t('dashboard.currency')}
                   </div>
                 </div>
                 <div className="md:col-span-2">
-                    <button onClick={addToCart} className="w-full bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 font-bold flex items-center justify-center gap-2">
-                        <Plus className="w-5 h-5" />
-                        {t('sales.addToCart')}
-                    </button>
+                  <button onClick={addToCart} className="w-full bg-rose-500 text-white py-2 rounded-lg hover:bg-rose-600 font-bold flex items-center justify-center gap-2">
+                    <Plus className="w-5 h-5" />
+                    {t('sales.addToCart')}
+                  </button>
                 </div>
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.discount')}</label>
-                  <input type="number" value={formData.discount} onChange={e => setFormData({...formData, discount: e.target.value})} className="w-full border p-2 rounded-lg" step="0.01" min="0" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.discountType')}</label>
-                  <select value={formData.discountType} onChange={e => setFormData({...formData, discountType: e.target.value})} className="w-full border p-2 rounded-lg">
-                    <option value="percentage">{t('sales.percentage')}</option>
-                    <option value="amount">{t('sales.amount')}</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.discount')}</label>
+                <input type="number" value={formData.discount} onChange={e => setFormData({ ...formData, discount: e.target.value })} className="w-full border p-2 rounded-lg" step="0.01" min="0" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.discountType')}</label>
+                <select value={formData.discountType} onChange={e => setFormData({ ...formData, discountType: e.target.value })} className="w-full border p-2 rounded-lg">
+                  <option value="percentage">{t('sales.percentage')}</option>
+                  <option value="amount">{t('sales.amount')}</option>
+                </select>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.customerName')}</label>
-              <input type="text" value={formData.customer} onChange={e => setFormData({...formData, customer: e.target.value})} className="w-full border p-2 rounded-lg" placeholder={t('sales.customerName')} />
+              <input type="text" value={formData.customer} onChange={e => setFormData({ ...formData, customer: e.target.value })} className="w-full border p-2 rounded-lg" placeholder={t('sales.customerName')} />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('sales.paymentMethod')}</label>
-              <select value={formData.paymentMethod} onChange={e => { setFormData({...formData, paymentMethod: e.target.value}); setStockError(''); }} className="w-full border p-2 rounded-lg" required>
+              <select value={formData.paymentMethod} onChange={e => { setFormData({ ...formData, paymentMethod: e.target.value }); setStockError(''); }} className="w-full border p-2 rounded-lg" required>
                 <option value="">{t('sales.selectPayment')}</option>
                 <option value="cash">{t('sales.cash')}</option>
                 <option value="card">{t('sales.card')}</option>
@@ -710,7 +708,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
                 <option value="mobile">{t('sales.wallet')}</option>
               </select>
             </div>
-            
+
             {cart.length > 0 && (
               <div className="bg-white p-4 rounded-xl border border-gray-200">
                 <h4 className="font-bold mb-2">{t('sales.cart')}</h4>
@@ -728,7 +726,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
                             <input type="number" min="0.01" step="0.01" value={editPrice} onChange={e => setEditPrice(e.target.value)} className="w-28 border p-1 rounded" />
                             <button onClick={() => {
                               const newCart = [...cart];
-                              newCart[idx] = { ...newCart[idx], quantity: parseInt(editQty)||0, price: parseFloat(editPrice)||0 };
+                              newCart[idx] = { ...newCart[idx], quantity: parseInt(editQty) || 0, price: parseFloat(editPrice) || 0 };
                               setCart(newCart);
                               setEditingCartIndex(null);
                             }} className="bg-rose-500 text-white px-3 py-1 rounded">{t('common.save')}</button>
@@ -748,7 +746,7 @@ const Sales = ({ data, saveData, showInvoice }) => {
               </div>
             )}
 
-            { (cart.length > 0 || (formData.item && formData.quantity && formData.price)) && (
+            {(cart.length > 0 || (formData.item && formData.quantity && formData.price)) && (
               <div className="bg-gradient-to-r from-rose-50 to-pink-50 p-4 rounded-xl border border-rose-200">
                 <h4 className="font-bold text-rose-800 mb-2 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-rose-500" />
@@ -766,12 +764,12 @@ const Sales = ({ data, saveData, showInvoice }) => {
                 </div>
               </div>
             )}
-            
+
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button 
-                onClick={addSale} 
+              <button
+                onClick={addSale}
                 disabled={cart.length === 0 || !formData.paymentMethod || loadingInvoice}
-                className={`flex-1 py-3 rounded-lg font-bold text-lg transition ${ (cart.length > 0 && formData.paymentMethod && !loadingInvoice) ? 'bg-rose-500 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }`}
+                className={`flex-1 py-3 rounded-lg font-bold text-lg transition ${(cart.length > 0 && formData.paymentMethod && !loadingInvoice) ? 'bg-rose-500 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
               >
                 {loadingInvoice ? t('common.loading') : t('sales.registerSale')}
               </button>

@@ -13,7 +13,7 @@ export async function GET(request) {
     await connectDB();
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get('categoryId');
-    
+
     // Scoped to storeId
     const query = { storeId: user.currentStoreId };
     if (categoryId) query.categoryId = categoryId;
@@ -38,6 +38,12 @@ export async function POST(request) {
     const newProduct = await product.save();
     return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || {}).filter(k => k !== 'storeId').join(' و ');
+      return NextResponse.json({
+        message: `هذا المنتج موجود بالفعل في متجرك (${field}: ${Object.values(error.keyValue || {}).filter((_, i) => i > 0).join('، ')})`
+      }, { status: 400 });
+    }
     return NextResponse.json({ message: error.message }, { status: 400 });
   }
 }
